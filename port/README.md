@@ -39,8 +39,13 @@ Não existem stubs que devolvem sucesso para chamadas de jogo desconhecidas.
 - **96 casos** alteraram a RAM e tiveram o resultado integralmente comparado.
 - ROM com hash incorreto, índices inválidos e bases de carga inválidas rejeitados.
 - Windows x64: `jfg_poc_smoke.exe` e `jfg_poc.dll` compilados com LLVM-MinGW;
-  formato COFF x86-64 e dependências de DLL conferidos. Ainda não executados
-  no Windows e sem teste de GPU.
+  formato COFF x86-64 e dependências de DLL conferidos. Executados no Windows
+  do PC com RTX 5070 Ti: diagnóstico de console aprovado, com código de saída 0
+  e hashes do pacote, executável e DLL confirmados.
+- O teste Windows executou quatro verificações em `mainGetZBCheck` e
+  `mainSetMode`. As 528 comparações diferenciais continuam sendo evidência do
+  Linux; a execução da suíte completa no Windows e os testes de GPU ficam para
+  uma etapa posterior.
 
 A [evidência estruturada](poc/validation.json) registra os casos, limites, versões
 e hashes dos artefatos Windows.
@@ -54,8 +59,9 @@ e hashes dos artefatos Windows.
 - O N64ModernRuntime está fixado como dependência; nesta etapa usamos seu
   N64Recomp e os cabeçalhos correspondentes. Os serviços completos do runtime
   ainda não estão integrados.
-- Passar no Linux comprova a execução nesse host. O executável Windows e a GPU
-  precisam de uma validação própria; o relatório identifica o sistema testado.
+- A evidência distingue a suíte diferencial no Linux, o diagnóstico de console
+  já aprovado no Windows e a integração gráfica ainda pendente. O diagnóstico
+  Windows não inicializa nem testa a GPU.
 - O código gerado, as ROMs e os binários ficam em `build/`, fora do Git.
 
 ## Dependências reproduzíveis

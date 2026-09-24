@@ -165,7 +165,7 @@
   "windows_cross_build": {
     "target": "Windows x64",
     "toolchain": "LLVM-MinGW 20260922 / Clang 23.1.2",
-    "executed_on_windows": false,
+    "executed_on_windows": true,
     "gpu_tested": false,
     "files": {
       "jfg_poc_smoke.exe": {
@@ -177,5 +177,32 @@
         "sha256": "5292f6c506c4572b3c684a503dbaea7049a7cf63f0deba3ebfc8ad5ce5ca49bf"
       }
     }
+  },
+  "windows_execution": {
+    "tested_at_utc": "2026-09-24T04:07:54.5226780Z",
+    "os_version": "Microsoft Windows NT 10.0.26200.0",
+    "process_64bit": true,
+    "machine_gpu": "NVIDIA GeForce RTX 5070 Ti",
+    "exit_code": 0,
+    "passed": true,
+    "scope": "console_cpu_smoke_only",
+    "functions_exercised": [
+      "mainGetZBCheck",
+      "mainSetMode"
+    ],
+    "console_checks": 4,
+    "compiled_functions": 16,
+    "full_differential_suite_run_on_windows": false,
+    "gpu_rendering_tested": false,
+    "package_sha256": "fc51848f5199dbf43deddd206a05db0f6f5abab0b644718fb8ff0b12e6b34455",
+    "hashes": {
+      "jfg_poc_smoke.exe": "d9b09cb3900b830c0bc76a8f7fddfaf7b06b2fc90c33c0c56c9a8343fe7bb40f",
+      "jfg_poc.dll": "5292f6c506c4572b3c684a503dbaea7049a7cf63f0deba3ebfc8ad5ce5ca49bf"
+    },
+    "output": [
+      "PASS: JFG native x64 CPU diagnostic (16 compiled functions).",
+      "This is a CPU proof, not a playable game; no graphics or audio are initialized."
+    ],
+    "source_commit": "81f617e78340564149806988c0432bfb9d237b72"
   }
 }

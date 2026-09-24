@@ -105,8 +105,14 @@ foi realizado, e isso não transfere para Windows a evidência diferencial Linux
 
 O [adaptador de filas](runtime/README.md) acrescenta a primeira ligação com os
 serviços do N64ModernRuntime. Ele usa o código original desse runtime e compara
-o comportamento das mensagens com as rotinas MIPS da ROM. A suspensão de
-threads e a ligação dessas chamadas à inicialização do jogo permanecem pendentes.
+o comportamento das mensagens com as rotinas MIPS da ROM.
+
+O [perfil de threads](threads/README.md) conecta essas chamadas a rotinas
+originais do jogo: `rcpWaitDP` suspende e retoma por mensagens, enquanto outra
+thread pode executar código do JFG. A prova cobre prioridades, criação/início
+de threads, cancelamento e fechamento completo dos recursos do teste. As
+mensagens gráficas são controladas pelo diagnóstico; ainda não há renderização
+nem inicialização completa do jogo.
 
 ## Limites atuais
 
@@ -115,12 +121,13 @@ threads e a ligação dessas chamadas à inicialização do jogo permanecem pend
   dependências entre eles ou todas as formas de modificação de código.
 - A chamada indireta do callback está validada. Novos destinos e chamadas entre
   dois overlays ainda exigem ampliação do conjunto registrado e dos testes.
-- A execução permanece em uma única thread. Os efeitos na memória das cargas e
+- O perfil básico permanece em uma thread. O novo perfil usa threads nativas
+  com execução convidada serializada por agendamento cooperativo. Os efeitos na memória das cargas e
   armazenamentos de ponto flutuante do callback foram comparados, mas não há
   validação geral de FPU, exceções, temporização, boot completo ou campanha.
 - O N64ModernRuntime está fixado como dependência. Usamos seu N64Recomp e
-  validamos o núcleo de filas por um adaptador separado. Os serviços completos
-  do runtime ainda não estão integrados ao jogo.
+  validamos filas e a integração cooperativa com rotinas selecionadas do jogo.
+  Os serviços completos do runtime ainda não estão integrados.
 - A evidência distingue cada versão testada no Linux e no Windows e a integração
   gráfica ainda pendente. O diagnóstico Windows não inicializa nem testa a GPU.
 - O código gerado, as ROMs e os binários ficam em `build/`, fora do Git.
@@ -197,7 +204,7 @@ cmake --build build/port-recomp/windows --parallel 2
 
 ## Próximos marcos
 
-1. Conectar as filas e o agendamento de threads às chamadas do jogo.
+1. Integrar eventos, timers e o scheduler à sequência US de `mainInitGame`.
 2. Ampliar dependências entre overlays e alcançar o boot completo.
 3. Provar uma via de renderização compatível com F3DJFG, mantendo o alvo
    Windows/NVIDIA definido por Thiago.

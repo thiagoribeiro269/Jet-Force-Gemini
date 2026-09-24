@@ -12,7 +12,12 @@
 #define POC_EXPORT __attribute__((visibility("default")))
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 POC_EXPORT uint32_t jfg_poc_function_count(void);
+POC_EXPORT int jfg_poc_is_callable(uint32_t address);
 POC_EXPORT uint32_t jfg_poc_address(const char *name);
 POC_EXPORT uint32_t jfg_poc_last_call_count(void);
 POC_EXPORT uint32_t jfg_poc_last_call_target(void);
@@ -25,3 +30,7 @@ POC_EXPORT int jfg_poc_bind_game_linker(uint8_t *rdram, size_t size, uint32_t ta
 POC_EXPORT void jfg_poc_unbind_game_linker(void);
 POC_EXPORT int jfg_poc_run(uint32_t address, uint8_t *rdram, size_t size,
                            const uint64_t *input, uint64_t *output);
+
+#ifdef __cplusplus
+}
+#endif

@@ -13,7 +13,9 @@ O adaptador serializa as chamadas e **não inicia threads de jogo**. Aceita o
 sinalizador de bloqueio somente quando a operação pode terminar imediatamente.
 Se for necessário suspender ou acordar uma thread, retorna erro explícito sem
 alterar a memória. O agendamento e a integração com as chamadas do jogo são os
-próximos passos.
+próximos passos deste adaptador limitado. O [perfil posterior de threads](../threads/README.md)
+já valida suspensão/retomada e chama as filas a partir de rotinas originais do
+jogo, mantendo esta prova como referência separada.
 
 ## Interface
 

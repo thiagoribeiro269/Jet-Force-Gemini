@@ -22,7 +22,7 @@ CALLBACKS = ("_AutoInit00044", "amAudioLinesReset")
 DEFERRED = ("amSndStop", "amAmbientStop")
 
 
-def closure(elf_path):
+def closure(elf_path, roots=ROOTS, host_imports=PLATFORM_IMPORTS, deferred=()):
     with elf_path.open("rb") as file:
         elf = ELFFile(file)
         sections = list(elf.iter_sections())
@@ -32,14 +32,14 @@ def closure(elf_path):
         by_address = {}
         for symbol in symbols:
             by_address.setdefault(symbol["st_value"], []).append(symbol)
-        todo, seen = list(ROOTS), set()
+        todo, seen = list(roots), set()
         data_cache = {}
         while todo:
             name = todo.pop()
             if name in seen:
                 continue
             seen.add(name)
-            if name in PLATFORM_IMPORTS:
+            if name in host_imports or name in deferred:
                 continue
             symbol = by_name[name]
             section = sections[symbol["st_shndx"]]

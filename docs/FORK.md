@@ -57,6 +57,8 @@ O [perfil de inicialização da memória e do carregador](../port/boot/README.md
 
 O [adaptador de filas](../port/runtime/README.md) valida os serviços de mensagens do N64ModernRuntime separadamente, preparando a futura integração com threads e com a inicialização do jogo.
 
+O [perfil de threads cooperativas](../port/threads/README.md) conecta filas e criação/início de threads a funções recompiladas. A rotina original `rcpWaitDP` suspende e retoma por mensagens, enquanto outra thread executa código do jogo. Os testes cobrem prioridades e fechamento de todas as threads criadas. A integração completa de `mainInitGame` e os gráficos continuam pendentes.
+
 ## Melhorias futuras
 
 As ideias para depois da base jogável incluem dublagem em inglês, modelos com mais detalhes e melhorias visuais. São possibilidades para uma etapa posterior; não fazem parte da prova atual de CPU. A prioridade permanece chegar a um port funcional que preserve a identidade do jogo.

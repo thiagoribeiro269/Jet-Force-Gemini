@@ -112,10 +112,10 @@ No Windows, o launcher exige Python x64 3.11+ e a ROM fornecida localmente.
 O `jfg_poc_smoke.exe` sozinho continua testando apenas quatro verificações
 simples em duas funções; ele não executa a inicialização do carregador.
 
-O [adaptador de filas do runtime](../runtime/README.md) é validado separadamente;
-ainda precisa ser conectado às chamadas da inicialização. Faltam threads, mais
-dependências entre módulos, gráficos F3DJFG, áudio, controles e saves. O perfil
-atual opera em uma única thread. Funções do jogo fora do conjunto registrado
+O [perfil de threads](../threads/README.md) estende esta prova com filas e
+suspensão/retomada de rotinas do jogo. Faltam a inicialização completa, mais
+dependências entre módulos, gráficos F3DJFG, áudio, controles e saves. Este perfil
+de memória/carregador continua sendo uma prova em uma thread. Funções fora do conjunto registrado
 não ficam executáveis apenas porque seus módulos foram carregados.
 
 Infraestrutura desenvolvida com assistência de OpenAI Codex. Os fontes do jogo

@@ -26,15 +26,17 @@ struct PocSection {
 
 static int32_t section_bases[JFG_POC_SECTION_COUNT];
 int32_t *section_addresses = section_bases;
-/* This proof's dispatcher is deliberately single-threaded. */
-static jmp_buf dispatch_guard;
-static int dispatch_active;
-static int dispatch_error;
-static uint32_t call_count;
-static uint32_t last_call_target;
-static uint64_t last_return_address;
-static uint64_t indirect_target;
-static int indirect_prepared;
+/* Each cooperatively scheduled host thread retains its own suspended call.
+   Guest RAM and section registration remain shared and serialized by the
+   runtime scheduler; this does not allow arbitrary concurrent guest writes. */
+static _Thread_local jmp_buf dispatch_guard;
+static _Thread_local int dispatch_active;
+static _Thread_local int dispatch_error;
+static _Thread_local uint32_t call_count;
+static _Thread_local uint32_t last_call_target;
+static _Thread_local uint64_t last_return_address;
+static _Thread_local uint64_t indirect_target;
+static _Thread_local int indirect_prepared;
 static uint32_t game_table_global;
 static uint32_t game_count_global;
 
@@ -80,6 +82,8 @@ static recomp_func_t *find_function(uint32_t address) {
 POC_EXPORT uint32_t jfg_poc_function_count(void) {
     return JFG_POC_FUNCTION_COUNT;
 }
+
+POC_EXPORT int jfg_poc_is_callable(uint32_t address) { return find_function(address) != NULL; }
 
 POC_EXPORT uint32_t jfg_poc_last_call_count(void) { return call_count; }
 POC_EXPORT uint32_t jfg_poc_last_call_target(void) { return last_call_target; }

@@ -1,0 +1,439 @@
+{
+  "recorded_at": "2026-09-24T11:43:50.551110-03:00",
+  "stage": "cooperative_threads_and_game_message_consumers",
+  "game_base": "f409c111053c671ae91051a6cdff277e0af7d95e",
+  "runtime_revision": "cdf5abbd5026fef5c364c676e4667c45e42b6863",
+  "recompiler_revision": "81213c1831fab2521a6a5459c67b63437d67e253",
+  "game_and_vendor_files_modified": false,
+  "local_runtime_override": {
+    "function": "ultramodern::thread_queue_remove",
+    "source": "port/threads/kernel.cpp",
+    "reason": "Advance the list link correctly when removing a non-head thread",
+    "validation_case": "cancel_blocked_non_head_threads"
+  },
+  "lifecycle_adapter": "Pinned vendor source is included in the project translation unit to drain its retirement queue and join every owned thread",
+  "profile": {
+    "registered_entries": 63,
+    "compiled_original_functions": [
+      "mainGetZBCheck",
+      "mainGameWindowChanging",
+      "mainSetAnimGroup",
+      "mainGetAnimGroup",
+      "mainChangeCameras",
+      "mainGetNextCharacter",
+      "mainGetNextLevel",
+      "mainSyncNextLevel",
+      "mainSetMode",
+      "mainGetGame",
+      "mainGetCurrentLevel",
+      "mainGetGameArrayPtr",
+      "mainGetNumberOfCameras",
+      "GetRegionIndex",
+      "pauseGetScreen",
+      "pauseGetPauseCharacter",
+      "frontSetInstrumentsHide",
+      "func_overlay_18_0120207C_1F31A54",
+      "func_overlay_32_02001D2C_1F526FC",
+      "func_overlay_32_02001D84_1F52754",
+      "GetSymbolName",
+      "PatchInstruction",
+      "ProcessRelocationEntry",
+      "ResolveRelocAddress",
+      "RevealReturnAddresses",
+      "_bzero",
+      "mainResetPressed",
+      "mempool_free_addr",
+      "mempool_free_queue",
+      "mempool_get_pool",
+      "mempool_init",
+      "mempool_slot_assign",
+      "mempool_slot_clear",
+      "mempool_slot_find",
+      "mmAlloc",
+      "mmAlloc2",
+      "mmAllocAtAddr",
+      "mmFree",
+      "mmGetDelay",
+      "mmInit",
+      "mmSetDelay",
+      "rcpWaitDP",
+      "runlinkCallResumeFunction",
+      "runlinkDownloadCode",
+      "runlinkGetAddressInfo",
+      "runlinkInitialise",
+      "runlinkIsModuleLoaded",
+      "runlinkResumeCode",
+      "runlinkUnloadOverlay",
+      "_AutoInit00044",
+      "amAudioLinesReset"
+    ],
+    "host_imports": [
+      "osInvalICache",
+      "osRecvMesg",
+      "osWritebackDCache",
+      "romCopy",
+      "osCreateMesgQueue",
+      "osSendMesg",
+      "osJamMesg",
+      "osCreateThread",
+      "osStartThread"
+    ],
+    "deferred_paths": [
+      "TrapDanglingJump",
+      "amSndStop",
+      "amAmbientStop"
+    ]
+  },
+  "native_linux": {
+    "status": "passed",
+    "scope": "cooperative_threads_and_real_game_message_consumers",
+    "host_os": "Linux",
+    "host_arch": "x86_64",
+    "cases": [
+      {
+        "name": "game_wait_without_active_dp",
+        "status": "passed",
+        "threads_joined": 1,
+        "return_v0": 0
+      },
+      {
+        "name": "game_wait_event_order_021",
+        "status": "passed",
+        "threads_joined": 2,
+        "return_v0": 305419896,
+        "flags": {
+          "D_800A4034": 0,
+          "blurTaskActive": 0,
+          "refractTaskActive": 0,
+          "cloneTaskActive": 0
+        },
+        "synthetic_completion_events": [
+          0,
+          2,
+          1
+        ]
+      },
+      {
+        "name": "game_wait_event_order_210",
+        "status": "passed",
+        "threads_joined": 2,
+        "return_v0": 305419896,
+        "flags": {
+          "D_800A4034": 0,
+          "blurTaskActive": 0,
+          "refractTaskActive": 0,
+          "cloneTaskActive": 0
+        },
+        "synthetic_completion_events": [
+          2,
+          1,
+          0
+        ]
+      },
+      {
+        "name": "blocking_osSendMesg",
+        "status": "passed",
+        "threads_joined": 2,
+        "remaining_messages": [
+          99
+        ]
+      },
+      {
+        "name": "blocking_osJamMesg",
+        "status": "passed",
+        "threads_joined": 2,
+        "remaining_messages": [
+          99,
+          2
+        ]
+      },
+      {
+        "name": "priority_order",
+        "status": "passed",
+        "threads_joined": 3,
+        "receive_priority_order": [
+          10,
+          7,
+          5
+        ]
+      },
+      {
+        "name": "cancel_blocked_non_head_threads",
+        "status": "passed",
+        "threads_joined": 3
+      },
+      {
+        "name": "cancel_created_before_start",
+        "status": "passed",
+        "threads_joined": 1
+      },
+      {
+        "name": "original_reset_queue_consumer",
+        "status": "passed",
+        "threads_joined": 0
+      },
+      {
+        "name": "queue_recreation_and_invalid_entry_rejected",
+        "status": "passed",
+        "threads_joined": 1
+      },
+      {
+        "name": "unsupported_clone_path_is_controlled_error",
+        "status": "passed",
+        "threads_joined": 1
+      },
+      {
+        "name": "create_and_start_from_running_guest_thread",
+        "status": "passed",
+        "threads_joined": 3
+      }
+    ],
+    "threads_created_and_joined": 21,
+    "library_sha256": "356dfba8cacc284f4f538cb8e0b6b246968a982a477e39b043fb904ec5d48c98",
+    "rom_sha1": "493ced9008dbe932d6e91179b68e8630cf23a023",
+    "emulator_used": false,
+    "gpu_initialized": false,
+    "full_boot": false,
+    "limits": [
+      "Cooperative thread/message integration, not full boot or mainThread",
+      "DP/blur/refraction completion messages are controlled test inputs, not GPU work",
+      "Serialized guest execution; no hardware preemption, timers, rendering or audio output",
+      "Three explicit deferred paths remain unsupported"
+    ]
+  },
+  "native_windows": {
+    "recorded_at": "2026-09-24T14:41:57.4850764Z",
+    "exit_code": 0,
+    "windows": "Microsoft Windows NT 10.0.26200.0",
+    "python": "Python 3.12.10",
+    "package_sha256": "0f910e07b23bdc083713a43848f1654dde85175309e2b4d21aca247c221864ba",
+    "report": {
+      "status": "passed",
+      "scope": "cooperative_threads_and_real_game_message_consumers",
+      "host_os": "Windows",
+      "host_arch": "AMD64",
+      "cases": [
+        {
+          "name": "game_wait_without_active_dp",
+          "status": "passed",
+          "threads_joined": 1,
+          "return_v0": 0
+        },
+        {
+          "name": "game_wait_event_order_021",
+          "status": "passed",
+          "threads_joined": 2,
+          "return_v0": 305419896,
+          "flags": {
+            "D_800A4034": 0,
+            "blurTaskActive": 0,
+            "refractTaskActive": 0,
+            "cloneTaskActive": 0
+          },
+          "synthetic_completion_events": [
+            0,
+            2,
+            1
+          ]
+        },
+        {
+          "name": "game_wait_event_order_210",
+          "status": "passed",
+          "threads_joined": 2,
+          "return_v0": 305419896,
+          "flags": {
+            "D_800A4034": 0,
+            "blurTaskActive": 0,
+            "refractTaskActive": 0,
+            "cloneTaskActive": 0
+          },
+          "synthetic_completion_events": [
+            2,
+            1,
+            0
+          ]
+        },
+        {
+          "name": "blocking_osSendMesg",
+          "status": "passed",
+          "threads_joined": 2,
+          "remaining_messages": [
+            99
+          ]
+        },
+        {
+          "name": "blocking_osJamMesg",
+          "status": "passed",
+          "threads_joined": 2,
+          "remaining_messages": [
+            99,
+            2
+          ]
+        },
+        {
+          "name": "priority_order",
+          "status": "passed",
+          "threads_joined": 3,
+          "receive_priority_order": [
+            10,
+            7,
+            5
+          ]
+        },
+        {
+          "name": "cancel_blocked_non_head_threads",
+          "status": "passed",
+          "threads_joined": 3
+        },
+        {
+          "name": "cancel_created_before_start",
+          "status": "passed",
+          "threads_joined": 1
+        },
+        {
+          "name": "original_reset_queue_consumer",
+          "status": "passed",
+          "threads_joined": 0
+        },
+        {
+          "name": "queue_recreation_and_invalid_entry_rejected",
+          "status": "passed",
+          "threads_joined": 1
+        },
+        {
+          "name": "unsupported_clone_path_is_controlled_error",
+          "status": "passed",
+          "threads_joined": 1
+        },
+        {
+          "name": "create_and_start_from_running_guest_thread",
+          "status": "passed",
+          "threads_joined": 3
+        }
+      ],
+      "threads_created_and_joined": 21,
+      "library_sha256": "a848d9aa3440cde2389f8b83156c3ff028d387868fa5266ac7649a3e1c4d2fe4",
+      "rom_sha1": "493ced9008dbe932d6e91179b68e8630cf23a023",
+      "emulator_used": false,
+      "gpu_initialized": false,
+      "full_boot": false,
+      "limits": [
+        "Cooperative thread/message integration, not full boot or mainThread",
+        "DP/blur/refraction completion messages are controlled test inputs, not GPU work",
+        "Serialized guest execution; no hardware preemption, timers, rendering or audio output",
+        "Three explicit deferred paths remain unsupported"
+      ]
+    }
+  },
+  "original_game_mips_comparison": {
+    "status": "passed",
+    "cases": [
+      {
+        "function": "rcpWaitDP",
+        "dp_active": 0,
+        "blur_active": 0,
+        "refraction_active": 0,
+        "return_v0": 0,
+        "threads_joined": 1
+      },
+      {
+        "function": "rcpWaitDP",
+        "dp_active": 1,
+        "blur_active": 0,
+        "refraction_active": 0,
+        "return_v0": 18446744071581156711,
+        "threads_joined": 1
+      },
+      {
+        "function": "rcpWaitDP",
+        "dp_active": 1,
+        "blur_active": 1,
+        "refraction_active": 0,
+        "return_v0": 18446744071581156711,
+        "threads_joined": 1
+      },
+      {
+        "function": "rcpWaitDP",
+        "dp_active": 1,
+        "blur_active": 1,
+        "refraction_active": 1,
+        "return_v0": 18446744071581156711,
+        "threads_joined": 1
+      }
+    ],
+    "comparison": "Return v0 and callee-saved GPRs; all 8 MiB RAM except host/thread slots, wait-list fields and guest call stack scratch",
+    "excluded_ram_bytes": 1368,
+    "contract": "Original MIPS libultra consumes prequeued completion messages with serialized interrupt hooks",
+    "limits": [
+      "This checks the game body under ready-message conditions, not MIPS thread context switching",
+      "Native blocking/resume and cancellation are tested separately by checks.py",
+      "No GPU or physical DP/RSP execution"
+    ]
+  },
+  "boot_regression": {
+    "status": "passed",
+    "checkpoints": 56,
+    "comparison": "All 32 GPRs, all 8 MiB RAM and ordered ROM/cache platform events at each checkpoint",
+    "report_sha256": "1e595fb5694bc3b47281d039e9683a5ff4745ef2f38f0ebf83d6684683efbcc8"
+  },
+  "previous_cpu_regression": {
+    "status": "passed",
+    "total_cases": 816,
+    "original_linker_groups_executed": 792,
+    "native_cross_section_calls": 162
+  },
+  "windows_package": {
+    "name": "jfg-threads-windows-x64.zip",
+    "size": 300979,
+    "sha256": "0f910e07b23bdc083713a43848f1654dde85175309e2b4d21aca247c221864ba",
+    "toolchain": "LLVM-MinGW 20260922 / Clang 23.1.2",
+    "files": {
+      "jfg_poc.dll": {
+        "size": 857600,
+        "sha256": "a848d9aa3440cde2389f8b83156c3ff028d387868fa5266ac7649a3e1c4d2fe4",
+        "dll_imports": [
+          "KERNEL32.dll",
+          "api-ms-win-crt-stdio-l1-1-0.dll",
+          "api-ms-win-crt-private-l1-1-0.dll",
+          "api-ms-win-crt-runtime-l1-1-0.dll",
+          "api-ms-win-crt-math-l1-1-0.dll",
+          "api-ms-win-crt-heap-l1-1-0.dll",
+          "api-ms-win-crt-string-l1-1-0.dll",
+          "api-ms-win-crt-convert-l1-1-0.dll",
+          "api-ms-win-crt-locale-l1-1-0.dll",
+          "api-ms-win-crt-environment-l1-1-0.dll",
+          "api-ms-win-crt-filesystem-l1-1-0.dll"
+        ]
+      },
+      "checks.py": {
+        "size": 15018,
+        "sha256": "c15152be573b0ac98e2cf57118e231fa60d002af770322c5e81b811de3330f11"
+      },
+      "native.py": {
+        "size": 8102,
+        "sha256": "35efe8ae165c428a11c5b8309119855c1caa8b17aece84afee0b8010298517d0"
+      },
+      "thread-config.json": {
+        "size": 51458,
+        "sha256": "9c2fba8d199273474bbfca70b39f6f343046bd2ad2d9cc5e95563922c3f85351"
+      },
+      "README.txt": {
+        "size": 1073,
+        "sha256": "711a9290731757ad191ed50c97321c024de59f9ac21fb3f82d6da44aaf0dc8e9"
+      }
+    }
+  },
+  "remote_execution": {
+    "method": "SSH console",
+    "existing_processes_or_services_changed": false,
+    "all_diagnostic_threads_joined": true
+  },
+  "limits": [
+    "Cooperative thread/message integration, not full boot or mainThread",
+    "DP/blur/refraction completion messages are controlled test inputs, not GPU work",
+    "Serialized guest execution; no hardware preemption, timers, rendering or audio output",
+    "Three explicit deferred paths remain unsupported",
+    "No general register-level comparison of MIPS thread context switching or timing",
+    "Other thread APIs, event registration, timers and full US mainInitGame remain pending"
+  ]
+}

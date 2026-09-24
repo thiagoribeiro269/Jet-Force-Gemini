@@ -1,0 +1,221 @@
+#!/usr/bin/env python3
+"""Export a deliberately small JFG US CPU proof from a verified local ROM/ELF.
+
+Only metadata and this tooling belong in Git. Recompiled game code and input
+binaries are generated under the ignored build directory.
+"""
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+import struct
+import sys
+from pathlib import Path
+
+from elftools.elf.elffile import ELFFile
+
+ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / "tools"))
+from overlay_reloc import OverlayRelocTool  # noqa: E402
+
+ROM_SHA1 = "493ced9008dbe932d6e91179b68e8630cf23a023"
+FUNCTIONS = (
+    "mainGetZBCheck", "mainGameWindowChanging", "mainSetAnimGroup",
+    "mainGetAnimGroup", "mainChangeCameras", "mainGetNextCharacter",
+    "mainGetNextLevel", "mainSyncNextLevel", "mainSetMode", "mainGetGame",
+    "mainGetCurrentLevel", "mainGetGameArrayPtr", "mainGetNumberOfCameras",
+    "GetRegionIndex", "pauseGetScreen", "pauseGetPauseCharacter",
+)
+REFERENCE_SYMBOLS = (
+    "ProcessRelocationEntry", "ResolveRelocAddress", "PatchInstruction",
+    "overlayTable", "overlayRomTable", "gRelocTextBase", "gRelocDataBase",
+    "__DATA_SECTION_START", "__BSS_SECTION_START", "__BSS_SECTION_END",
+    "mainGameMode",
+)
+
+
+def unique_symbol(symtab, name):
+    candidates = symtab.get_symbol_by_name(name) or []
+    values = {(s["st_value"], s["st_size"], s["st_shndx"]) for s in candidates}
+    if len(values) != 1:
+        raise ValueError(f"Expected one unambiguous ELF symbol: {name}")
+    return candidates[0]
+
+
+def rom_offset(elf, section):
+    candidates = [
+        p["p_paddr"] + section["sh_offset"] - p["p_offset"]
+        for p in elf.iter_segments()
+        if p["p_type"] == "PT_LOAD" and p.section_in_segment(section)
+    ]
+    if len(candidates) != 1:
+        raise ValueError(f"Ambiguous ROM mapping for {section.name}")
+    return candidates[0]
+
+
+def local_relocations(tool, number, section, selected, rom):
+    """Translate only local HI16/LO16 pairs used by the selected leaf functions.
+
+    Cross-overlay references, jumps and other relocation forms are rejected,
+    never silently replaced by stubs. The oracle separately executes JFG's
+    original ProcessRelocationEntry to validate these conversions.
+    """
+    converted, pairs = [], []
+    ranges = [(f["offset"], f["offset"] + f["size"]) for f in selected]
+    for secondary in (False, True):
+        entries = tool.get_relocation_entries(number, secondary=secondary)
+        index = 0
+        while index < len(entries):
+            entry = entries[index]
+            if not any(lo <= entry.target_offset < hi for lo, hi in ranges):
+                index += 1
+                continue
+            if entry.reloc_type != 1 or entry.patch_type != 5 or index + 1 >= len(entries):
+                raise ValueError(f"Unsupported proof relocation in overlay {number}: {entry}")
+            low = entries[index + 1]
+            if (low.reloc_type, low.patch_type, low.symbol_index) != (1, 6, entry.symbol_index):
+                raise ValueError(f"Invalid HI16/LO16 pair in overlay {number}")
+            if not any(lo <= low.target_offset < hi for lo, hi in ranges):
+                raise ValueError("Relocation pair crosses the selected function boundary")
+            hi_word = struct.unpack_from(">I", rom, section["rom"] + entry.target_offset)[0]
+            lo_word = struct.unpack_from(">I", rom, section["rom"] + low.target_offset)[0]
+            if hi_word >> 26 != 0x0F:
+                raise ValueError("HI16 relocation does not refer to a LUI instruction")
+            signed_low = struct.unpack(">h", struct.pack(">H", lo_word & 0xFFFF))[0]
+            target_offset = entry.symbol_index + ((hi_word & 0xFFFF) << 16) + signed_low
+            if not 0 <= target_offset < section["memory_size"]:
+                raise ValueError("Local relocation target is outside overlay memory")
+            for rel, kind in ((entry, "R_MIPS_HI16"), (low, "R_MIPS_LO16")):
+                converted.append({"vram": section["vram"] + rel.target_offset,
+                                  "target_vram": section["vram"] + target_offset,
+                                  "type": kind})
+            pairs.append({
+                "table": "secondary" if secondary else "primary",
+                "index": index, "hi_offset": entry.target_offset,
+                "lo_offset": low.target_offset, "target_offset": target_offset,
+                "symbol_index": entry.symbol_index,
+            })
+            index += 2
+    return converted, pairs
+
+
+def prepare(elf_path: Path, rom_path: Path, out: Path):
+    rom = rom_path.read_bytes()
+    if len(rom) != 0x2000000 or hashlib.sha1(rom).hexdigest() != ROM_SHA1:
+        raise ValueError("The proof requires the verified, unmodified US ROM")
+    out.mkdir(parents=True, exist_ok=True)
+    tool = OverlayRelocTool(str(rom_path))
+    sections, functions = [], []
+    with elf_path.open("rb") as file:
+        elf = ELFFile(file)
+        if elf.elfclass != 32 or elf.little_endian or elf["e_machine"] != "EM_MIPS":
+            raise ValueError("Expected the big-endian MIPS ELF produced by the N64 build")
+        symtab = elf.get_section_by_name(".symtab")
+        if symtab is None:
+            raise ValueError("ELF symbol table is missing")
+        by_name = {}
+        for name in FUNCTIONS:
+            symbol = unique_symbol(symtab, name)
+            if symbol["st_info"]["type"] != "STT_FUNC" or not symbol["st_size"]:
+                raise ValueError(f"Invalid function symbol: {name}")
+            section = elf.get_section(symbol["st_shndx"])
+            if section.name not in by_name:
+                number = int(section.name.removeprefix(".overlay_")) if section.name.startswith(".overlay_") else 0
+                info = {"name": section.name, "index": len(sections), "overlay": number,
+                        "vram": section["sh_addr"], "rom": rom_offset(elf, section),
+                        "size": section["sh_size"], "functions": []}
+                data = section.data()
+                if data != rom[info["rom"]:info["rom"] + len(data)]:
+                    raise ValueError(f"ELF section {section.name} differs from the reference ROM")
+                if number:
+                    header = tool.get_overlay_header(number)
+                    if tool.offsets["overlay_data_base"] + header.rom_offset != info["rom"]:
+                        raise ValueError("ELF and game overlay tables disagree")
+                    info["header"] = vars(header)
+                    info["load_size"] = header.text_size + header.data_size
+                    info["memory_size"] = info["load_size"] + header.bss_size
+                else:
+                    info["load_size"] = info["size"]
+                    info["memory_size"] = unique_symbol(symtab, "__BSS_SECTION_END")["st_value"] - info["vram"]
+                by_name[section.name] = info
+                sections.append(info)
+            info = by_name[section.name]
+            offset = symbol["st_value"] - info["vram"]
+            if offset < 0 or offset + symbol["st_size"] > info["load_size"]:
+                raise ValueError(f"Function {name} is outside the section")
+            function = {"name": name, "vram": symbol["st_value"], "size": symbol["st_size"],
+                        "section": info["index"], "offset": offset,
+                        "rom": info["rom"] + offset}
+            info["functions"].append(function)
+            functions.append(function)
+        reference = {name: unique_symbol(symtab, name)["st_value"] for name in REFERENCE_SYMBOLS}
+        function_count = sum(s["st_info"]["type"] == "STT_FUNC" for s in symtab.iter_symbols())
+
+    toml = []
+    for section in sections:
+        relocs, pairs = local_relocations(tool, section["overlay"], section, section["functions"], rom) if section["overlay"] else ([], [])
+        section["relocations"] = relocs
+        section["relocation_pairs"] = pairs
+        toml.extend(["[[section]]", f'name = {json.dumps(section["name"])}',
+                     f'rom = 0x{section["rom"]:X}', f'vram = 0x{section["vram"]:X}',
+                     f'size = 0x{section["size"]:X}', "functions = ["])
+        for function in section["functions"]:
+            toml.append('  { name = "%s", vram = 0x%X, size = 0x%X },' %
+                        (function["name"], function["vram"], function["size"]))
+        toml.append("]")
+        if relocs:
+            toml.append("relocs = [")
+            for rel in relocs:
+                toml.append('  { vram = 0x%X, target_vram = 0x%X, type = "%s" },' %
+                            (rel["vram"], rel["target_vram"], rel["type"]))
+            toml.append("]")
+        toml.append("")
+    (out / "symbols.toml").write_text("\n".join(toml), encoding="utf-8")
+    config = {"symbols_file_path": "symbols.toml", "rom_file_path": rom_path.resolve().as_posix(),
+              "output_func_path": "generated", "functions_per_output_file": 50}
+    (out / "recomp.toml").write_text("[input]\n" + "\n".join(
+        f"{key} = {json.dumps(value)}" for key, value in config.items()) + "\n", encoding="utf-8")
+    header = ["/* Generated metadata only; do not edit. */", "#pragma once",
+              f"#define JFG_POC_SECTION_COUNT {len(sections)}",
+              f"#define JFG_POC_FUNCTION_COUNT {len(functions)}"]
+    for function in functions:
+        header.append(f'extern void {function["name"]}(uint8_t*, recomp_context*);')
+    header.append("static const struct PocFunction poc_functions[] = {")
+    for function in functions:
+        header.append('    { "%s", %s, %d, 0x%Xu },' %
+                      (function["name"], function["name"], function["section"], function["offset"]))
+    header.append("};")
+    header.append("static const uint32_t poc_section_sizes[] = {" + ",".join(
+        str(s["memory_size"]) for s in sections) + "};")
+    (out / "poc_symbols.h").write_text("\n".join(header) + "\n", encoding="utf-8")
+    main_section = next(s for s in sections if not s["overlay"])
+    (out / "poc_smoke.h").write_text(
+        "#pragma once\n"
+        f'#define POC_MAIN_SECTION {main_section["index"]}u\n'
+        f'#define POC_MAIN_BASE 0x{main_section["vram"]:08X}u\n'
+        f'#define POC_GAME_MODE 0x{reference["mainGameMode"]:08X}u\n', encoding="utf-8")
+    manifest = {"rom_sha1": ROM_SHA1, "rom_path": rom_path.resolve().as_posix(),
+                "elf_path": elf_path.resolve().as_posix(), "elf_function_symbols": function_count,
+                "sections": sections, "functions": functions, "reference_symbols": reference,
+                "overlay_rom_table": tool.offsets["overlay_rom_table"],
+                "overlay_table": tool.offsets["overlay_table"],
+                "overlay_data_base": tool.offsets["overlay_data_base"],
+                "limits": ["Selected integer functions only", "Local HI16/LO16 relocation pairs only",
+                           "No full runLink loader, boot, graphics, audio or gameplay"]}
+    (out / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+    print(f"Prepared {len(functions)} functions in {len(sections)} sections; {sum(len(s['relocation_pairs']) for s in sections)} real relocation pairs.")
+    return manifest
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--elf", type=Path, default=ROOT / "build/jfg.us.elf")
+    parser.add_argument("--rom", type=Path, default=ROOT / "baseroms/baserom.us.z64")
+    parser.add_argument("--out", type=Path, default=ROOT / "build/port-recomp/proof")
+    args = parser.parse_args()
+    prepare(args.elf, args.rom, args.out)
+
+
+if __name__ == "__main__":
+    main()

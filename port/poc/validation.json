@@ -1,0 +1,181 @@
+{
+  "recorded_at": "2026-09-24T00:48:12.947127-03:00",
+  "game_base": "f409c111053c671ae91051a6cdff277e0af7d95e",
+  "runtime_revision": "cdf5abbd5026fef5c364c676e4667c45e42b6863",
+  "recompiler_revision": "81213c1831fab2521a6a5459c67b63437d67e253",
+  "differential_validation": {
+    "status": "passed",
+    "host_os": "Linux",
+    "host_arch": "x86_64",
+    "target": "Windows x64 / NVIDIA; CPU proof has no graphics backend",
+    "rom_sha1": "493ced9008dbe932d6e91179b68e8630cf23a023",
+    "oracle": "Unicorn 2.1.4, MIPS64 R4000, big-endian",
+    "functions": [
+      {
+        "function": "mainGetZBCheck",
+        "overlay": 0,
+        "cases": 24,
+        "load_bases": [
+          "0x80000400"
+        ]
+      },
+      {
+        "function": "mainGameWindowChanging",
+        "overlay": 0,
+        "cases": 24,
+        "load_bases": [
+          "0x80000400"
+        ]
+      },
+      {
+        "function": "mainSetAnimGroup",
+        "overlay": 0,
+        "cases": 24,
+        "load_bases": [
+          "0x80000400"
+        ]
+      },
+      {
+        "function": "mainGetAnimGroup",
+        "overlay": 0,
+        "cases": 24,
+        "load_bases": [
+          "0x80000400"
+        ]
+      },
+      {
+        "function": "mainChangeCameras",
+        "overlay": 0,
+        "cases": 24,
+        "load_bases": [
+          "0x80000400"
+        ]
+      },
+      {
+        "function": "mainGetNextCharacter",
+        "overlay": 0,
+        "cases": 24,
+        "load_bases": [
+          "0x80000400"
+        ]
+      },
+      {
+        "function": "mainGetNextLevel",
+        "overlay": 0,
+        "cases": 24,
+        "load_bases": [
+          "0x80000400"
+        ]
+      },
+      {
+        "function": "mainSyncNextLevel",
+        "overlay": 0,
+        "cases": 24,
+        "load_bases": [
+          "0x80000400"
+        ]
+      },
+      {
+        "function": "mainSetMode",
+        "overlay": 0,
+        "cases": 24,
+        "load_bases": [
+          "0x80000400"
+        ]
+      },
+      {
+        "function": "mainGetGame",
+        "overlay": 0,
+        "cases": 24,
+        "load_bases": [
+          "0x80000400"
+        ]
+      },
+      {
+        "function": "mainGetCurrentLevel",
+        "overlay": 0,
+        "cases": 24,
+        "load_bases": [
+          "0x80000400"
+        ]
+      },
+      {
+        "function": "mainGetGameArrayPtr",
+        "overlay": 0,
+        "cases": 24,
+        "load_bases": [
+          "0x80000400"
+        ]
+      },
+      {
+        "function": "mainGetNumberOfCameras",
+        "overlay": 0,
+        "cases": 24,
+        "load_bases": [
+          "0x80000400"
+        ]
+      },
+      {
+        "function": "GetRegionIndex",
+        "overlay": 3,
+        "cases": 72,
+        "load_bases": [
+          "0x80200000",
+          "0x803FF000",
+          "0x80508000"
+        ]
+      },
+      {
+        "function": "pauseGetScreen",
+        "overlay": 19,
+        "cases": 72,
+        "load_bases": [
+          "0x80200000",
+          "0x803FF000",
+          "0x80508000"
+        ]
+      },
+      {
+        "function": "pauseGetPauseCharacter",
+        "overlay": 19,
+        "cases": 72,
+        "load_bases": [
+          "0x80200000",
+          "0x803FF000",
+          "0x80508000"
+        ]
+      }
+    ],
+    "total_cases": 528,
+    "original_linker_pairs_executed": 360,
+    "memory_mutating_cases": 96,
+    "comparison": "All 32 general registers and all 8 MiB of guest RAM after every call",
+    "limits": [
+      "Selected integer functions only",
+      "Local HI16/LO16 relocation pairs only",
+      "No full runLink loader, boot, graphics, audio or gameplay",
+      "No FPU, exceptions or whole-console timing validation",
+      "Windows/GPU execution requires its own test run"
+    ]
+  },
+  "input_guards": {
+    "wrong_rom_sha1": "rejected",
+    "invalid_section_or_load_base": "rejected"
+  },
+  "windows_cross_build": {
+    "target": "Windows x64",
+    "toolchain": "LLVM-MinGW 20260922 / Clang 23.1.2",
+    "executed_on_windows": false,
+    "gpu_tested": false,
+    "files": {
+      "jfg_poc_smoke.exe": {
+        "size": 68608,
+        "sha256": "d9b09cb3900b830c0bc76a8f7fddfaf7b06b2fc90c33c0c56c9a8343fe7bb40f"
+      },
+      "jfg_poc.dll": {
+        "size": 51200,
+        "sha256": "5292f6c506c4572b3c684a503dbaea7049a7cf63f0deba3ebfc8ad5ce5ca49bf"
+      }
+    }
+  }
+}

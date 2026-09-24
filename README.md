@@ -10,6 +10,8 @@ Para alterações de descompilação, a referência de validação é recompilar
 
 Consulte [a direção e a base do fork](docs/FORK.md) e [as instruções de desenvolvimento](AGENTS.md). ROMs, arquivos extraídos e binários de jogo ficam fora do Git.
 
+Na branch experimental `port/recomp-poc`, a [prova de recompilação para PC](port/README.md) executa funções reais do jogo e compara seus resultados com o MIPS original. O alvo é Windows x64 com GPU NVIDIA; a etapa atual valida CPU e realocações locais, antes da integração gráfica.
+
 ## Instruções de compilação herdadas
 
 A repository exploring a decompilation of Jet Force Gemini.

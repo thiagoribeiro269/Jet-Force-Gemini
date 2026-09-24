@@ -47,7 +47,9 @@ O código de jogo permaneceu na base escolhida. A preparação do fork acrescent
 
 Este checkout recompila uma ROM para N64. Um port para outra arquitetura exige trabalho adicional na execução, nos gráficos, no áudio e nas demais interfaces com o hardware.
 
-A recompilação estática é uma alternativa a investigar, usando referências como [N64Recomp](https://github.com/N64Recomp/N64Recomp) e [Zelda64Recomp](https://github.com/Zelda64Recomp/Zelda64Recomp). Ela não depende de concluir toda a descompilação em C legível, mas exige metadados e adaptação específicos do jogo. A viabilidade desse caminho para Jet Force Gemini ainda não foi demonstrada neste fork.
+A recompilação estática usa referências como [N64Recomp](https://github.com/N64Recomp/N64Recomp) e [Zelda64Recomp](https://github.com/Zelda64Recomp/Zelda64Recomp). Ela não depende de concluir toda a descompilação em C legível, mas exige metadados e adaptação específicos do jogo.
+
+Em 24/09/2026, Thiago autorizou o início do trabalho e escolheu **Windows x64 com GPU NVIDIA** como alvo. A branch `port/recomp-poc` contém a [primeira prova de CPU](../port/README.md): funções reais do programa principal e de dois overlays, com validação diferencial contra MIPS64 e contra a rotina original de realocação. A viabilidade do port completo, incluindo gráficos F3DJFG, áudio e boot, permanece em investigação.
 
 ## Créditos e arquivos de jogo
 

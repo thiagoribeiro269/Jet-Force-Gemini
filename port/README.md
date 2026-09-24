@@ -231,7 +231,12 @@ sintetizador, buffers, filas e a thread de áudio, que permanece sem iniciar.
 As três configurações passaram no Linux, contra o MIPS original e no Windows
 x64. A próxima fronteira é o construtor de players `n_alCSPNew`.
 
-1. Inicializar os players e avançar até a thread e o processamento de áudio.
+O [perfil de players](audio_players/README.md) também já cria os dois players
+de sequências e o player de efeitos, incluindo suas filas e eventos iniciais.
+O percurso passou no Linux, contra o MIPS original e no Windows x64, e para
+antes de `amGo`, com a thread de áudio ainda parada.
+
+1. Integrar `amGo`, os eventos dos players e o processamento de áudio.
 2. Ampliar dependências entre overlays e alcançar o boot completo.
 3. Provar uma via de renderização compatível com F3DJFG, mantendo o alvo
    Windows/NVIDIA definido por Thiago.

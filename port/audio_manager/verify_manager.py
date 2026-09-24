@@ -16,8 +16,8 @@ from checks_manager import ManagerSession, require, load_native_library
 
 
 class ManagerOracle(BootstrapOracle):
-    def __init__(self, *args):
-        super().__init__(*args, boundary_name="n_alCSPNew", native_imports=("osAiSetFrequency",))
+    def __init__(self, *args, boundary_name="n_alCSPNew"):
+        super().__init__(*args, boundary_name=boundary_name, native_imports=("osAiSetFrequency",))
         self.cpu.mem_map(0x04500000, 0x1000)
         self.audio_writes = []
         self.cpu.hook_add(UC_HOOK_MEM_WRITE, self.observe_ai, begin=0x04500000, end=0x04500FFF)
@@ -27,7 +27,8 @@ class ManagerOracle(BootstrapOracle):
         self.audio_writes.append([address, value & 0xFFFFFFFF])
 
 
-def run(elf_path, rom_path, manifest_path, library_path, report_path):
+def run(elf_path, rom_path, manifest_path, library_path, report_path, *,
+        session_class=ManagerSession, boundary_name="n_alCSPNew"):
     manifest, rom = json.loads(manifest_path.read_text()), rom_path.read_bytes()
     with elf_path.open("rb") as file:
         syms = ELFFile(file).get_section_by_name(".symtab")
@@ -36,9 +37,9 @@ def run(elf_path, rom_path, manifest_path, library_path, report_path):
     lib = load_native_library(library_path)
     cases = []
     for tv in (1, 0, 2):
-        session = ManagerSession(lib, rom, manifest, tv, dirty_heap=True)
+        session = session_class(lib, rom, manifest, tv, dirty_heap=True)
         try:
-            oracle = ManagerOracle(session.native.snapshot(), rom, manifest, symbols)
+            oracle = ManagerOracle(session.native.snapshot(), rom, manifest, symbols, boundary_name=boundary_name)
             registers = [0] * 32
             registers[29], registers[31] = sx32(0x80780000 - 0x10), sx32(RETURN)
             oracle.call(symbols["mainInitGame"], registers, budget=15000000)
@@ -62,7 +63,7 @@ def run(elf_path, rom_path, manifest_path, library_path, report_path):
             if expected != actual:
                 offset = next(i for i, (a, b) in enumerate(zip(expected, actual)) if a != b)
                 raise AssertionError(f"Manager RAM differs at {offset:08X}: {expected[offset:offset+16].hex()} != {actual[offset:offset+16].hex()}")
-            cases.append({"name": f"original_manager_tv_{tv}", "status": "passed", "boundary": boundary,
+            cases.append({"name": f"original_{session_class.profile_key.removesuffix('_profile')}_tv_{tv}", "status": "passed", "boundary": boundary,
                           "compared_gprs": list(compared), "rom_transfers": len(transfers), "ai_writes": native_ai_writes,
                           "masked_regions": [[f"0x{a:08X}", n] for a,n in regions],
                           "ram_sha256": hashlib.sha256(actual).hexdigest()})
@@ -73,7 +74,7 @@ def run(elf_path, rom_path, manifest_path, library_path, report_path):
     report = {"status": "passed", "cases": cases, "limits": [
         "Original osAiSetFrequency executes with observed MMIO; other explicit platform hooks retained",
         "17 GPRs and RAM compared with kernel/wait-list/call-stack exclusions; no general FPU/FCSR proof",
-        "Audio thread is created but not started; stops before n_alCSPNew"]}
+        f"Audio thread is created but not started; stops before {boundary_name}"]}
     report_path.write_text(json.dumps(report, indent=2) + "\n")
 
 

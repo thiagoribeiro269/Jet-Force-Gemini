@@ -24,6 +24,7 @@ def configure_manager(lib):
 
 
 class ManagerSession(BootstrapSession):
+    profile_key = "manager_profile"
     def __init__(self, lib, rom, manifest, tv=1, dirty_heap=False):
         configure_manager(lib)
         super().__init__(lib, rom, manifest, tv, dirty_heap=dirty_heap)
@@ -51,7 +52,7 @@ class ManagerSession(BootstrapSession):
         require_success(self.lib.jfg_threads_error(slot, ctypes.byref(target), ctypes.byref(site)), "Read player boundary")
         table = self.word(self.symbols["overlayTable"])
         base36, base25 = self.word(table + 36 * 32), self.word(table + 25 * 32)
-        profile = self.manifest["manager_profile"]
+        profile = self.manifest[self.profile_key]
         require((state, status, target.value, site.value) == (3, -3, profile["boundary_target"], base25 + profile["boundary_call_offset"]),
                 f"Unexpected manager stop: {(state, status, hex(target.value), hex(site.value))}")
         require(created and (thread_state.value, thread_status.value) == (0, 0), "Audio thread was not left created and unstarted")
@@ -59,12 +60,13 @@ class ManagerSession(BootstrapSession):
                 "call_site": f"0x{site.value:08X}", "overlay36": f"0x{base36:08X}", "overlay25": f"0x{base25:08X}"}
 
 
-def run(library_path, rom_path, manifest_path, report_path):
+def run(library_path, rom_path, manifest_path, report_path, *, session_class=ManagerSession,
+        extra_checks=None, label="audio manager"):
     lib = load_native_library(library_path)
     manifest, rom = json.loads(manifest_path.read_text()), rom_path.read_bytes()
     cases = []
     for tv in (1, 0, 2):
-        session = ManagerSession(lib, rom, manifest, tv, dirty_heap=True)
+        session = session_class(lib, rom, manifest, tv, dirty_heap=True)
         try:
             boundary = session.bootstrap()
             assets = check_audio_assets(session, initial_heap_only=False)
@@ -83,15 +85,17 @@ def run(library_path, rom_path, manifest_path, report_path):
             frame_counts = {name: session.word(session.symbols[name]) for name in
                             ("D_800F2168_BA118", "D_800F216C_BA11C", "D_800F2170_BA120")}
             transfers = [e for e in session.native.events() if e[0] == 1]
+            extra = extra_checks(session) if extra_checks else {}
         finally:
             joined = session.close()
         require(joined == 3 and session.ai()["active"] == 0, "Manager session did not retire its workers and AI state")
-        cases.append({"name": f"manager_creation_tv_{tv}", "status": "passed", "boundary": boundary,
+        cases.append({"name": f"{session_class.profile_key.removesuffix('_profile')}_creation_tv_{tv}", "status": "passed", "boundary": boundary,
                       "ai": ai, "assets": assets, "queues": queues, "frame_counts": frame_counts,
-                      "rom_transfers": len(transfers), "threads_joined": joined})
-        print(f"PASS audio manager TV {tv}: {ai['actual']} Hz, {heap_used} heap bytes, {joined} threads joined", flush=True)
+                      "rom_transfers": len(transfers), "threads_joined": joined, "extra_checks": extra})
+        print(f"PASS {label} TV {tv}: {ai['actual']} Hz, {heap_used} heap bytes, {joined} threads joined", flush=True)
     report = {"status": "passed", "platform": platform.platform(), "cases": cases,
-              "limits": ["Audio thread created but not started; no samples or device output", "Sequence player constructor remains deferred"]}
+              "limits": ["Audio thread created but not started; no samples or device output",
+                         f"Stops before {manifest[session_class.profile_key]['boundary_function']}"]}
     report_path.write_text(json.dumps(report, indent=2) + "\n")
     return report
 

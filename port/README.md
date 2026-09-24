@@ -236,7 +236,16 @@ de sequências e o player de efeitos, incluindo suas filas e eventos iniciais.
 O percurso passou no Linux, contra o MIPS original e no Windows x64, e para
 antes de `amGo`, com a thread de áudio ainda parada.
 
-1. Integrar `amGo`, os eventos dos players e o processamento de áudio.
+O [perfil de início de áudio](audio_start/README.md) completa `amInit`, inicia
+a thread e verifica sua primeira espera, o despertar por mensagem de controle
+e a falha explícita ao solicitar um frame ainda não implementado. Passou no
+Linux e no Windows x64, com referência MIPS para a inicialização. A próxima
+fronteira do bootstrap é `amInitAudioMap`; ainda não há saída de som.
+
+As dependências e pendências de distribuição estão no
+[inventário de licenças](THIRD_PARTY_NOTICES.md).
+
+1. Integrar `amInitAudioMap` e o processamento de eventos/amostras de áudio.
 2. Ampliar dependências entre overlays e alcançar o boot completo.
 3. Provar uma via de renderização compatível com F3DJFG, mantendo o alvo
    Windows/NVIDIA definido por Thiago.

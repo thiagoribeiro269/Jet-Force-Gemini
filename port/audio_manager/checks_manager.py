@@ -25,6 +25,7 @@ def configure_manager(lib):
 
 class ManagerSession(BootstrapSession):
     profile_key = "manager_profile"
+    expected_audio_state = 0
     def __init__(self, lib, rom, manifest, tv=1, dirty_heap=False):
         configure_manager(lib)
         super().__init__(lib, rom, manifest, tv, dirty_heap=dirty_heap)
@@ -53,9 +54,13 @@ class ManagerSession(BootstrapSession):
         table = self.word(self.symbols["overlayTable"])
         base36, base25 = self.word(table + 36 * 32), self.word(table + 25 * 32)
         profile = self.manifest[self.profile_key]
-        require((state, status, target.value, site.value) == (3, -3, profile["boundary_target"], base25 + profile["boundary_call_offset"]),
+        caller_overlay = profile["boundary_call_overlay"]
+        caller = next(s for s in self.manifest["sections"] if s["overlay"] == caller_overlay)
+        caller_base = self.word(table + caller_overlay * 32) if caller_overlay else caller["vram"]
+        require((state, status, target.value, site.value) == (3, -3, profile["boundary_target"], caller_base + profile["boundary_call_offset"]),
                 f"Unexpected manager stop: {(state, status, hex(target.value), hex(site.value))}")
-        require(created and (thread_state.value, thread_status.value) == (0, 0), "Audio thread was not left created and unstarted")
+        require(created and (thread_state.value, thread_status.value) == (self.expected_audio_state, 0),
+                f"Unexpected audio thread state: {(created, thread_state.value, thread_status.value)}")
         return {"function": profile["boundary_function"], "status": status, "target": f"0x{target.value:08X}",
                 "call_site": f"0x{site.value:08X}", "overlay36": f"0x{base36:08X}", "overlay25": f"0x{base25:08X}"}
 
@@ -94,7 +99,8 @@ def run(library_path, rom_path, manifest_path, report_path, *, session_class=Man
                       "rom_transfers": len(transfers), "threads_joined": joined, "extra_checks": extra})
         print(f"PASS {label} TV {tv}: {ai['actual']} Hz, {heap_used} heap bytes, {joined} threads joined", flush=True)
     report = {"status": "passed", "platform": platform.platform(), "cases": cases,
-              "limits": ["Audio thread created but not started; no samples or device output",
+              "limits": [("Audio thread started and waiting; no samples or device output" if session_class.expected_audio_state == 1
+                          else "Audio thread created but not started; no samples or device output"),
                          f"Stops before {manifest[session_class.profile_key]['boundary_function']}"]}
     report_path.write_text(json.dumps(report, indent=2) + "\n")
     return report

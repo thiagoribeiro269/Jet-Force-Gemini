@@ -4,6 +4,7 @@
 - Este fork aceita desenvolvimento assistido por IA. Revise as alterações e declare o uso de assistência de IA ao descrever contribuições geradas dessa forma.
 - A base escolhida por Thiago é `f409c111053c671ae91051a6cdff277e0af7d95e`, a contribuição aceita no PR original #2. Não sincronize mudanças posteriores do original sem uma nova solicitação de Thiago.
 - O desenvolvimento segue neste fork. Não abra issues ou pull requests no projeto original sem solicitação explícita.
+- O alvo escolhido é Windows x64 com GPU NVIDIA. Nos testes, preserve processos e serviços preexistentes; não os encerre para liberar recursos. Acesso remoto permanece limitado ao método e ao escopo autorizados na conversa.
 - Preserve os créditos e o histórico do projeto original. Não atribua uma nova licença ao código herdado: não há uma licença geral explícita na raiz desta base.
 - Antes de editar, confira a branch, o estado da árvore de trabalho e eventuais instruções mais específicas. Preserve alterações já existentes.
 - Mantenha ROMs, assets extraídos e binários de jogo fora do controle de versão. Use a ROM local somente como entrada para extração e validação.

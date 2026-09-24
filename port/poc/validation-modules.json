@@ -1,0 +1,255 @@
+{
+  "recorded_at": "2026-09-24T01:48:51.559044-03:00",
+  "stage": "external_calls_and_basic_module_loading",
+  "game_base": "f409c111053c671ae91051a6cdff277e0af7d95e",
+  "runtime_revision": "cdf5abbd5026fef5c364c676e4667c45e42b6863",
+  "recompiler_revision": "81213c1831fab2521a6a5459c67b63437d67e253",
+  "recompiler_adapter": "port/recompiler/driver.cpp",
+  "upstream_sources_modified": false,
+  "differential_validation": {
+    "status": "passed",
+    "host_os": "Linux",
+    "host_arch": "x86_64",
+    "target": "Windows x64 / NVIDIA; CPU proof has no graphics backend",
+    "rom_sha1": "493ced9008dbe932d6e91179b68e8630cf23a023",
+    "oracle": "Unicorn 2.1.4, MIPS64 R4000, big-endian",
+    "functions": [
+      {
+        "function": "mainGetZBCheck",
+        "overlay": 0,
+        "cases": 24,
+        "load_bases": [
+          "0x80000400"
+        ]
+      },
+      {
+        "function": "mainGameWindowChanging",
+        "overlay": 0,
+        "cases": 24,
+        "load_bases": [
+          "0x80000400"
+        ]
+      },
+      {
+        "function": "mainSetAnimGroup",
+        "overlay": 0,
+        "cases": 24,
+        "load_bases": [
+          "0x80000400"
+        ]
+      },
+      {
+        "function": "mainGetAnimGroup",
+        "overlay": 0,
+        "cases": 24,
+        "load_bases": [
+          "0x80000400"
+        ]
+      },
+      {
+        "function": "mainChangeCameras",
+        "overlay": 0,
+        "cases": 24,
+        "load_bases": [
+          "0x80000400"
+        ]
+      },
+      {
+        "function": "mainGetNextCharacter",
+        "overlay": 0,
+        "cases": 24,
+        "load_bases": [
+          "0x80000400"
+        ]
+      },
+      {
+        "function": "mainGetNextLevel",
+        "overlay": 0,
+        "cases": 24,
+        "load_bases": [
+          "0x80000400"
+        ]
+      },
+      {
+        "function": "mainSyncNextLevel",
+        "overlay": 0,
+        "cases": 24,
+        "load_bases": [
+          "0x80000400"
+        ]
+      },
+      {
+        "function": "mainSetMode",
+        "overlay": 0,
+        "cases": 24,
+        "load_bases": [
+          "0x80000400"
+        ]
+      },
+      {
+        "function": "mainGetGame",
+        "overlay": 0,
+        "cases": 24,
+        "load_bases": [
+          "0x80000400"
+        ]
+      },
+      {
+        "function": "mainGetCurrentLevel",
+        "overlay": 0,
+        "cases": 24,
+        "load_bases": [
+          "0x80000400"
+        ]
+      },
+      {
+        "function": "mainGetGameArrayPtr",
+        "overlay": 0,
+        "cases": 24,
+        "load_bases": [
+          "0x80000400"
+        ]
+      },
+      {
+        "function": "mainGetNumberOfCameras",
+        "overlay": 0,
+        "cases": 24,
+        "load_bases": [
+          "0x80000400"
+        ]
+      },
+      {
+        "function": "GetRegionIndex",
+        "overlay": 3,
+        "cases": 72,
+        "load_bases": [
+          "0x80200000",
+          "0x803FF000",
+          "0x80508000"
+        ]
+      },
+      {
+        "function": "pauseGetScreen",
+        "overlay": 19,
+        "cases": 72,
+        "load_bases": [
+          "0x80200000",
+          "0x803FF000",
+          "0x80508000"
+        ]
+      },
+      {
+        "function": "pauseGetPauseCharacter",
+        "overlay": 19,
+        "cases": 72,
+        "load_bases": [
+          "0x80200000",
+          "0x803FF000",
+          "0x80508000"
+        ]
+      },
+      {
+        "function": "frontSetInstrumentsHide",
+        "overlay": 6,
+        "cases": 72,
+        "load_bases": [
+          "0x80200000",
+          "0x803FF000",
+          "0x80508000"
+        ]
+      },
+      {
+        "function": "func_overlay_18_0120207C_1F31A54",
+        "overlay": 18,
+        "cases": 72,
+        "load_bases": [
+          "0x80200000",
+          "0x803FF000",
+          "0x80508000"
+        ]
+      },
+      {
+        "function": "func_overlay_32_02001D2C_1F526FC",
+        "overlay": 32,
+        "cases": 72,
+        "load_bases": [
+          "0x80200000",
+          "0x803FF000",
+          "0x80508000"
+        ]
+      },
+      {
+        "function": "func_overlay_32_02001D84_1F52754",
+        "overlay": 32,
+        "cases": 72,
+        "load_bases": [
+          "0x80200000",
+          "0x803FF000",
+          "0x80508000"
+        ]
+      }
+    ],
+    "total_cases": 816,
+    "original_linker_groups_executed": 792,
+    "original_linker_pairs_executed": 432,
+    "original_linker_call_relocations_executed": 360,
+    "native_cross_section_calls": 162,
+    "call_targets_and_return_addresses_compared": 162,
+    "missing_dependency_checks": 12,
+    "conditional_paths_without_dependency": 3,
+    "loader_checks": {
+      "load_unload_reload_cycles": 15,
+      "overlap_rejections": 15,
+      "nonempty_bss_reset_checks": 12,
+      "empty_bss_boundary_checks": 3,
+      "stale_address_checks": 15
+    },
+    "memory_mutating_cases": 384,
+    "comparison": "All 32 general registers and all 8 MiB of guest RAM after every call",
+    "limits": [
+      "Selected integer functions only",
+      "Selected local/external HI16/LO16 and external JAL relocations",
+      "No full runLink loader, boot, graphics, audio or gameplay",
+      "No FPU, exceptions or whole-console timing validation",
+      "Windows/GPU execution requires its own test run"
+    ]
+  },
+  "windows_cross_build": {
+    "target": "Windows x64",
+    "toolchain": "LLVM-MinGW 20260922 / Clang 23.1.2",
+    "compiled_functions": 20,
+    "executed_on_windows": false,
+    "gpu_tested": false,
+    "files": {
+      "jfg_poc_smoke.exe": {
+        "size": 68608,
+        "sha256": "617be7fe23ab820f8b9a90bd618c00b5ecbd68751082472a4ea6c15ad1859bc5",
+        "dll_imports": [
+          "jfg_poc.dll",
+          "KERNEL32.dll",
+          "api-ms-win-crt-stdio-l1-1-0.dll",
+          "api-ms-win-crt-runtime-l1-1-0.dll",
+          "api-ms-win-crt-locale-l1-1-0.dll",
+          "api-ms-win-crt-heap-l1-1-0.dll",
+          "api-ms-win-crt-private-l1-1-0.dll",
+          "api-ms-win-crt-string-l1-1-0.dll",
+          "api-ms-win-crt-math-l1-1-0.dll",
+          "api-ms-win-crt-environment-l1-1-0.dll"
+        ]
+      },
+      "jfg_poc.dll": {
+        "size": 55808,
+        "sha256": "82166ca7ad37e9dbbecf5cbcde0b37500951a01c5dc94c71e8a7f7b5c6d001eb",
+        "dll_imports": [
+          "KERNEL32.dll",
+          "api-ms-win-crt-stdio-l1-1-0.dll",
+          "api-ms-win-crt-private-l1-1-0.dll",
+          "api-ms-win-crt-runtime-l1-1-0.dll",
+          "api-ms-win-crt-string-l1-1-0.dll"
+        ]
+      }
+    }
+  },
+  "package_sha256": "0519fe0caa5b485a64a13894115d719128c0c8760958abee86fa667b4a5b53f2",
+  "previous_windows_validation": "validation.json; tested the earlier 16-function binary only"
+}

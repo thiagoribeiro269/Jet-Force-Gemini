@@ -16,6 +16,7 @@ if(WIN32)
     set_target_properties(jfg_poc PROPERTIES PREFIX "")
 endif()
 target_include_directories(jfg_poc PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}"
     "${JFG_PROOF_DIR}"
     "${CMAKE_CURRENT_SOURCE_DIR}/../vendor/N64ModernRuntime/N64Recomp/include")
 if(MSVC)

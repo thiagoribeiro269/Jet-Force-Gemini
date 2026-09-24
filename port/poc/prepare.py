@@ -26,12 +26,14 @@ FUNCTIONS = (
     "mainGetNextLevel", "mainSyncNextLevel", "mainSetMode", "mainGetGame",
     "mainGetCurrentLevel", "mainGetGameArrayPtr", "mainGetNumberOfCameras",
     "GetRegionIndex", "pauseGetScreen", "pauseGetPauseCharacter",
+    "frontSetInstrumentsHide", "func_overlay_18_0120207C_1F31A54",
+    "func_overlay_32_02001D2C_1F526FC", "func_overlay_32_02001D84_1F52754",
 )
 REFERENCE_SYMBOLS = (
     "ProcessRelocationEntry", "ResolveRelocAddress", "PatchInstruction",
     "overlayTable", "overlayRomTable", "gRelocTextBase", "gRelocDataBase",
-    "__DATA_SECTION_START", "__BSS_SECTION_START", "__BSS_SECTION_END",
-    "mainGameMode",
+    "__CODE_SECTION_START", "__DATA_SECTION_START", "__BSS_SECTION_START", "__BSS_SECTION_END",
+    "mainGameMode", "gameplay",
 )
 
 
@@ -54,15 +56,34 @@ def rom_offset(elf, section):
     return candidates[0]
 
 
-def local_relocations(tool, number, section, selected, rom):
-    """Translate only local HI16/LO16 pairs used by the selected leaf functions.
+def convert_relocations(tool, number, section, selected, rom, sections, reference):
+    """Translate proven local/external HI16/LO16 pairs and external JALs.
 
-    Cross-overlay references, jumps and other relocation forms are rejected,
-    never silently replaced by stubs. The oracle separately executes JFG's
-    original ProcessRelocationEntry to validate these conversions.
+    The oracle independently executes the original linker for every group.
+    Other forms and unlisted dependencies remain explicit errors.
     """
-    converted, pairs = [], []
+    converted, groups = [], []
+    by_overlay = {s["overlay"]: s for s in sections}
     ranges = [(f["offset"], f["offset"] + f["size"]) for f in selected]
+
+    def resolve(entry, addend):
+        if entry.reloc_type == 1:
+            return section, entry.symbol_index + addend
+        if entry.reloc_type != 0:
+            raise ValueError(f"Unsupported relocation source: {entry}")
+        target_overlay, symbol_offset = tool.resolve_ort_entry(entry.symbol_index)
+        anchors = {0: "__CODE_SECTION_START", 0xFFD: "__DATA_SECTION_START",
+                   0xFFE: "__DATA_SECTION_START", 0xFFF: "__BSS_SECTION_START"}
+        if target_overlay in anchors:
+            target = by_overlay[0]
+            offset = reference[anchors[target_overlay]] + symbol_offset - target["vram"] + addend
+        else:
+            if target_overlay not in by_overlay:
+                raise ValueError(f"Missing overlay dependency {target_overlay}: {tool.get_symbol_name(entry.symbol_index)}")
+            target = by_overlay[target_overlay]
+            offset = symbol_offset + addend
+        return target, offset
+
     for secondary in (False, True):
         entries = tool.get_relocation_entries(number, secondary=secondary)
         index = 0
@@ -71,10 +92,28 @@ def local_relocations(tool, number, section, selected, rom):
             if not any(lo <= entry.target_offset < hi for lo, hi in ranges):
                 index += 1
                 continue
-            if entry.reloc_type != 1 or entry.patch_type != 5 or index + 1 >= len(entries):
+            group = {"table": "secondary" if secondary else "primary", "index": index,
+                     "symbol_index": entry.symbol_index, "source_type": entry.reloc_type}
+            if entry.reloc_type == 0 and entry.patch_type == 4:
+                word = struct.unpack_from(">I", rom, section["rom"] + entry.target_offset)[0]
+                if word >> 26 != 3:
+                    raise ValueError("This proof supports external JAL relocation, not other jump forms")
+                target, target_offset = resolve(entry, 0)
+                callee = next((f for f in target["functions"] if f["offset"] == target_offset), None)
+                if callee is None:
+                    raise ValueError(f"Unlisted function dependency: {tool.get_symbol_name(entry.symbol_index)}")
+                converted.append({"vram": section["vram"] + entry.target_offset,
+                                  "target_vram": target["vram"] + target_offset,
+                                  "target_section": target["index"], "type": "R_MIPS_26"})
+                group.update(kind="call", consumed=1, patch_offset=entry.target_offset,
+                             target_section=target["index"], target_offset=target_offset, callee=callee["name"])
+                groups.append(group)
+                index += 1
+                continue
+            if entry.reloc_type not in (0, 1) or entry.patch_type != 5 or index + 1 >= len(entries):
                 raise ValueError(f"Unsupported proof relocation in overlay {number}: {entry}")
             low = entries[index + 1]
-            if (low.reloc_type, low.patch_type, low.symbol_index) != (1, 6, entry.symbol_index):
+            if (low.reloc_type, low.patch_type, low.symbol_index) != (entry.reloc_type, 6, entry.symbol_index):
                 raise ValueError(f"Invalid HI16/LO16 pair in overlay {number}")
             if not any(lo <= low.target_offset < hi for lo, hi in ranges):
                 raise ValueError("Relocation pair crosses the selected function boundary")
@@ -83,21 +122,23 @@ def local_relocations(tool, number, section, selected, rom):
             if hi_word >> 26 != 0x0F:
                 raise ValueError("HI16 relocation does not refer to a LUI instruction")
             signed_low = struct.unpack(">h", struct.pack(">H", lo_word & 0xFFFF))[0]
-            target_offset = entry.symbol_index + ((hi_word & 0xFFFF) << 16) + signed_low
-            if not 0 <= target_offset < section["memory_size"]:
-                raise ValueError("Local relocation target is outside overlay memory")
+            target, target_offset = resolve(entry, ((hi_word & 0xFFFF) << 16) + signed_low)
+            if not 0 <= target_offset < target["memory_size"]:
+                raise ValueError("Relocation target is outside section memory")
             for rel, kind in ((entry, "R_MIPS_HI16"), (low, "R_MIPS_LO16")):
                 converted.append({"vram": section["vram"] + rel.target_offset,
-                                  "target_vram": section["vram"] + target_offset,
+                                  "target_vram": target["vram"] + target_offset,
+                                  "target_section": target["index"],
                                   "type": kind})
-            pairs.append({
-                "table": "secondary" if secondary else "primary",
-                "index": index, "hi_offset": entry.target_offset,
-                "lo_offset": low.target_offset, "target_offset": target_offset,
-                "symbol_index": entry.symbol_index,
-            })
+            group.update(kind="pair", consumed=2, hi_offset=entry.target_offset,
+                         lo_offset=low.target_offset, target_offset=target_offset,
+                         target_section=target["index"])
+            groups.append(group)
             index += 2
-    return converted, pairs
+    converted.sort(key=lambda rel: rel["vram"])
+    if len({rel["vram"] for rel in converted}) != len(converted):
+        raise ValueError("Duplicate relocation sites require a separate runtime analysis")
+    return converted, groups
 
 
 def prepare(elf_path: Path, rom_path: Path, out: Path):
@@ -154,9 +195,10 @@ def prepare(elf_path: Path, rom_path: Path, out: Path):
 
     toml = []
     for section in sections:
-        relocs, pairs = local_relocations(tool, section["overlay"], section, section["functions"], rom) if section["overlay"] else ([], [])
+        relocs, groups = convert_relocations(tool, section["overlay"], section, section["functions"], rom,
+                                             sections, reference) if section["overlay"] else ([], [])
         section["relocations"] = relocs
-        section["relocation_pairs"] = pairs
+        section["relocation_groups"] = groups
         toml.extend(["[[section]]", f'name = {json.dumps(section["name"])}',
                      f'rom = 0x{section["rom"]:X}', f'vram = 0x{section["vram"]:X}',
                      f'size = 0x{section["size"]:X}', "functions = ["])
@@ -164,12 +206,11 @@ def prepare(elf_path: Path, rom_path: Path, out: Path):
             toml.append('  { name = "%s", vram = 0x%X, size = 0x%X },' %
                         (function["name"], function["vram"], function["size"]))
         toml.append("]")
-        if relocs:
-            toml.append("relocs = [")
-            for rel in relocs:
-                toml.append('  { vram = 0x%X, target_vram = 0x%X, type = "%s" },' %
-                            (rel["vram"], rel["target_vram"], rel["type"]))
-            toml.append("]")
+        toml.append("relocs = [")
+        for rel in relocs:
+            toml.append('  { vram = 0x%X, target_vram = 0x%X, target_section = %d, type = "%s" },' %
+                        (rel["vram"], rel["target_vram"], rel["target_section"], rel["type"]))
+        toml.append("]")
         toml.append("")
     (out / "symbols.toml").write_text("\n".join(toml), encoding="utf-8")
     config = {"symbols_file_path": "symbols.toml", "rom_file_path": rom_path.resolve().as_posix(),
@@ -186,8 +227,12 @@ def prepare(elf_path: Path, rom_path: Path, out: Path):
         header.append('    { "%s", %s, %d, 0x%Xu },' %
                       (function["name"], function["name"], function["section"], function["offset"]))
     header.append("};")
-    header.append("static const uint32_t poc_section_sizes[] = {" + ",".join(
-        str(s["memory_size"]) for s in sections) + "};")
+    header.append("static const struct PocSection poc_sections[] = {")
+    for section in sections:
+        header.append('    { 0x%Xu, 0x%Xu, 0x%Xu, 0x%Xu },' %
+                      (section["rom"], section["load_size"], section["memory_size"],
+                       0 if section["overlay"] else section["vram"]))
+    header.append("};")
     (out / "poc_symbols.h").write_text("\n".join(header) + "\n", encoding="utf-8")
     main_section = next(s for s in sections if not s["overlay"])
     (out / "poc_smoke.h").write_text(
@@ -201,10 +246,10 @@ def prepare(elf_path: Path, rom_path: Path, out: Path):
                 "overlay_rom_table": tool.offsets["overlay_rom_table"],
                 "overlay_table": tool.offsets["overlay_table"],
                 "overlay_data_base": tool.offsets["overlay_data_base"],
-                "limits": ["Selected integer functions only", "Local HI16/LO16 relocation pairs only",
+                "limits": ["Selected integer functions only", "Selected local/external HI16/LO16 and external JAL relocations",
                            "No full runLink loader, boot, graphics, audio or gameplay"]}
     (out / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
-    print(f"Prepared {len(functions)} functions in {len(sections)} sections; {sum(len(s['relocation_pairs']) for s in sections)} real relocation pairs.")
+    print(f"Prepared {len(functions)} functions in {len(sections)} sections; {sum(len(s['relocation_groups']) for s in sections)} real relocation groups.")
     return manifest
 
 

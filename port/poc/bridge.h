@@ -14,6 +14,12 @@
 
 POC_EXPORT uint32_t jfg_poc_function_count(void);
 POC_EXPORT uint32_t jfg_poc_address(const char *name);
+POC_EXPORT uint32_t jfg_poc_last_call_count(void);
+POC_EXPORT uint32_t jfg_poc_last_call_target(void);
+POC_EXPORT uint64_t jfg_poc_last_return_address(void);
 POC_EXPORT int jfg_poc_set_section(uint32_t index, uint32_t base);
+POC_EXPORT int jfg_poc_load_section(uint32_t index, uint32_t base, uint8_t *rdram,
+                                    size_t ram_size, const uint8_t *rom, size_t rom_size);
+POC_EXPORT int jfg_poc_unload_section(uint32_t index);
 POC_EXPORT int jfg_poc_run(uint32_t address, uint8_t *rdram, size_t size,
                            const uint64_t *input, uint64_t *output);

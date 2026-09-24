@@ -51,6 +51,8 @@ A recompilação estática usa referências como [N64Recomp](https://github.com/
 
 Em 24/09/2026, Thiago autorizou o início do trabalho e escolheu **Windows x64 com GPU NVIDIA** como alvo. A branch `port/recomp-poc` contém a [primeira prova de CPU](../port/README.md): funções reais do programa principal e de dois overlays, com validação diferencial contra MIPS64 e contra a rotina original de realocação. A viabilidade do port completo, incluindo gráficos F3DJFG, áudio e boot, permanece em investigação.
 
+A ampliação seguinte cobre 20 funções e chamadas dos overlays ao programa principal, além de um carregador básico com BSS e proteção contra sobreposição. Foram aprovadas 816 comparações diferenciais no Linux. A documentação do port mantém separadas a validação Windows dos primeiros binários e a evidência da versão ampliada.
+
 ## Créditos e arquivos de jogo
 
 Preserve o histórico e a autoria das contribuições herdadas. Esta decisão de desenvolvimento não altera licenças nem atribuições existentes. A raiz desta base não contém uma licença geral explícita.

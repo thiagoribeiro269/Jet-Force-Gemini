@@ -12,10 +12,11 @@ posteriores do projeto original.
 ## O que o protótipo faz
 
 1. Confere a ROM US pelo SHA-1 e compara com ela as seções utilizadas do ELF.
-2. Exporta metadados de 16 funções reais: 13 do programa principal e três dos
-   overlays 3 e 19. As funções são escolhidas explicitamente em `poc/prepare.py`.
-3. Converte três pares de realocações locais HI16/LO16 para o formato do
-   N64Recomp. Referências externas e tipos não tratados causam erro.
+2. Exporta metadados de 20 funções reais: 13 do programa principal e sete dos
+   overlays 3, 6, 18, 19 e 32. As funções são escolhidas explicitamente em
+   `poc/prepare.py`.
+3. Converte pares HI16/LO16 locais e externos e chamadas JAL ao programa
+   principal. Dependências não incluídas e tipos não tratados causam erro.
 4. Recompila os bytes MIPS da ROM em C, usando a versão fixada do N64Recomp,
    e compila uma biblioteca nativa de 64 bits.
 5. Executa os mesmos casos no código nativo e no Unicorn, configurado como
@@ -25,8 +26,10 @@ posteriores do projeto original.
    `ProcessRelocationEntry` do JFG, incluindo suas funções auxiliares. O resultado
    esperado não é calculado pela mesma conversão que estamos testando.
 7. Testa as funções de overlay em três bases de carga, incluindo casos de
-   transporte entre HI16 e LO16, e verifica que um módulo desregistrado não
-   continua acessível pelo despachante do protótipo.
+   transporte entre HI16 e LO16 e os endereços de retorno das chamadas.
+8. Carrega imagens de módulos na RAM representada, zera a BSS, rejeita
+   sobreposições e verifica carga, descarga e recarga. O despachante rejeita
+   endereços antigos e dependências ausentes sem encerrar o processo de teste.
 
 O Unicorn é uma dependência de **teste**, não parte proposta da execução do port.
 Não existem stubs que devolvem sucesso para chamadas de jogo desconhecidas.
@@ -48,20 +51,56 @@ Não existem stubs que devolvem sucesso para chamadas de jogo desconhecidas.
   uma etapa posterior.
 
 A [evidência estruturada](poc/validation.json) registra os casos, limites, versões
-e hashes dos artefatos Windows.
+e hashes dos artefatos Windows dessa primeira etapa de 16 funções.
+
+## Ampliação de módulos — 24/09/2026
+
+- **816 comparações diferenciais** aprovadas em 20 funções, incluindo leituras
+  e alterações de dados e chamadas dos overlays ao programa principal.
+- **792 grupos de realocação** executados pela rotina original: 432 pares
+  HI16/LO16 e 360 realocações de chamadas JAL.
+- **162 chamadas nativas** tiveram quantidade, destino e endereço de retorno
+  comparados com a execução MIPS.
+- **15 ciclos de carga, descarga e recarga**, com verificação de cópia da ROM,
+  BSS, limites de memória, sobreposição e rejeição de endereços antigos.
+- **12 cenários de dependência ausente** retornaram erro controlado. Três
+  caminhos condicionais que não usam a dependência continuaram funcionando.
+
+A [evidência desta ampliação](poc/validation-modules.json) é separada da inicial.
+Os testes desta etapa foram executados no servidor Linux; os binários Windows
+novos foram compilados, mas ainda não executados no PC RTX. A execução Windows
+registrada na etapa anterior corresponde exclusivamente aos binários de 16
+funções, identificados pelos seus hashes.
+
+## Adaptador de recompilação
+
+`port/recompiler/driver.cpp` usa a biblioteca N64Recomp sem alterar seus fontes.
+Nosso frontend interpreta o campo adicional `target_section` nos metadados,
+registra as chamadas JAL como referências a símbolos e emite chamadas pelo
+despachante. Também preserva o endereço de retorno correspondente à posição em
+que o módulo está carregado.
+
+O comando `poc/run.py` compila e utiliza esse frontend. O CLI original do
+N64Recomp não interpreta a extensão `target_section` utilizada nesta etapa.
 
 ## Limites desta etapa
 
-- O despachante de teste não implementa todo o `runLink`, seus ciclos de vida,
-  referências cruzadas, chamadas de inicialização ou alterações de código.
-- A prova cobre funções inteiras e os pares locais selecionados. Não valida
-  ponto flutuante, exceções, temporização, boot nem a campanha.
+- O carregamento básico cobre cópia de código/dados, BSS e registro de funções.
+  Ainda faltam o ciclo completo de `runLink`, callbacks de inicialização,
+  gerenciamento do heap, atualização de todas as referências e modificações
+  gerais de código. Ele não aplica todas as tabelas de realocação à imagem MIPS
+  carregada; a prova diferencial usa o linker original para preparar a referência.
+- As referências externas verificadas nesta etapa ligam overlays ao programa
+  principal. Chamadas entre dois overlays, JALR e demais formas de realocação
+  continuam exigindo provas específicas.
+- A prova cobre funções inteiras selecionadas e permanece em execução de uma
+  única thread. Não valida ponto flutuante, exceções, temporização, boot nem a
+  campanha.
 - O N64ModernRuntime está fixado como dependência; nesta etapa usamos seu
   N64Recomp e os cabeçalhos correspondentes. Os serviços completos do runtime
   ainda não estão integrados.
-- A evidência distingue a suíte diferencial no Linux, o diagnóstico de console
-  já aprovado no Windows e a integração gráfica ainda pendente. O diagnóstico
-  Windows não inicializa nem testa a GPU.
+- A evidência distingue cada versão testada no Linux e no Windows e a integração
+  gráfica ainda pendente. O diagnóstico Windows não inicializa nem testa a GPU.
 - O código gerado, as ROMs e os binários ficam em `build/`, fora do Git.
 
 ## Dependências reproduzíveis
@@ -136,8 +175,8 @@ cmake --build build/port-recomp/windows --parallel 2
 
 ## Próximos marcos
 
-1. Ampliar a prova para referências entre overlays e chamadas indiretas reais.
-2. Integrar carregamento, filas, threads e boot com o runtime completo.
+1. Ampliar a prova para referências entre dois overlays, JALR e callbacks reais.
+2. Integrar o carregador ao estado do jogo, às filas, às threads e ao boot.
 3. Provar uma via de renderização compatível com F3DJFG, mantendo o alvo
    Windows/NVIDIA definido por Thiago.
 4. Avançar para menu, controles, áudio, saves e uma fase jogável.

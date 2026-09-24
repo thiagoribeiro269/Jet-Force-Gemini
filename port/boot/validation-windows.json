@@ -1,0 +1,63 @@
+{
+  "recorded_at": "2026-09-24T13:51:04.9044793Z",
+  "windows": "Microsoft Windows NT 10.0.26200.0",
+  "python": "Python 3.12.10",
+  "package_sha256": "a558a602ea1972f950812976575a2ee13ba108ad3c9d96d864495d4a557079f0",
+  "dll_sha256": "55894721ce5ca2123b0a4644922326b639246a7d17dd2cbbcff2092c5cd47ecf",
+  "smoke_exit": 0,
+  "smoke_output": "PASS: JFG native x64 CPU diagnostic (54 registered functions).\r\nThis is a CPU proof, not a playable game; no graphics or audio are initialized.",
+  "standard_exit": 0,
+  "standard": {
+    "status": "passed",
+    "scope": "native_heap_linker_startup_only",
+    "host_os": "Windows",
+    "host_arch": "AMD64",
+    "rom_sha1": "493ced9008dbe932d6e91179b68e8630cf23a023",
+    "overlay_table_slots": 158,
+    "extended_ram_flag": false,
+    "heap_end": "0x80400000",
+    "modules": {
+      "19": "0x80112100",
+      "6": "0x80113BE0",
+      "32": "0x80115B00",
+      "44": "0x80119250"
+    },
+    "real_init_callback": "_AutoInit00044 -> amAudioLinesReset",
+    "rom_reads": 14,
+    "gpu_initialized": false,
+    "emulator_used": false,
+    "gameplay_available": false
+  },
+  "extended_exit": 0,
+  "extended": {
+    "status": "passed",
+    "scope": "native_heap_linker_startup_only",
+    "host_os": "Windows",
+    "host_arch": "AMD64",
+    "rom_sha1": "493ced9008dbe932d6e91179b68e8630cf23a023",
+    "overlay_table_slots": 158,
+    "extended_ram_flag": true,
+    "heap_end": "0x80600000",
+    "modules": {
+      "19": "0x80112100",
+      "6": "0x80113BE0",
+      "32": "0x80115B00",
+      "44": "0x80119250"
+    },
+    "real_init_callback": "_AutoInit00044 -> amAudioLinesReset",
+    "rom_reads": 14,
+    "gpu_initialized": false,
+    "emulator_used": false,
+    "gameplay_available": false
+  },
+  "stage": "windows_native_heap_linker_startup",
+  "source_commit": "5691ef14a827bc399164f1f73c637dcc8b191489",
+  "package_evidence": "validation.json",
+  "hardware_label": "PC RTX 5070 Ti; CPU-only test",
+  "access_method": "SSH console",
+  "existing_processes_or_services_changed": false,
+  "limits": [
+    "Two native startup runs, not the complete 56-checkpoint MIPS differential suite",
+    "No full boot, rendering, audio output, controller input or gameplay"
+  ]
+}

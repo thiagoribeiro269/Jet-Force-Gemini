@@ -98,8 +98,15 @@ Passaram 56 pontos de comparação com a execução MIPS original, incluindo
 descarga e recarga, nos limites padrão e estendido do heap. A sequência também
 funcionou com o launcher nativo independente do emulador. Os 816 casos da suíte
 anterior continuam aprovados. Consulte [escopo e reprodução](boot/README.md) e
-[evidência](boot/validation.json). O novo pacote foi compilado para Windows,
-mas ainda não executado nessa plataforma.
+[evidência](boot/validation.json). O pacote também foi
+[executado no Windows da RTX](boot/validation-windows.json): inicialização
+nativa aprovada com os limites padrão e estendido do heap. Nenhum teste de GPU
+foi realizado, e isso não transfere para Windows a evidência diferencial Linux.
+
+O [adaptador de filas](runtime/README.md) acrescenta a primeira ligação com os
+serviços do N64ModernRuntime. Ele usa o código original desse runtime e compara
+o comportamento das mensagens com as rotinas MIPS da ROM. A suspensão de
+threads e a ligação dessas chamadas à inicialização do jogo permanecem pendentes.
 
 ## Limites atuais
 
@@ -111,9 +118,9 @@ mas ainda não executado nessa plataforma.
 - A execução permanece em uma única thread. Os efeitos na memória das cargas e
   armazenamentos de ponto flutuante do callback foram comparados, mas não há
   validação geral de FPU, exceções, temporização, boot completo ou campanha.
-- O N64ModernRuntime está fixado como dependência; nesta etapa usamos seu
-  N64Recomp e os cabeçalhos correspondentes. Os serviços completos do runtime
-  ainda não estão integrados.
+- O N64ModernRuntime está fixado como dependência. Usamos seu N64Recomp e
+  validamos o núcleo de filas por um adaptador separado. Os serviços completos
+  do runtime ainda não estão integrados ao jogo.
 - A evidência distingue cada versão testada no Linux e no Windows e a integração
   gráfica ainda pendente. O diagnóstico Windows não inicializa nem testa a GPU.
 - O código gerado, as ROMs e os binários ficam em `build/`, fora do Git.
@@ -190,8 +197,8 @@ cmake --build build/port-recomp/windows --parallel 2
 
 ## Próximos marcos
 
-1. Executar o novo diagnóstico de memória/carregador no Windows x64.
-2. Ampliar dependências entre overlays e integrar filas, threads e boot completo.
+1. Conectar as filas e o agendamento de threads às chamadas do jogo.
+2. Ampliar dependências entre overlays e alcançar o boot completo.
 3. Provar uma via de renderização compatível com F3DJFG, mantendo o alvo
    Windows/NVIDIA definido por Thiago.
 4. Avançar para menu, controles, áudio, saves e uma fase jogável.

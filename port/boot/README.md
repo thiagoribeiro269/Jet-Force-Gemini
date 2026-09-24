@@ -61,9 +61,12 @@ A rotina de áudio usa cargas e armazenamentos de registradores de ponto
 flutuante. Seus efeitos na memória foram comparados; os registradores de ponto
 flutuante não são comparados diretamente e não há validação geral de FPU.
 
-A [evidência estruturada](validation.json) distingue execução Linux, compilação
-Windows e limites. O novo pacote Windows ainda precisa de execução nessa
-plataforma. O diagnóstico inicial já executado na RTX pertence a outra versão.
+A [evidência inicial](validation.json) registra os testes Linux e a compilação
+Windows. A [validação posterior no Windows da RTX](validation-windows.json)
+confirma duas execuções nativas: heap padrão e estendido, quatro módulos e
+callback real, ambas com saída zero. Os hashes identificam o pacote testado.
+As 56 comparações diferenciais continuam sendo evidência do Linux; o launcher
+Windows verifica a sequência de inicialização e não executa aquela suíte inteira.
 
 ## Reproduzir
 
@@ -109,7 +112,8 @@ No Windows, o launcher exige Python x64 3.11+ e a ROM fornecida localmente.
 O `jfg_poc_smoke.exe` sozinho continua testando apenas quatro verificações
 simples em duas funções; ele não executa a inicialização do carregador.
 
-Ainda faltam integração com threads e filas, inicialização completa, mais
+O [adaptador de filas do runtime](../runtime/README.md) é validado separadamente;
+ainda precisa ser conectado às chamadas da inicialização. Faltam threads, mais
 dependências entre módulos, gráficos F3DJFG, áudio, controles e saves. O perfil
 atual opera em uma única thread. Funções do jogo fora do conjunto registrado
 não ficam executáveis apenas porque seus módulos foram carregados.

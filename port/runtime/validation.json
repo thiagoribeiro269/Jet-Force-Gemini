@@ -1,0 +1,123 @@
+{
+  "recorded_at": "2026-09-24T11:06:40.136122-03:00",
+  "stage": "runtime_message_queue_adapter",
+  "game_base": "f409c111053c671ae91051a6cdff277e0af7d95e",
+  "runtime_revision": "cdf5abbd5026fef5c364c676e4667c45e42b6863",
+  "upstream_sources_modified": false,
+  "original_rom_sha1": "493ced9008dbe932d6e91179b68e8630cf23a023",
+  "linux_reference": {
+    "status": "passed",
+    "oracle": "Unicorn 2.1.4, MIPS64 R4000, big-endian",
+    "functions": [
+      "osCreateMesgQueue",
+      "osSendMesg",
+      "osJamMesg",
+      "osRecvMesg"
+    ],
+    "original_mips_operations_compared": 463,
+    "host_boundary_rejections": 128,
+    "rejections_by_status": {
+      "-3": 104,
+      "-1": 16,
+      "-2": 8
+    },
+    "comparison": "API return and all 8 MiB RAM except the 8-byte queue wait-list fields and 576-byte guest call stack scratch",
+    "contract": "Serialized API calls; original interrupt disable/restore hooks, no asynchronous interrupts"
+  },
+  "linux_native_replay": {
+    "status": "passed",
+    "scope": "native_runtime_queues_without_thread_suspension",
+    "host_os": "Linux",
+    "host_arch": "x86_64",
+    "checks": 591,
+    "rejections": 128,
+    "public_return_checks": 459,
+    "capacities": [
+      1,
+      2,
+      4,
+      16
+    ],
+    "comparison": "API return and all 8 MiB RAM except the 8-byte queue wait-list fields and 576-byte guest call stack scratch",
+    "fixture_sha256": "064d40a6e5101e7e8a59e93e894f9de7a6e6084ea00339cd3baa8123dee50b6d",
+    "library_sha256": "3b13ae0580a1ebc0779a2dd1012bee939ce8ffb8a0774b77285231452863f8c8",
+    "emulator_used": false,
+    "threads_started": 0,
+    "gpu_initialized": false
+  },
+  "windows_native_replay": {
+    "recorded_at": "2026-09-24T14:03:36.4690295Z",
+    "exit_code": 0,
+    "windows": "Microsoft Windows NT 10.0.26200.0",
+    "python": "Python 3.12.10",
+    "package_sha256": "d73373c6c24d67779dbc8744658f74efcedf576c2b93cfa59c7dd688a16d3dcd",
+    "report": {
+      "status": "passed",
+      "scope": "native_runtime_queues_without_thread_suspension",
+      "host_os": "Windows",
+      "host_arch": "AMD64",
+      "checks": 591,
+      "rejections": 128,
+      "public_return_checks": 459,
+      "capacities": [
+        1,
+        2,
+        4,
+        16
+      ],
+      "comparison": "API return and all 8 MiB RAM except the 8-byte queue wait-list fields and 576-byte guest call stack scratch",
+      "fixture_sha256": "064d40a6e5101e7e8a59e93e894f9de7a6e6084ea00339cd3baa8123dee50b6d",
+      "library_sha256": "a51ca51dd8e4a7ccd33dc9a90175e2eb1d354519715a2b586fbe15322ced2550",
+      "emulator_used": false,
+      "threads_started": 0,
+      "gpu_initialized": false
+    }
+  },
+  "windows_package": {
+    "name": "jfg-runtime-queues-windows-x64.zip",
+    "size": 280982,
+    "sha256": "d73373c6c24d67779dbc8744658f74efcedf576c2b93cfa59c7dd688a16d3dcd",
+    "toolchain": "LLVM-MinGW 20260922 / Clang 23.1.2",
+    "files": {
+      "jfg_queues.dll": {
+        "size": 790528,
+        "sha256": "a51ca51dd8e4a7ccd33dc9a90175e2eb1d354519715a2b586fbe15322ced2550"
+      },
+      "queue-fixtures.json": {
+        "size": 147796,
+        "sha256": "064d40a6e5101e7e8a59e93e894f9de7a6e6084ea00339cd3baa8123dee50b6d"
+      },
+      "queue_checks.py": {
+        "size": 4989,
+        "sha256": "d148d5533d3bb76cb6de6434e4922690dbd2070bee0e306a1b41a2793a8aa60a"
+      },
+      "README.txt": {
+        "size": 1211,
+        "sha256": "b02dd918365c855c3e20c1b5a860b2c803210ab94894d00d7c71d1368fc4b5f7"
+      }
+    },
+    "dll_imports": [
+      "KERNEL32.dll",
+      "api-ms-win-crt-runtime-l1-1-0.dll",
+      "api-ms-win-crt-heap-l1-1-0.dll",
+      "api-ms-win-crt-private-l1-1-0.dll",
+      "api-ms-win-crt-string-l1-1-0.dll",
+      "api-ms-win-crt-convert-l1-1-0.dll",
+      "api-ms-win-crt-stdio-l1-1-0.dll",
+      "api-ms-win-crt-locale-l1-1-0.dll",
+      "api-ms-win-crt-environment-l1-1-0.dll",
+      "api-ms-win-crt-filesystem-l1-1-0.dll"
+    ]
+  },
+  "remote_execution": {
+    "method": "SSH console",
+    "existing_processes_or_services_changed": false
+  },
+  "limits": [
+    "Adapter tested separately; not yet called by original game startup",
+    "No game threads are created; no scheduler or suspend/resume integration",
+    "Blocking flags work only when the operation completes immediately",
+    "No full boot, rendering, audio, input, saves, or gameplay",
+    "Fixture replay compares memory hashes; it does not execute MIPS on Windows"
+  ]
+}

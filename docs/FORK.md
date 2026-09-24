@@ -53,7 +53,13 @@ Em 24/09/2026, Thiago autorizou o início do trabalho e escolheu **Windows x64 c
 
 A ampliação seguinte cobre 20 funções e chamadas dos overlays ao programa principal, além de um carregador básico com BSS e proteção contra sobreposição. Foram aprovadas 816 comparações diferenciais no Linux. A documentação do port mantém separadas a validação Windows dos primeiros binários e a evidência da versão ampliada.
 
-O [perfil de inicialização da memória e do carregador](../port/boot/README.md) passou a executar o heap e o `runLink` originais recompilados, carregar quatro módulos e chamar a inicialização real de um deles. Foram aprovados 56 pontos de comparação com MIPS, nos limites padrão e estendido do heap, e uma execução nativa sem emulador. O novo diagnóstico foi compilado para Windows, mas ainda não executado lá. Esta etapa não inicia o boot completo nem a parte gráfica.
+O [perfil de inicialização da memória e do carregador](../port/boot/README.md) passou a executar o heap e o `runLink` originais recompilados, carregar quatro módulos e chamar a inicialização real de um deles. Foram aprovados 56 pontos de comparação com MIPS no Linux. A sequência nativa também foi executada no Windows da RTX, nos limites padrão e estendido do heap, sem emulador. Esta etapa não inicia o boot completo nem a parte gráfica.
+
+O [adaptador de filas](../port/runtime/README.md) valida os serviços de mensagens do N64ModernRuntime separadamente, preparando a futura integração com threads e com a inicialização do jogo.
+
+## Melhorias futuras
+
+As ideias para depois da base jogável incluem dublagem em inglês, modelos com mais detalhes e melhorias visuais. São possibilidades para uma etapa posterior; não fazem parte da prova atual de CPU. A prioridade permanece chegar a um port funcional que preserve a identidade do jogo.
 
 ## Créditos e arquivos de jogo
 

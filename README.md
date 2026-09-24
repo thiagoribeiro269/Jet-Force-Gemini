@@ -1,4 +1,16 @@
-# Jet Force Gemini
+# Jet Force Gemini — fork com assistência de IA
+
+Este é o fork independente de [Thiago Ribeiro](https://github.com/thiagoribeiro269/Jet-Force-Gemini), derivado do trabalho de [Ryan Myers e colaboradores](https://github.com/Ryan-Myers/Jet-Force-Gemini).
+
+O desenvolvimento deste fork aceita assistência de IA, com revisão das alterações e verificação dos resultados. As decisões e a validação deste fork são independentes das políticas de contribuição do projeto original.
+
+A base escolhida é o commit [`f409c11`](https://github.com/thiagoribeiro269/Jet-Force-Gemini/commit/f409c111053c671ae91051a6cdff277e0af7d95e), que contém a contribuição de Thiago aceita no [PR original #2](https://github.com/Ryan-Myers/Jet-Force-Gemini/pull/2). Atualizações posteriores do original não são incorporadas automaticamente.
+
+Para alterações de descompilação, a referência de validação é recompilar a versão US e comparar o resultado com a ROM base. Uma compilação bem-sucedida, sozinha, não comprova que o binário confere. Um eventual port nativo para PC será uma etapa distinta; este checkout ainda produz uma ROM para N64.
+
+Consulte [a direção e a base do fork](docs/FORK.md) e [as instruções de desenvolvimento](AGENTS.md). ROMs, arquivos extraídos e binários de jogo ficam fora do Git.
+
+## Instruções de compilação herdadas
 
 A repository exploring a decompilation of Jet Force Gemini.
 
@@ -25,4 +37,3 @@ make setup
 make extract
 make
 ```
-

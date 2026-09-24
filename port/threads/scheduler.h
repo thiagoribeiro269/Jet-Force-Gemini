@@ -10,6 +10,7 @@ POC_EXPORT int jfg_threads_create(uint8_t* ram, uint32_t slot, int32_t id, uint3
                                  uint32_t stack, int32_t priority, const uint64_t* arguments);
 POC_EXPORT int jfg_threads_start(uint8_t* ram, uint32_t slot);
 POC_EXPORT int jfg_threads_result(uint32_t slot, int32_t* state, int32_t* status, uint64_t* registers);
+POC_EXPORT int jfg_threads_error(uint32_t slot, uint32_t* target, uint32_t* site);
 POC_EXPORT int jfg_threads_end(uint8_t* ram);
 POC_EXPORT uint32_t jfg_threads_joined(void);
 int jfg_threads_context(uint8_t* ram, int owner_only);

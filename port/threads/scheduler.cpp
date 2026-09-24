@@ -11,6 +11,9 @@
 #ifdef JFG_EVENT_PROFILE
 #include "events.h"
 #endif
+#ifdef JFG_INIT_PROFILE
+#include "io.h"
+#endif
 
 int jfg_kernel_attach(uint8_t*, int32_t);
 int jfg_kernel_join_retired(uint32_t);
@@ -27,6 +30,7 @@ struct Worker {
     std::atomic<int32_t> state{created};
     std::atomic<bool> entered{false};
     int32_t status = 0;
+    uint32_t error_target = 0, error_site = 0;
 };
 uint8_t* session_ram;
 uint32_t host_slot;
@@ -76,6 +80,8 @@ void run_thread_function(uint8_t* rdram, uint64_t entry, uint64_t stack, uint64_
     input[31] = sign_extend(0x807FF000);
     try {
         worker->status = jfg_poc_run(worker->entry, rdram, 0x800000, input.data(), worker->result.data());
+        worker->error_target = jfg_poc_error_target();
+        worker->error_site = jfg_poc_error_site();
         worker->state.store(worker->status ? failed : completed, std::memory_order_release);
     } catch (ultramodern::thread_terminated&) {
         worker->status = -100;
@@ -137,6 +143,15 @@ int jfg_threads_result(uint32_t slot, int32_t* state, int32_t* status, uint64_t*
     return 0;
 }
 
+int jfg_threads_error(uint32_t slot, uint32_t* target, uint32_t* site) {
+    if (!host_access() || !target || !site) return -1;
+    auto* worker = find_worker(slot);
+    if (!worker || worker->state.load(std::memory_order_acquire) < completed) return -1;
+    *target = worker->error_target;
+    *site = worker->error_site;
+    return 0;
+}
+
 int jfg_threads_queue(uint8_t* ram, uint32_t operation, uint32_t queue,
                       uint32_t value, int32_t argument, int32_t* result) {
     if (!access(ram) || !result || !range(queue, sizeof(OSMesgQueue))) return -1;
@@ -148,7 +163,17 @@ int jfg_threads_queue(uint8_t* ram, uint32_t operation, uint32_t queue,
         // already registered queue can contain live native wait lists.
         if (message_queues.contains(queue) && (mq->blocked_on_recv || mq->blocked_on_send)) return -1;
     } else {
-        if (!message_queues.contains(queue)) return -1;
+        if (!message_queues.contains(queue)) {
+            // JFG polls its zeroed reset queue before its later initialization.
+            // Original libultra returns -1 before touching the buffer in this
+            // exact nonblocking, empty case; preserve that observed behavior.
+            const OSMesgQueue zero{};
+            if (operation == 3 && argument == OS_MESG_NOBLOCK && !std::memcmp(mq, &zero, sizeof(zero))) {
+                *result = -1;
+                return 0;
+            }
+            return -1;
+        }
         if (operation > 3 || (argument != OS_MESG_BLOCK && argument != OS_MESG_NOBLOCK)) return -1;
         if (mq->msgCount <= 0 || mq->msgCount > 0x200000 || mq->validCount < 0 || mq->validCount > mq->msgCount ||
             mq->first < 0 || mq->first >= mq->msgCount || !range(uint32_t(mq->msg), uint32_t(mq->msgCount) * 4) ||
@@ -175,6 +200,9 @@ int jfg_threads_queue(uint8_t* ram, uint32_t operation, uint32_t queue,
 
 int jfg_threads_end(uint8_t* ram) {
     if (!host_access() || ram != session_ram) return -1;
+#ifdef JFG_INIT_PROFILE
+    if (jfg_io_end(ram)) return -1;
+#endif
 #ifdef JFG_EVENT_PROFILE
     if (jfg_events_end(ram)) return -1;
 #endif

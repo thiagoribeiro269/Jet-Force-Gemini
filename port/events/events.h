@@ -16,6 +16,8 @@ int jfg_events_vi_bind(uint8_t* ram, uint32_t queue, uint32_t message, uint32_t 
 int jfg_events_vi_manager(uint8_t* ram, int32_t priority);
 int jfg_events_vi_mode(uint8_t* ram, uint32_t mode);
 int jfg_events_vi_black(uint8_t* ram, uint32_t black);
+int jfg_events_vi_features(uint8_t* ram, uint32_t features);
+POC_EXPORT int jfg_events_vi_state(uint32_t* fields, size_t count);
 int jfg_events_clock(uint8_t* ram, int operation, uint64_t value, uint64_t* result);
 int jfg_events_timer(uint8_t* ram, uint32_t timer, uint64_t countdown, uint64_t interval,
                       uint32_t queue, uint32_t message);

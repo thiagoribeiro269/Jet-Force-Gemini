@@ -120,6 +120,12 @@ reset. Relógios controlado e monotônico permitem verificar timers e acordar
 threads. O VI ainda não produz imagens; os contadores comprovam o processamento
 de mensagens, não renderização.
 
+O [perfil de inicialização e PI](init/README.md) executa o `mainInitGame`
+original até sua primeira chamada de bootstrap ainda não resolvida. Prepara
+buffers de vídeo e filas do RCP, executa o `romCopy` original por DMA e
+descompacta dados reais da ROM. A fronteira atual é `mainInitRlo`, no overlay 36;
+o boot completo e a renderização continuam pendentes.
+
 ## Limites atuais
 
 - O perfil inicial `poc` mantém seu carregador básico. O perfil `boot` executa
@@ -210,7 +216,7 @@ cmake --build build/port-recomp/windows --parallel 2
 
 ## Próximos marcos
 
-1. Integrar vídeo, periféricos/DMA e RCP às demais etapas de `mainInitGame`.
+1. Integrar a chamada dinâmica e o código de `mainInitRlo`, no overlay 36.
 2. Ampliar dependências entre overlays e alcançar o boot completo.
 3. Provar uma via de renderização compatível com F3DJFG, mantendo o alvo
    Windows/NVIDIA definido por Thiago.

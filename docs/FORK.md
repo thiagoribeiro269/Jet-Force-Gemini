@@ -61,6 +61,8 @@ O [perfil de threads cooperativas](../port/threads/README.md) conecta filas e cr
 
 O [perfil de eventos e timers](../port/events/README.md) inicia o scheduler original na ordem US, antes do heap, processa notificações de VI e entrega eventos aos clientes do jogo. Os temporizadores usam relógio controlado ou monotônico do computador e pertencem à sessão. Essa execução ainda não desenha frames nem completa `mainInitGame`.
 
+O [perfil de inicialização e PI](../port/init/README.md) passou a executar `mainInitGame` desde sua entrada, preparando buffers de vídeo, filas do RCP e tabelas lidas da ROM pelo `romCopy` original. A descompressão de um arquivo de 153.616 bytes coincide com MIPS e zlib. O percurso para explicitamente na chamada dinâmica de `mainInitRlo`, no overlay 36; o boot completo e o jogo visual continuam pendentes.
+
 ## Melhorias futuras
 
 As ideias para depois da base jogável incluem dublagem em inglês, modelos com mais detalhes e melhorias visuais. São possibilidades para uma etapa posterior; não fazem parte da prova atual de CPU. A prioridade permanece chegar a um port funcional que preserve a identidade do jogo.

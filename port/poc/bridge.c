@@ -37,6 +37,8 @@ static _Thread_local uint32_t last_call_target;
 static _Thread_local uint64_t last_return_address;
 static _Thread_local uint64_t indirect_target;
 static _Thread_local int indirect_prepared;
+static _Thread_local uint32_t error_target;
+static _Thread_local uint32_t error_site;
 static uint32_t game_table_global;
 static uint32_t game_count_global;
 
@@ -88,12 +90,18 @@ POC_EXPORT int jfg_poc_is_callable(uint32_t address) { return find_function(addr
 POC_EXPORT uint32_t jfg_poc_last_call_count(void) { return call_count; }
 POC_EXPORT uint32_t jfg_poc_last_call_target(void) { return last_call_target; }
 POC_EXPORT uint64_t jfg_poc_last_return_address(void) { return last_return_address; }
+POC_EXPORT uint32_t jfg_poc_error_target(void) { return error_target; }
+POC_EXPORT uint32_t jfg_poc_error_site(void) { return error_site; }
 
 void jfg_poc_call(uint32_t section, uint32_t offset, uint8_t *rdram, recomp_context *ctx) {
     jfg_poc_require_section(section);
     if (offset >= poc_sections[section].memory_size) dispatch_fail(-3);
     recomp_func_t *function = find_function((uint32_t)section_bases[section] + offset);
-    if (!function) dispatch_fail(-3);
+    if (!function) {
+        error_target = (uint32_t)section_bases[section] + offset;
+        error_site = (uint32_t)ctx->r31 - 8;
+        dispatch_fail(-3);
+    }
     call_count++;
     last_call_target = (uint32_t)section_bases[section] + offset;
     last_return_address = ctx->r31;
@@ -106,7 +114,11 @@ void jfg_poc_call_indirect(uint8_t *rdram, recomp_context *ctx) {
     indirect_prepared = 0;
     if (game_table_global && sync_game_sections(rdram)) dispatch_fail(-7);
     recomp_func_t *function = find_function(target);
-    if (!function) dispatch_fail(-3);
+    if (!function) {
+        error_target = target;
+        error_site = (uint32_t)ctx->r31 - 8;
+        dispatch_fail(-3);
+    }
     call_count++;
     last_call_target = target;
     last_return_address = ctx->r31;
@@ -224,6 +236,7 @@ POC_EXPORT int jfg_poc_run(uint32_t address, uint8_t *rdram, size_t size,
     last_call_target = 0;
     last_return_address = 0;
     indirect_prepared = 0;
+    error_target = error_site = 0;
     if (setjmp(dispatch_guard)) {
         dispatch_active = 0;
         return dispatch_error;

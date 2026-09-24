@@ -27,6 +27,7 @@ struct Events {
     uint64_t timer_order = 0;
     Route vi;
     uint32_t vi_mode = 0, retrace_divisor = 1, retraces_left = 1, int_mask = 0x003FFF01u;
+    uint32_t vi_control = 0, vi_features = 0;
     uint64_t vi_period = ticks_per_second / 60, vi_due = 0;
     uint64_t timer_firings = 0, vi_fields = 0, delivered = 0, dropped = 0, posts = 0;
 } events;
@@ -148,10 +149,12 @@ int jfg_events_vi_manager(uint8_t* ram, int32_t priority) {
 int jfg_events_vi_mode(uint8_t* ram, uint32_t mode) {
     if (!access(ram) || !events.manager || !range(mode, 80)) return -1;
     uint8_t type = ram[(mode - ram_base) ^ 3];
-    if (type != 0 && type != 14 && type != 28) return -2;
-    uint64_t period = ticks_per_second / (type == 14 ? 50 : 60);
+    if (type >= 42) return -2;
+    uint64_t period = ticks_per_second / (type >= 14 && type < 28 ? 50 : 60);
     if (now() > UINT64_MAX - period) return -1;
     events.vi_mode = mode;
+    std::memcpy(&events.vi_control, ram + mode - ram_base + 4, 4);
+    events.vi_features = 0;
     events.vi_period = period;
     events.vi_due = now() + period;
     return 0;
@@ -159,6 +162,31 @@ int jfg_events_vi_mode(uint8_t* ram, uint32_t mode) {
 int jfg_events_vi_black(uint8_t* ram, uint32_t black) {
     if (!access(ram) || !events.manager || black > 1) return -1;
     events.black = black != 0;
+    return 0;
+}
+int jfg_events_vi_features(uint8_t* ram, uint32_t features) {
+    if (!access(ram) || !events.manager || !events.vi_mode) return -1;
+    uint32_t control = events.vi_control;
+    if (features & 1) control |= 8;
+    if (features & 2) control &= ~8u;
+    if (features & 4) control |= 4;
+    if (features & 8) control &= ~4u;
+    if (features & 16) control |= 16;
+    if (features & 32) control &= ~16u;
+    if (features & 64) { control |= 0x10000; control &= ~0x300u; }
+    if (features & 128) {
+        uint32_t original;
+        std::memcpy(&original, ram + events.vi_mode - ram_base + 4, 4);
+        control = (control & ~0x10000u) | (original & 0x300u);
+    }
+    events.vi_control = control;
+    events.vi_features = features & 0xFFu;
+    return 0;
+}
+int jfg_events_vi_state(uint32_t* fields, size_t count) {
+    if (!fields || count != 4 || (events.ram && !access(events.ram, true))) return -1;
+    std::array<uint32_t, 4> values{events.vi_mode, events.vi_control, events.vi_features, events.black};
+    std::memcpy(fields, values.data(), sizeof(values));
     return 0;
 }
 int jfg_events_vi_bind(uint8_t* ram, uint32_t queue, uint32_t message, uint32_t retraces) {

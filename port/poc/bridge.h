@@ -22,6 +22,10 @@ POC_EXPORT uint32_t jfg_poc_address(const char *name);
 POC_EXPORT uint32_t jfg_poc_last_call_count(void);
 POC_EXPORT uint32_t jfg_poc_last_call_target(void);
 POC_EXPORT uint64_t jfg_poc_last_return_address(void);
+POC_EXPORT uint32_t jfg_poc_error_target(void);
+POC_EXPORT uint32_t jfg_poc_error_site(void);
+POC_EXPORT size_t jfg_boot_rom_size(void);
+POC_EXPORT int jfg_boot_rom_read(uint8_t* ram, uint32_t source, uint32_t destination, uint32_t length);
 POC_EXPORT int jfg_poc_set_section(uint32_t index, uint32_t base);
 POC_EXPORT int jfg_poc_load_section(uint32_t index, uint32_t base, uint8_t *rdram,
                                     size_t ram_size, const uint8_t *rom, size_t rom_size);

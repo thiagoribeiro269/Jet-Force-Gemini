@@ -23,6 +23,7 @@ POC_EXPORT int jfg_boot_bind_rom(const uint8_t *rom, size_t length) {
 
 POC_EXPORT void jfg_boot_clear_events(void) { event_count = 0; }
 POC_EXPORT uint32_t jfg_boot_event_count(void) { return event_count; }
+POC_EXPORT size_t jfg_boot_rom_size(void) { return rom_length; }
 POC_EXPORT int jfg_boot_event(uint32_t index, uint32_t *out) {
     if (!out || index >= event_count) return -1;
     memcpy(out, events[index], sizeof(events[index]));
@@ -38,15 +39,19 @@ static void event(uint32_t type, uint32_t a, uint32_t b, uint32_t c) {
     event_count++;
 }
 
-void jfg_host_romCopy(uint8_t *rdram, recomp_context *ctx) {
-    uint32_t source = (uint32_t)ctx->r4, destination = (uint32_t)ctx->r5, length = (uint32_t)ctx->r6;
-    if (!rom_image || source > rom_length || length > rom_length - source ||
+POC_EXPORT int jfg_boot_rom_read(uint8_t *rdram, uint32_t source, uint32_t destination, uint32_t length) {
+    if (!rdram || !rom_image || event_count >= EVENT_CAPACITY || source > rom_length || length > rom_length - source ||
         destination < 0x80000000u || destination > 0x80800000u || length > 0x80800000u - destination) {
-        jfg_poc_fail(-10);
+        return -1;
     }
     event(1, source, destination, length);
     uint32_t offset = destination - 0x80000000u;
     for (uint32_t i = 0; i < length; i++) rdram[(offset + i) ^ 3u] = rom_image[source + i];
+    return 0;
+}
+
+void jfg_host_romCopy(uint8_t *rdram, recomp_context *ctx) {
+    if (jfg_boot_rom_read(rdram, (uint32_t)ctx->r4, (uint32_t)ctx->r5, (uint32_t)ctx->r6)) jfg_poc_fail(-10);
 }
 
 static void cache_contract(uint32_t type, recomp_context *ctx) {
@@ -64,3 +69,12 @@ static void cache_contract(uint32_t type, recomp_context *ctx) {
 
 void jfg_host_osWritebackDCache(uint8_t *rdram, recomp_context *ctx) { (void)rdram; cache_contract(2, ctx); }
 void jfg_host_osInvalICache(uint8_t *rdram, recomp_context *ctx) { (void)rdram; cache_contract(3, ctx); }
+void jfg_host_osInvalDCache(uint8_t *rdram, recomp_context *ctx) { (void)rdram; cache_contract(4, ctx); }
+void jfg_host_osWritebackDCacheAll(uint8_t *rdram, recomp_context *ctx) {
+    (void)rdram;
+    recomp_context range = {0};
+    range.r4 = 0x80000000u;
+    range.r5 = 0x800000u;
+    cache_contract(5, &range);
+    (void)ctx;
+}

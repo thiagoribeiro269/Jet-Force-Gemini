@@ -1,0 +1,884 @@
+{
+  "recorded_at": "2026-09-24T14:05:33.620006-03:00",
+  "stage": "original_initialization_prefix_pi_dma_and_asset_decoding",
+  "game_base": "f409c111053c671ae91051a6cdff277e0af7d95e",
+  "runtime_revision": "cdf5abbd5026fef5c364c676e4667c45e42b6863",
+  "recompiler_revision": "81213c1831fab2521a6a5459c67b63437d67e253",
+  "game_and_vendor_sources_modified": false,
+  "profile": {
+    "entries": 140,
+    "compiled_original_functions": [
+      "mainGetZBCheck",
+      "mainGameWindowChanging",
+      "mainSetAnimGroup",
+      "mainGetAnimGroup",
+      "mainChangeCameras",
+      "mainGetNextCharacter",
+      "mainGetNextLevel",
+      "mainSyncNextLevel",
+      "mainSetMode",
+      "mainGetGame",
+      "mainGetCurrentLevel",
+      "mainGetGameArrayPtr",
+      "mainGetNumberOfCameras",
+      "GetRegionIndex",
+      "pauseGetScreen",
+      "pauseGetPauseCharacter",
+      "frontSetInstrumentsHide",
+      "func_overlay_18_0120207C_1F31A54",
+      "func_overlay_32_02001D2C_1F526FC",
+      "func_overlay_32_02001D84_1F52754",
+      "GetSymbolName",
+      "PatchInstruction",
+      "ProcessRelocationEntry",
+      "ResolveRelocAddress",
+      "RevealReturnAddresses",
+      "__scHandleRetrace",
+      "__scMain",
+      "__scSchedule",
+      "__scTaskReady",
+      "_bzero",
+      "fontSetWindow0",
+      "func_80050670",
+      "func_80055D44",
+      "func_80055DA8",
+      "func_80055E68",
+      "func_80055F4C",
+      "huft_build",
+      "inflate_block",
+      "inflate_codes",
+      "inflate_dynamic",
+      "inflate_fixed",
+      "inflate_stored",
+      "mainInitGame",
+      "mainPreNMI",
+      "mainResetPressed",
+      "mempool_free_addr",
+      "mempool_free_queue",
+      "mempool_get_pool",
+      "mempool_init",
+      "mempool_slot_assign",
+      "mempool_slot_clear",
+      "mempool_slot_find",
+      "mmAlloc",
+      "mmAlloc2",
+      "mmAllocAtAddr",
+      "mmFree",
+      "mmGetDelay",
+      "mmInit",
+      "mmSetDelay",
+      "osCreateScheduler",
+      "osScAddClient",
+      "osScGetCmdQ",
+      "osScGetInterruptQ",
+      "osScRemoveClient",
+      "piInit",
+      "piRomGetFileSize",
+      "piRomGetSectionPtr",
+      "piRomLoad",
+      "piRomLoadSection",
+      "rcpInit",
+      "rcpWaitDP",
+      "romCopy",
+      "runlinkCallResumeFunction",
+      "runlinkDownloadCode",
+      "runlinkFreeCode",
+      "runlinkGetAddressInfo",
+      "runlinkInitialise",
+      "runlinkIsModuleLoaded",
+      "runlinkResumeCode",
+      "runlinkUnloadOverlay",
+      "rzipInit",
+      "rzipUncompress",
+      "rzipUncompressSize",
+      "viAllocateZBuffer",
+      "viChangeMode",
+      "viFrameRateReset",
+      "viFreeZBuffer",
+      "viInit",
+      "viSetTiming",
+      "_AutoInit00044",
+      "amAudioLinesReset"
+    ],
+    "host_imports": [
+      "osCreateMesgQueue",
+      "osCreatePiManager",
+      "osCreateThread",
+      "osCreateViManager",
+      "osGetTime",
+      "osInvalDCache",
+      "osInvalICache",
+      "osPiStartDma",
+      "osRecvMesg",
+      "osSendMesg",
+      "osSetEventMesg",
+      "osSetIntMask",
+      "osSetTime",
+      "osStartThread",
+      "osViBlack",
+      "osViSetEvent",
+      "osViSetMode",
+      "osViSetSpecialFeatures",
+      "osWritebackDCache",
+      "osWritebackDCacheAll",
+      "osJamMesg",
+      "osGetCount",
+      "osSetTimer"
+    ],
+    "deferred_paths": [
+      "TrapDanglingJump",
+      "__osSpSetStatus",
+      "__scAppendList",
+      "__scExec",
+      "__scHandleRDP",
+      "__scHandleRSP",
+      "__scYield",
+      "amAudioMgrGetNextFrameCount",
+      "amStop",
+      "diPrintf",
+      "diPrintfAll",
+      "diPrintfSetXY",
+      "func_800507A4",
+      "func_80050AA4",
+      "osDpSetStatus",
+      "osScGetTaskType",
+      "osSpTaskLoad",
+      "osSpTaskStartGo",
+      "osViGetCurrentFramebuffer",
+      "osViGetNextFramebuffer",
+      "rumbleKill",
+      "rumbleTick",
+      "segSetBase",
+      "viReset",
+      "amSndStop",
+      "amAmbientStop"
+    ]
+  },
+  "initialization_boundary": {
+    "bootstrap_call_site": 2147766008,
+    "bootstrap_target": 2147829040,
+    "bootstrap_overlay": {
+      "symbol_index": 1659,
+      "overlay": 36,
+      "offset": 0,
+      "name": "mainInitRlo"
+    },
+    "compressed_asset_index": 19,
+    "dma_max_game_chunk": 20480
+  },
+  "native_linux": {
+    "status": "passed",
+    "scope": "original_init_prefix_video_buffers_pi_dma_and_assets",
+    "host_os": "Linux",
+    "host_arch": "x86_64",
+    "cases": [
+      {
+        "name": "original_main_init_prefix_tv_1",
+        "status": "passed",
+        "threads_joined": 2,
+        "io": {
+          "active": 1,
+          "command_queue": 2148524120,
+          "pending": 0,
+          "submitted": 4,
+          "completed": 4,
+          "bytes": 18992,
+          "dropped": 0,
+          "cancelled": 0,
+          "rejected": 0,
+          "reserved": 0
+        },
+        "boundary": {
+          "function": "mainInitGame",
+          "status": -3,
+          "target": "0x80054530",
+          "call_site": "0x80044EF8"
+        },
+        "dimensions": [
+          320,
+          240
+        ],
+        "framebuffers": [
+          "0x8010FF00",
+          "0x80135700"
+        ]
+      },
+      {
+        "name": "original_main_init_prefix_tv_0",
+        "status": "passed",
+        "threads_joined": 2,
+        "io": {
+          "active": 1,
+          "command_queue": 2148524120,
+          "pending": 0,
+          "submitted": 4,
+          "completed": 4,
+          "bytes": 18992,
+          "dropped": 0,
+          "cancelled": 0,
+          "rejected": 0,
+          "reserved": 0
+        },
+        "boundary": {
+          "function": "mainInitGame",
+          "status": -3,
+          "target": "0x80054530",
+          "call_site": "0x80044EF8"
+        },
+        "dimensions": [
+          320,
+          240
+        ],
+        "framebuffers": [
+          "0x8010FF00",
+          "0x80135700"
+        ]
+      },
+      {
+        "name": "original_main_init_prefix_tv_2",
+        "status": "passed",
+        "threads_joined": 2,
+        "io": {
+          "active": 1,
+          "command_queue": 2148524120,
+          "pending": 0,
+          "submitted": 4,
+          "completed": 4,
+          "bytes": 18992,
+          "dropped": 0,
+          "cancelled": 0,
+          "rejected": 0,
+          "reserved": 0
+        },
+        "boundary": {
+          "function": "mainInitGame",
+          "status": -3,
+          "target": "0x80054530",
+          "call_site": "0x80044EF8"
+        },
+        "dimensions": [
+          320,
+          240
+        ],
+        "framebuffers": [
+          "0x8010FF00",
+          "0x80135700"
+        ]
+      },
+      {
+        "name": "raw_partial_and_compressed_assets",
+        "status": "passed",
+        "threads_joined": 7,
+        "io": {
+          "active": 1,
+          "command_queue": 2148524120,
+          "pending": 0,
+          "submitted": 9,
+          "completed": 9,
+          "bytes": 61952,
+          "dropped": 0,
+          "cancelled": 0,
+          "rejected": 0,
+          "reserved": 0
+        },
+        "compressed_asset": 19,
+        "decompressed_bytes": 153616,
+        "decompressed_sha256": "ee6266e0f60b021a4089adeb713bbf51ee3985e330a42dd5d2f180941cca74ef"
+      },
+      {
+        "name": "pi_priorities_completion_and_rejections",
+        "status": "passed",
+        "threads_joined": 0,
+        "io": {
+          "active": 1,
+          "command_queue": 2155544640,
+          "pending": 0,
+          "submitted": 2,
+          "completed": 2,
+          "bytes": 32,
+          "dropped": 0,
+          "cancelled": 0,
+          "rejected": 5,
+          "reserved": 0
+        }
+      },
+      {
+        "name": "cart_address_and_full_completion_queue",
+        "status": "passed",
+        "threads_joined": 0,
+        "io": {
+          "active": 1,
+          "command_queue": 2155544640,
+          "pending": 0,
+          "submitted": 1,
+          "completed": 1,
+          "bytes": 16,
+          "dropped": 1,
+          "cancelled": 0,
+          "rejected": 0,
+          "reserved": 0
+        }
+      },
+      {
+        "name": "close_cancels_pending_dma_and_waiter",
+        "status": "passed",
+        "threads_joined": 1,
+        "io": {
+          "active": 1,
+          "command_queue": 2155544640,
+          "pending": 1,
+          "submitted": 1,
+          "completed": 0,
+          "bytes": 0,
+          "dropped": 0,
+          "cancelled": 0,
+          "rejected": 0,
+          "reserved": 0
+        }
+      }
+    ],
+    "threads_created_and_joined": 14,
+    "library_sha256": "b68f39c778045ae723a3d94313affe5fe7f8328879d0c55435c98dae40714916",
+    "rom_sha1": "493ced9008dbe932d6e91179b68e8630cf23a023",
+    "emulator_used": false,
+    "gpu_initialized": false,
+    "full_main_init": false,
+    "limits": [
+      "Original mainInitGame prefix; stops at unresolved bootstrap overlay call",
+      "Original ROM transfer loop and decompression; host PI completion pumped by session owner",
+      "Framebuffer allocation/clearing only; no RSP/RDP renderer or image presentation",
+      "Reset/shutdown, bootstrap overlay, audio and gameplay paths remain incomplete"
+    ]
+  },
+  "native_windows": {
+    "recorded_at": "2026-09-24T17:00:17.1474473Z",
+    "exit_code": 0,
+    "windows": "Microsoft Windows NT 10.0.26200.0",
+    "python": "Python 3.12.10",
+    "package_sha256": "b25e93c7a4fc4955eacc642c2125a1fe9897f58d172a70835abfb6488ff10829",
+    "report": {
+      "status": "passed",
+      "scope": "original_init_prefix_video_buffers_pi_dma_and_assets",
+      "host_os": "Windows",
+      "host_arch": "AMD64",
+      "cases": [
+        {
+          "name": "original_main_init_prefix_tv_1",
+          "status": "passed",
+          "threads_joined": 2,
+          "io": {
+            "active": 1,
+            "command_queue": 2148524120,
+            "pending": 0,
+            "submitted": 4,
+            "completed": 4,
+            "bytes": 18992,
+            "dropped": 0,
+            "cancelled": 0,
+            "rejected": 0,
+            "reserved": 0
+          },
+          "boundary": {
+            "function": "mainInitGame",
+            "status": -3,
+            "target": "0x80054530",
+            "call_site": "0x80044EF8"
+          },
+          "dimensions": [
+            320,
+            240
+          ],
+          "framebuffers": [
+            "0x8010FF00",
+            "0x80135700"
+          ]
+        },
+        {
+          "name": "original_main_init_prefix_tv_0",
+          "status": "passed",
+          "threads_joined": 2,
+          "io": {
+            "active": 1,
+            "command_queue": 2148524120,
+            "pending": 0,
+            "submitted": 4,
+            "completed": 4,
+            "bytes": 18992,
+            "dropped": 0,
+            "cancelled": 0,
+            "rejected": 0,
+            "reserved": 0
+          },
+          "boundary": {
+            "function": "mainInitGame",
+            "status": -3,
+            "target": "0x80054530",
+            "call_site": "0x80044EF8"
+          },
+          "dimensions": [
+            320,
+            240
+          ],
+          "framebuffers": [
+            "0x8010FF00",
+            "0x80135700"
+          ]
+        },
+        {
+          "name": "original_main_init_prefix_tv_2",
+          "status": "passed",
+          "threads_joined": 2,
+          "io": {
+            "active": 1,
+            "command_queue": 2148524120,
+            "pending": 0,
+            "submitted": 4,
+            "completed": 4,
+            "bytes": 18992,
+            "dropped": 0,
+            "cancelled": 0,
+            "rejected": 0,
+            "reserved": 0
+          },
+          "boundary": {
+            "function": "mainInitGame",
+            "status": -3,
+            "target": "0x80054530",
+            "call_site": "0x80044EF8"
+          },
+          "dimensions": [
+            320,
+            240
+          ],
+          "framebuffers": [
+            "0x8010FF00",
+            "0x80135700"
+          ]
+        },
+        {
+          "name": "raw_partial_and_compressed_assets",
+          "status": "passed",
+          "threads_joined": 7,
+          "io": {
+            "active": 1,
+            "command_queue": 2148524120,
+            "pending": 0,
+            "submitted": 9,
+            "completed": 9,
+            "bytes": 61952,
+            "dropped": 0,
+            "cancelled": 0,
+            "rejected": 0,
+            "reserved": 0
+          },
+          "compressed_asset": 19,
+          "decompressed_bytes": 153616,
+          "decompressed_sha256": "ee6266e0f60b021a4089adeb713bbf51ee3985e330a42dd5d2f180941cca74ef"
+        },
+        {
+          "name": "pi_priorities_completion_and_rejections",
+          "status": "passed",
+          "threads_joined": 0,
+          "io": {
+            "active": 1,
+            "command_queue": 2155544640,
+            "pending": 0,
+            "submitted": 2,
+            "completed": 2,
+            "bytes": 32,
+            "dropped": 0,
+            "cancelled": 0,
+            "rejected": 5,
+            "reserved": 0
+          }
+        },
+        {
+          "name": "cart_address_and_full_completion_queue",
+          "status": "passed",
+          "threads_joined": 0,
+          "io": {
+            "active": 1,
+            "command_queue": 2155544640,
+            "pending": 0,
+            "submitted": 1,
+            "completed": 1,
+            "bytes": 16,
+            "dropped": 1,
+            "cancelled": 0,
+            "rejected": 0,
+            "reserved": 0
+          }
+        },
+        {
+          "name": "close_cancels_pending_dma_and_waiter",
+          "status": "passed",
+          "threads_joined": 1,
+          "io": {
+            "active": 1,
+            "command_queue": 2155544640,
+            "pending": 1,
+            "submitted": 1,
+            "completed": 0,
+            "bytes": 0,
+            "dropped": 0,
+            "cancelled": 0,
+            "rejected": 0,
+            "reserved": 0
+          }
+        }
+      ],
+      "threads_created_and_joined": 14,
+      "library_sha256": "dedf47dcbede31e10c276918d5912cdf7d59bd134748f58ed574915c00299479",
+      "rom_sha1": "493ced9008dbe932d6e91179b68e8630cf23a023",
+      "emulator_used": false,
+      "gpu_initialized": false,
+      "full_main_init": false,
+      "limits": [
+        "Original mainInitGame prefix; stops at unresolved bootstrap overlay call",
+        "Original ROM transfer loop and decompression; host PI completion pumped by session owner",
+        "Framebuffer allocation/clearing only; no RSP/RDP renderer or image presentation",
+        "Reset/shutdown, bootstrap overlay, audio and gameplay paths remain incomplete"
+      ]
+    }
+  },
+  "mips_reference": {
+    "status": "passed",
+    "cases": [
+      {
+        "name": "main_init_prefix_tv_1",
+        "status": "passed",
+        "rom_transfers": 4,
+        "masked_regions": [
+          [
+            "0x807A0000",
+            256
+          ],
+          [
+            "0x807A1000",
+            512
+          ],
+          [
+            "0x800FB4F0",
+            432
+          ],
+          [
+            "0x800FD348",
+            1056
+          ],
+          [
+            "0x8077DFF0",
+            8256
+          ],
+          [
+            "0x800FB480",
+            8
+          ],
+          [
+            "0x800FB4B8",
+            8
+          ],
+          [
+            "0x800FE000",
+            8
+          ],
+          [
+            "0x800FE058",
+            8
+          ],
+          [
+            "0x800FE480",
+            8
+          ],
+          [
+            "0x800FE4A0",
+            8
+          ],
+          [
+            "0x800FE4B8",
+            8
+          ],
+          [
+            "0x800FE8A8",
+            8
+          ],
+          [
+            "0x800FE8E0",
+            8
+          ],
+          [
+            "0x800FE918",
+            8
+          ],
+          [
+            "0x800FEB80",
+            8
+          ]
+        ],
+        "ram_sha256": "64bdccf43df50d042866e15a09ebe046e8732fe0d6873ff6a523aa45b4a592a3",
+        "threads_joined": 2
+      },
+      {
+        "name": "main_init_prefix_tv_0",
+        "status": "passed",
+        "rom_transfers": 4,
+        "masked_regions": [
+          [
+            "0x807A0000",
+            256
+          ],
+          [
+            "0x807A1000",
+            512
+          ],
+          [
+            "0x800FB4F0",
+            432
+          ],
+          [
+            "0x800FD348",
+            1056
+          ],
+          [
+            "0x8077DFF0",
+            8256
+          ],
+          [
+            "0x800FB480",
+            8
+          ],
+          [
+            "0x800FB4B8",
+            8
+          ],
+          [
+            "0x800FE000",
+            8
+          ],
+          [
+            "0x800FE058",
+            8
+          ],
+          [
+            "0x800FE480",
+            8
+          ],
+          [
+            "0x800FE4A0",
+            8
+          ],
+          [
+            "0x800FE4B8",
+            8
+          ],
+          [
+            "0x800FE8A8",
+            8
+          ],
+          [
+            "0x800FE8E0",
+            8
+          ],
+          [
+            "0x800FE918",
+            8
+          ],
+          [
+            "0x800FEB80",
+            8
+          ]
+        ],
+        "ram_sha256": "4753ff3cdecaff90d50b14e75492af701d9ef06aa97cd22ea56cf41d87e31972",
+        "threads_joined": 2
+      },
+      {
+        "name": "main_init_prefix_tv_2",
+        "status": "passed",
+        "rom_transfers": 4,
+        "masked_regions": [
+          [
+            "0x807A0000",
+            256
+          ],
+          [
+            "0x807A1000",
+            512
+          ],
+          [
+            "0x800FB4F0",
+            432
+          ],
+          [
+            "0x800FD348",
+            1056
+          ],
+          [
+            "0x8077DFF0",
+            8256
+          ],
+          [
+            "0x800FB480",
+            8
+          ],
+          [
+            "0x800FB4B8",
+            8
+          ],
+          [
+            "0x800FE000",
+            8
+          ],
+          [
+            "0x800FE058",
+            8
+          ],
+          [
+            "0x800FE480",
+            8
+          ],
+          [
+            "0x800FE4A0",
+            8
+          ],
+          [
+            "0x800FE4B8",
+            8
+          ],
+          [
+            "0x800FE8A8",
+            8
+          ],
+          [
+            "0x800FE8E0",
+            8
+          ],
+          [
+            "0x800FE918",
+            8
+          ],
+          [
+            "0x800FEB80",
+            8
+          ]
+        ],
+        "ram_sha256": "1342eaf6481680b16772e991ad641c87cf9161908e832e010ffc73da5ec2a074",
+        "threads_joined": 2
+      },
+      {
+        "name": "original_decompression",
+        "status": "passed",
+        "gprs_compared": 32,
+        "decompressed_bytes": 153616,
+        "sha256": "ee6266e0f60b021a4089adeb713bbf51ee3985e330a42dd5d2f180941cca74ef",
+        "masked_regions": [
+          [
+            "0x807A0000",
+            256
+          ],
+          [
+            "0x807A1600",
+            512
+          ]
+        ],
+        "threads_joined": 4
+      }
+    ],
+    "reference": "Original MIPS game bodies with explicit platform hooks; ROM bytes and zlib provide independent data checks",
+    "limits": [
+      "Initialization comparison stops before executing TrapDanglingJump",
+      "Kernel thread structures, wait-list fields and initialization call stacks are masked",
+      "PI completion is immediate in the MIPS oracle and owner-pumped in native execution",
+      "No graphics/RSP/RDP hardware or complete game boot"
+    ]
+  },
+  "address_sanitizer": {
+    "status": "passed",
+    "scenarios": 7,
+    "threads_joined": 14,
+    "leak_detection_enabled": false,
+    "loader": "libasan and libstdc++ preloaded into the Python test process"
+  },
+  "previous_profile_regressions": {
+    "basic_cpu_cases": 816,
+    "heap_linker_checkpoints": 56,
+    "thread_scenarios": 12,
+    "event_scenarios": 15,
+    "event_mips_comparisons": 43,
+    "note": "Separate previous profiles retain synchronous romCopy; the new initialization profile recompiles it"
+  },
+  "windows_package": {
+    "name": "jfg-init-windows-x64.zip",
+    "size": 343235,
+    "sha256": "b25e93c7a4fc4955eacc642c2125a1fe9897f58d172a70835abfb6488ff10829",
+    "toolchain": "LLVM-MinGW 20260922 / Clang 23.1.2",
+    "files": {
+      "jfg_poc.dll": {
+        "size": 930816,
+        "sha256": "dedf47dcbede31e10c276918d5912cdf7d59bd134748f58ed574915c00299479",
+        "dll_imports": [
+          "KERNEL32.dll",
+          "api-ms-win-crt-stdio-l1-1-0.dll",
+          "api-ms-win-crt-private-l1-1-0.dll",
+          "api-ms-win-crt-runtime-l1-1-0.dll",
+          "api-ms-win-crt-math-l1-1-0.dll",
+          "api-ms-win-crt-heap-l1-1-0.dll",
+          "api-ms-win-crt-string-l1-1-0.dll",
+          "api-ms-win-crt-convert-l1-1-0.dll",
+          "api-ms-win-crt-locale-l1-1-0.dll",
+          "api-ms-win-crt-environment-l1-1-0.dll",
+          "api-ms-win-crt-filesystem-l1-1-0.dll"
+        ]
+      },
+      "checks_init.py": {
+        "size": 12714,
+        "sha256": "78e1d99a41cb90b7dbc984570b30f52c9c4b23ed63d5b7a5ddf2e70e9e8acd29"
+      },
+      "checks_events.py": {
+        "size": 12308,
+        "sha256": "c768038a627b9afa94a8178c2183c21b895bfe486819f61538a6c2fda7e25b9c"
+      },
+      "thread_checks.py": {
+        "size": 15140,
+        "sha256": "0bb3547d9dd907424347d49228ab18b973c4f858ed9fdc84d8456d2ead3a8ec5"
+      },
+      "native.py": {
+        "size": 8102,
+        "sha256": "35efe8ae165c428a11c5b8309119855c1caa8b17aece84afee0b8010298517d0"
+      },
+      "init-config.json": {
+        "size": 93230,
+        "sha256": "2817beecc7155bbc6b54eaffe3eaf25f1651d212a1e002109eb6c243d7f2879f"
+      },
+      "README.txt": {
+        "size": 1197,
+        "sha256": "58742db23c98d604bd17f010ca8c273dbfabdd9b17eb3fdaba43d24783b154cb"
+      }
+    }
+  },
+  "remote_execution": {
+    "method": "SSH console",
+    "existing_processes_or_services_changed": false,
+    "all_diagnostic_threads_joined": true
+  },
+  "matching_n64_build": {
+    "status": "passed",
+    "byte_comparison": "identical"
+  },
+  "compression_scope": {
+    "path": [
+      "piRomLoad",
+      "mmAlloc",
+      "rzipUncompress"
+    ],
+    "separate_input_output_buffers": true,
+    "excluded_helper": "piRomLoadCompressed",
+    "reason": "Its overlapping layout with this whole section failed in native/ASan and exceeded the MIPS test budget"
+  },
+  "limits": [
+    "Original mainInitGame prefix; stops at unresolved bootstrap overlay call",
+    "Original ROM transfer loop and decompression; host PI completion pumped by session owner",
+    "Framebuffer allocation/clearing only; no RSP/RDP renderer or image presentation",
+    "Reset/shutdown, bootstrap overlay, audio and gameplay paths remain incomplete",
+    "Native PI is owner-pumped; the reference completes transfers synchronously",
+    "No general FPU or cycle-accurate DMA/interrupt timing validation"
+  ]
+}

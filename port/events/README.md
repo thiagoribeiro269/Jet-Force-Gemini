@@ -135,8 +135,10 @@ padrão. Não altera drivers, serviços ou outros processos.
 
 ## Próxima etapa
 
-Integrar as demais dependências de `mainInitGame`, incluindo inicialização de
-vídeo, periféricos/DMA e RCP, mantendo erros explícitos onde falta suporte.
+O [perfil posterior de inicialização](../init/README.md) já executa preparação
+de vídeo, PI/DMA e RCP pelo código original, até a chamada de bootstrap do
+overlay 36. É necessário integrar esse próximo módulo, mantendo erros
+explícitos onde falta suporte.
 Ainda faltam boot completo, renderização F3DJFG, áudio, controles, saves e uma
 partida jogável. Contadores avançando e mensagens de VI não são frames desenhados.
 

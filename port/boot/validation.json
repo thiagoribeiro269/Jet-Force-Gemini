@@ -1,0 +1,310 @@
+{
+  "recorded_at": "2026-09-24T02:46:25.371108-03:00",
+  "stage": "original_heap_and_runlink_startup_slice",
+  "game_base": "f409c111053c671ae91051a6cdff277e0af7d95e",
+  "runtime_revision": "cdf5abbd5026fef5c364c676e4667c45e42b6863",
+  "recompiler_revision": "81213c1831fab2521a6a5459c67b63437d67e253",
+  "upstream_sources_modified": false,
+  "rom_sha1": "493ced9008dbe932d6e91179b68e8630cf23a023",
+  "registered_entries": 54,
+  "compiled_original_functions": [
+    "mainGetZBCheck",
+    "mainGameWindowChanging",
+    "mainSetAnimGroup",
+    "mainGetAnimGroup",
+    "mainChangeCameras",
+    "mainGetNextCharacter",
+    "mainGetNextLevel",
+    "mainSyncNextLevel",
+    "mainSetMode",
+    "mainGetGame",
+    "mainGetCurrentLevel",
+    "mainGetGameArrayPtr",
+    "mainGetNumberOfCameras",
+    "GetRegionIndex",
+    "pauseGetScreen",
+    "pauseGetPauseCharacter",
+    "frontSetInstrumentsHide",
+    "func_overlay_18_0120207C_1F31A54",
+    "func_overlay_32_02001D2C_1F526FC",
+    "func_overlay_32_02001D84_1F52754",
+    "GetSymbolName",
+    "PatchInstruction",
+    "ProcessRelocationEntry",
+    "ResolveRelocAddress",
+    "RevealReturnAddresses",
+    "_bzero",
+    "mempool_free_addr",
+    "mempool_free_queue",
+    "mempool_get_pool",
+    "mempool_init",
+    "mempool_slot_assign",
+    "mempool_slot_clear",
+    "mempool_slot_find",
+    "mmAlloc",
+    "mmAlloc2",
+    "mmAllocAtAddr",
+    "mmFree",
+    "mmGetDelay",
+    "mmInit",
+    "mmSetDelay",
+    "runlinkCallResumeFunction",
+    "runlinkDownloadCode",
+    "runlinkGetAddressInfo",
+    "runlinkInitialise",
+    "runlinkIsModuleLoaded",
+    "runlinkResumeCode",
+    "runlinkUnloadOverlay",
+    "_AutoInit00044",
+    "amAudioLinesReset"
+  ],
+  "platform_contracts": [
+    "romCopy",
+    "osWritebackDCache",
+    "osInvalICache"
+  ],
+  "deferred_audio_paths": [
+    "amSndStop",
+    "amAmbientStop"
+  ],
+  "runtime_instruction_patches": 4,
+  "differential_validation": {
+    "status": "passed",
+    "host_os": "Linux",
+    "host_arch": "x86_64",
+    "oracle": "Unicorn 2.1.4, MIPS64 R4000, big-endian; same three explicit platform contracts",
+    "checkpoints": 56,
+    "comparison": "All 32 GPRs, all 8 MiB RAM and ordered ROM/cache platform events at each checkpoint",
+    "variants": [
+      {
+        "extended_ram_flag": false,
+        "heap_end": "0x80400000",
+        "overlay_table_slots": 158,
+        "module_bases": {
+          "19": "0x80112100",
+          "6": "0x80113BE0",
+          "32": "0x80115B00",
+          "44": "0x80119250"
+        },
+        "real_init_callback": "_AutoInit00044 -> amAudioLinesReset",
+        "premature_allocator_rejections": 1,
+        "deferred_audio_rejections": 2,
+        "checkpoints": 28,
+        "rom_reads": 17,
+        "rom_bytes": 63912,
+        "cache_contract_calls": 3123,
+        "checkpoint_functions": [
+          "RevealReturnAddresses",
+          "mmInit",
+          "runlinkInitialise",
+          "runlinkDownloadCode",
+          "runlinkIsModuleLoaded",
+          "runlinkDownloadCode",
+          "runlinkIsModuleLoaded",
+          "runlinkDownloadCode",
+          "runlinkIsModuleLoaded",
+          "runlinkDownloadCode",
+          "runlinkIsModuleLoaded",
+          "pauseGetScreen",
+          "frontSetInstrumentsHide",
+          "pauseGetPauseCharacter",
+          "mmSetDelay",
+          "runlinkUnloadOverlay",
+          "runlinkIsModuleLoaded",
+          "runlinkUnloadOverlay",
+          "runlinkIsModuleLoaded",
+          "runlinkUnloadOverlay",
+          "runlinkIsModuleLoaded",
+          "runlinkUnloadOverlay",
+          "runlinkIsModuleLoaded",
+          "runlinkDownloadCode",
+          "runlinkIsModuleLoaded",
+          "runlinkDownloadCode",
+          "runlinkUnloadOverlay",
+          "mmSetDelay"
+        ],
+        "final_ram_sha256": "ea2a101724d2e6a5d0036c3444b6695a3a69c49319226b5fc272a78673c9ad1c"
+      },
+      {
+        "extended_ram_flag": true,
+        "heap_end": "0x80600000",
+        "overlay_table_slots": 158,
+        "module_bases": {
+          "19": "0x80112100",
+          "6": "0x80113BE0",
+          "32": "0x80115B00",
+          "44": "0x80119250"
+        },
+        "real_init_callback": "_AutoInit00044 -> amAudioLinesReset",
+        "premature_allocator_rejections": 1,
+        "deferred_audio_rejections": 2,
+        "checkpoints": 28,
+        "rom_reads": 17,
+        "rom_bytes": 63912,
+        "cache_contract_calls": 3123,
+        "checkpoint_functions": [
+          "RevealReturnAddresses",
+          "mmInit",
+          "runlinkInitialise",
+          "runlinkDownloadCode",
+          "runlinkIsModuleLoaded",
+          "runlinkDownloadCode",
+          "runlinkIsModuleLoaded",
+          "runlinkDownloadCode",
+          "runlinkIsModuleLoaded",
+          "runlinkDownloadCode",
+          "runlinkIsModuleLoaded",
+          "pauseGetScreen",
+          "frontSetInstrumentsHide",
+          "pauseGetPauseCharacter",
+          "mmSetDelay",
+          "runlinkUnloadOverlay",
+          "runlinkIsModuleLoaded",
+          "runlinkUnloadOverlay",
+          "runlinkIsModuleLoaded",
+          "runlinkUnloadOverlay",
+          "runlinkIsModuleLoaded",
+          "runlinkUnloadOverlay",
+          "runlinkIsModuleLoaded",
+          "runlinkDownloadCode",
+          "runlinkIsModuleLoaded",
+          "runlinkDownloadCode",
+          "runlinkUnloadOverlay",
+          "mmSetDelay"
+        ],
+        "final_ram_sha256": "116bad5dcae599ba1a7dca85fcc544ad25d42fc4d832fd63e51bcbb1045b1d5e"
+      }
+    ],
+    "detail_report_sha256": "32162e21fe72615b3dc1afeee53fc1881597f7eaa4a3cc7b0d01603c19d2b5ce"
+  },
+  "native_only_validation": [
+    {
+      "status": "passed",
+      "scope": "native_heap_linker_startup_only",
+      "host_os": "Linux",
+      "host_arch": "x86_64",
+      "rom_sha1": "493ced9008dbe932d6e91179b68e8630cf23a023",
+      "overlay_table_slots": 158,
+      "extended_ram_flag": false,
+      "heap_end": "0x80400000",
+      "modules": {
+        "19": "0x80112100",
+        "6": "0x80113BE0",
+        "32": "0x80115B00",
+        "44": "0x80119250"
+      },
+      "real_init_callback": "_AutoInit00044 -> amAudioLinesReset",
+      "rom_reads": 14,
+      "gpu_initialized": false,
+      "emulator_used": false,
+      "gameplay_available": false
+    },
+    {
+      "status": "passed",
+      "scope": "native_heap_linker_startup_only",
+      "host_os": "Linux",
+      "host_arch": "x86_64",
+      "rom_sha1": "493ced9008dbe932d6e91179b68e8630cf23a023",
+      "overlay_table_slots": 158,
+      "extended_ram_flag": true,
+      "heap_end": "0x80600000",
+      "modules": {
+        "19": "0x80112100",
+        "6": "0x80113BE0",
+        "32": "0x80115B00",
+        "44": "0x80119250"
+      },
+      "real_init_callback": "_AutoInit00044 -> amAudioLinesReset",
+      "rom_reads": 14,
+      "gpu_initialized": false,
+      "emulator_used": false,
+      "gameplay_available": false
+    }
+  ],
+  "standalone_launcher": {
+    "uses_only_python_stdlib": true,
+    "packaged_config_tested_on_linux": true,
+    "optimized_isolated_python_tested": true
+  },
+  "previous_profile_regression": {
+    "status": "passed",
+    "total_cases": 816,
+    "original_linker_groups_executed": 792,
+    "native_cross_section_calls": 162,
+    "missing_dependency_checks": 12,
+    "loader_checks": {
+      "load_unload_reload_cycles": 15,
+      "overlap_rejections": 15,
+      "nonempty_bss_reset_checks": 12,
+      "empty_bss_boundary_checks": 3,
+      "stale_address_checks": 15
+    }
+  },
+  "matching_n64_build": {
+    "make_version_us": "passed",
+    "byte_comparison_to_original_rom": "identical"
+  },
+  "windows_cross_build": {
+    "status": "passed",
+    "target": "Windows x64",
+    "toolchain": "LLVM-MinGW 20260922 / Clang 23.1.2",
+    "compiled_original_functions": 49,
+    "executed_on_windows": false,
+    "format_and_dll_imports_checked": true,
+    "gpu_tested": false,
+    "package_name": "jfg-heap-linker-windows-x64.zip",
+    "package_size": 66014,
+    "package_sha256": "a558a602ea1972f950812976575a2ee13ba108ad3c9d96d864495d4a557079f0",
+    "files": {
+      "jfg_poc.dll": {
+        "size": 96768,
+        "sha256": "55894721ce5ca2123b0a4644922326b639246a7d17dd2cbbcff2092c5cd47ecf",
+        "dll_imports": [
+          "KERNEL32.dll",
+          "api-ms-win-crt-stdio-l1-1-0.dll",
+          "api-ms-win-crt-private-l1-1-0.dll",
+          "api-ms-win-crt-runtime-l1-1-0.dll",
+          "api-ms-win-crt-string-l1-1-0.dll"
+        ]
+      },
+      "jfg_poc_smoke.exe": {
+        "size": 68608,
+        "sha256": "cd9bdb0bd6dcf94f77a514e9e17fd937d5705f2faddaa0b485db89ee28564399",
+        "dll_imports": [
+          "jfg_poc.dll",
+          "KERNEL32.dll",
+          "api-ms-win-crt-stdio-l1-1-0.dll",
+          "api-ms-win-crt-runtime-l1-1-0.dll",
+          "api-ms-win-crt-locale-l1-1-0.dll",
+          "api-ms-win-crt-heap-l1-1-0.dll",
+          "api-ms-win-crt-private-l1-1-0.dll",
+          "api-ms-win-crt-string-l1-1-0.dll",
+          "api-ms-win-crt-math-l1-1-0.dll",
+          "api-ms-win-crt-environment-l1-1-0.dll"
+        ]
+      },
+      "boot-config.json": {
+        "size": 4141,
+        "sha256": "e0f17ad5855c938c25ba886c748fbc15a8c4e6f26407c61c97a369ffbfbffe6e"
+      },
+      "native.py": {
+        "size": 8102,
+        "sha256": "35efe8ae165c428a11c5b8309119855c1caa8b17aece84afee0b8010298517d0"
+      },
+      "README.txt": {
+        "size": 1469,
+        "sha256": "e410e6a2a24bc4ccc534692912ba8556b5ba6dfa576edfddecb5ede7c09b5ba9"
+      }
+    }
+  },
+  "limits": [
+    "Heap/linker initialization slice, not full boot or mainThread",
+    "Synchronous ROM reads and coherent-host cache contracts",
+    "Two explicit deferred audio-stop paths; invoking them fails",
+    "Single-threaded; no rendering, controller or audio output",
+    "No general FPU validation; callback FP load/store memory effects only; FPRs are not directly compared",
+    "Only selected registered functions can execute, even in loaded modules",
+    "The previous RTX Windows run used the initial 16-function binary, not this profile",
+    "No RTX access or process/service changes during this stage"
+  ]
+}

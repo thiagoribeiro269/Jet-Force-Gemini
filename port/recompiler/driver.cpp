@@ -42,7 +42,7 @@ public:
         }
         call_target(it->second.front());
     }
-    void emit_function_call_by_register(int reg) const override { delegate_.emit_function_call_by_register(reg); }
+    void emit_function_call_by_register(int) const override { out_ << "jfg_poc_call_indirect(rdram, ctx);\n"; }
     void emit_function_call_reference_symbol(const N64Recomp::Context& context, uint16_t section, size_t symbol, uint32_t) const override {
         const auto& reference = context.get_reference_symbol(section, symbol);
         auto function = context_.functions_by_name.find(reference.name);
@@ -99,9 +99,19 @@ int main(int argc, char** argv) {
         const auto metadata = toml::parse_file(config.symbols_file_path.string());
         const auto* sections = metadata["section"].as_array();
         if (!sections || sections->size() != context.sections.size()) throw std::runtime_error("Section count mismatch");
-        size_t cross_relocations = 0, call_sites = 0;
+        size_t cross_relocations = 0, call_sites = 0, indirect_sites = 0;
+        std::unordered_set<size_t> excluded;
         for (size_t i = 0; i < sections->size(); i++) {
             auto& section = context.sections[i];
+            const auto* function_rows = (*sections)[i].as_table()->get_as<toml::array>("functions");
+            for (const auto& row : *function_rows) {
+                const auto* table = row.as_table();
+                if ((*table)["host_import"].value_or(false) || (*table)["deferred"].value_or(false)) {
+                    auto name = (*table)["name"].value<std::string>();
+                    if (!name || !context.functions_by_name.contains(*name)) throw std::runtime_error("Unknown platform import");
+                    excluded.insert(context.functions_by_name.at(*name));
+                }
+            }
             // Main stays fixed by the loader; the flag also makes references to
             // its data/BSS explicit relocations in the N64Recomp context.
             section.relocatable = true;
@@ -116,6 +126,28 @@ int main(int argc, char** argv) {
                 relocation.target_section = static_cast<uint16_t>(*target);
                 relocation.target_section_offset = *address - context.sections[*target].ram_addr;
                 cross_relocations += *target != i;
+            }
+        }
+        if (const auto* patches = metadata["runtime_patch"].as_array()) {
+            for (const auto& row : *patches) {
+                const auto* patch = row.as_table();
+                const auto address = (*patch)["vram"].value<uint32_t>();
+                const auto before = (*patch)["before"].value<uint32_t>();
+                const auto after = (*patch)["after"].value<uint32_t>();
+                if (!address || !before || !after) throw std::runtime_error("Invalid runtime preparation patch");
+                size_t patched = 0;
+                for (size_t i = 0; i < context.functions.size(); i++) {
+                    auto& function = context.functions[i];
+                    if (*address < function.vram || *address >= function.vram + function.words.size() * 4) continue;
+                    if (excluded.contains(i)) throw std::runtime_error("Runtime patch targets an external import");
+                    auto& word = function.words.at((*address - function.vram) / 4);
+                    if (byteswap(word) != *before) throw std::runtime_error("Runtime patch input word differs");
+                    word = byteswap(*after);
+                    function.function_hooks[-1] += fmt::format(
+                        "jfg_poc_require_runtime_patch(rdram, 0x{:X}u, 0x{:X}u);", *address, *after);
+                    patched++;
+                }
+                if (patched != 1) throw std::runtime_error("Runtime patch did not match exactly one compiled function");
             }
         }
         // JFG stores external JAL instructions with a zero target. Use the
@@ -139,7 +171,9 @@ int main(int argc, char** argv) {
                 relocation.target_section = reference.section_index;
             }
         }
-        for (auto& function : context.functions) {
+        for (size_t function_index = 0; function_index < context.functions.size(); function_index++) {
+            if (excluded.contains(function_index)) continue;
+            auto& function = context.functions[function_index];
             const auto& section = context.sections[function.section_index];
             for (size_t i = 0; i < function.words.size(); i++) {
                 const auto word = byteswap(function.words[i]);
@@ -149,8 +183,16 @@ int main(int argc, char** argv) {
                         function.section_index, function.vram - section.ram_addr + i * 4 + 8);
                     call_sites++;
                 }
-                if ((word >> 26) == 0 && (word & 63) == 9) {
-                    throw std::runtime_error("JALR requires a separate return-register proof");
+                if ((word >> 26) == 0 && ((word & 63) == 9 || ((word & 63) == 8 && ((word >> 21) & 31) != 31))) {
+                    const auto source = (word >> 21) & 31;
+                    function.function_hooks[static_cast<int32_t>(i)] += fmt::format("jfg_poc_prepare_indirect(ctx->r{});", source);
+                    if ((word & 63) == 9) {
+                        if (((word >> 11) & 31) != 31) throw std::runtime_error("Unsupported JALR return register");
+                        function.function_hooks[static_cast<int32_t>(i)] += fmt::format(
+                            "ctx->r31 = (gpr)(int32_t)(section_addresses[{}] + 0x{:X}u);",
+                            function.section_index, function.vram - section.ram_addr + i * 4 + 8);
+                    }
+                    indirect_sites++;
                 }
                 if ((word >> 26) == 1 && ((word >> 16) & 31) >= 16 && ((word >> 16) & 31) <= 19) {
                     throw std::runtime_error("Conditional link branches need their own return-register proof");
@@ -171,6 +213,7 @@ int main(int argc, char** argv) {
         std::vector<std::vector<uint32_t>> static_functions(context.sections.size());
         JfgGenerator generator(context, output);
         for (size_t i = 0; i < context.functions.size(); i++) {
+            if (excluded.contains(i)) continue;
             if (!N64Recomp::recompile_function_custom(generator, context, i, output, static_functions, false)) {
                 throw std::runtime_error("Recompilation failed: " + context.functions[i].name);
             }
@@ -178,8 +221,9 @@ int main(int argc, char** argv) {
         for (const auto& functions : static_functions) {
             if (!functions.empty()) throw std::runtime_error("Unexpected unlisted static functions");
         }
-        std::cout << "Recompiled " << context.functions.size() << " functions, " << cross_relocations
-                  << " cross-section relocations and " << call_sites << " direct call sites.\n";
+        std::cout << "Recompiled " << context.functions.size() - excluded.size() << " functions, " << excluded.size()
+                  << " explicit external/deferred entries, " << cross_relocations << " cross-section relocations, "
+                  << call_sites << " direct and " << indirect_sites << " indirect call/jump sites.\n";
         return 0;
     } catch (const std::exception& error) {
         std::cerr << error.what() << '\n';

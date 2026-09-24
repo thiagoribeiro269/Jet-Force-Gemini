@@ -21,5 +21,7 @@ POC_EXPORT int jfg_poc_set_section(uint32_t index, uint32_t base);
 POC_EXPORT int jfg_poc_load_section(uint32_t index, uint32_t base, uint8_t *rdram,
                                     size_t ram_size, const uint8_t *rom, size_t rom_size);
 POC_EXPORT int jfg_poc_unload_section(uint32_t index);
+POC_EXPORT int jfg_poc_bind_game_linker(uint8_t *rdram, size_t size, uint32_t table_global, uint32_t count_global);
+POC_EXPORT void jfg_poc_unbind_game_linker(void);
 POC_EXPORT int jfg_poc_run(uint32_t address, uint8_t *rdram, size_t size,
                            const uint64_t *input, uint64_t *output);

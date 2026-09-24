@@ -53,6 +53,8 @@ Em 24/09/2026, Thiago autorizou o início do trabalho e escolheu **Windows x64 c
 
 A ampliação seguinte cobre 20 funções e chamadas dos overlays ao programa principal, além de um carregador básico com BSS e proteção contra sobreposição. Foram aprovadas 816 comparações diferenciais no Linux. A documentação do port mantém separadas a validação Windows dos primeiros binários e a evidência da versão ampliada.
 
+O [perfil de inicialização da memória e do carregador](../port/boot/README.md) passou a executar o heap e o `runLink` originais recompilados, carregar quatro módulos e chamar a inicialização real de um deles. Foram aprovados 56 pontos de comparação com MIPS, nos limites padrão e estendido do heap, e uma execução nativa sem emulador. O novo diagnóstico foi compilado para Windows, mas ainda não executado lá. Esta etapa não inicia o boot completo nem a parte gráfica.
+
 ## Créditos e arquivos de jogo
 
 Preserve o histórico e a autoria das contribuições herdadas. Esta decisão de desenvolvimento não altera licenças nem atribuições existentes. A raiz desta base não contém uma licença geral explícita.

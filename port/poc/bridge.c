@@ -19,6 +19,7 @@ struct PocSection {
     uint32_t load_size;
     uint32_t memory_size;
     uint32_t fixed_base;
+    uint32_t overlay;
 };
 
 #include "poc_symbols.h"
@@ -32,6 +33,12 @@ static int dispatch_error;
 static uint32_t call_count;
 static uint32_t last_call_target;
 static uint64_t last_return_address;
+static uint64_t indirect_target;
+static int indirect_prepared;
+static uint32_t game_table_global;
+static uint32_t game_count_global;
+
+static int sync_game_sections(uint8_t *rdram);
 
 static _Noreturn void dispatch_fail(int error) {
     if (dispatch_active) {
@@ -39,6 +46,20 @@ static _Noreturn void dispatch_fail(int error) {
         longjmp(dispatch_guard, 1);
     }
     abort();
+}
+
+void jfg_poc_fail(int code) { dispatch_fail(code); }
+
+void jfg_poc_require_runtime_patch(uint8_t *rdram, uint32_t address, uint32_t word) {
+    if (address < 0x80000000u || address > 0x807FFFFCu || (address & 3)) dispatch_fail(-9);
+    uint32_t actual;
+    memcpy(&actual, rdram + address - 0x80000000u, 4);
+    if (actual != word) dispatch_fail(-9);
+}
+
+void jfg_poc_prepare_indirect(uint64_t target) {
+    indirect_target = target;
+    indirect_prepared = 1;
 }
 
 void jfg_poc_require_section(uint32_t section) {
@@ -71,6 +92,19 @@ void jfg_poc_call(uint32_t section, uint32_t offset, uint8_t *rdram, recomp_cont
     if (!function) dispatch_fail(-3);
     call_count++;
     last_call_target = (uint32_t)section_bases[section] + offset;
+    last_return_address = ctx->r31;
+    function(rdram, ctx);
+}
+
+void jfg_poc_call_indirect(uint8_t *rdram, recomp_context *ctx) {
+    if (!indirect_prepared) dispatch_fail(-3);
+    uint32_t target = (uint32_t)indirect_target;
+    indirect_prepared = 0;
+    if (game_table_global && sync_game_sections(rdram)) dispatch_fail(-7);
+    recomp_func_t *function = find_function(target);
+    if (!function) dispatch_fail(-3);
+    call_count++;
+    last_call_target = target;
     last_return_address = ctx->r31;
     function(rdram, ctx);
 }
@@ -128,6 +162,48 @@ POC_EXPORT int jfg_poc_unload_section(uint32_t index) {
     return jfg_poc_set_section(index, 0);
 }
 
+static int guest_word(uint8_t *rdram, uint32_t address, uint32_t *value) {
+    if (address < 0x80000000u || address > 0x807FFFFCu || (address & 3)) return -1;
+    memcpy(value, rdram + address - 0x80000000u, 4);
+    return 0;
+}
+
+static int sync_game_sections(uint8_t *rdram) {
+    uint32_t table, count;
+    if (guest_word(rdram, game_table_global, &table) || guest_word(rdram, game_count_global, &count)) return -1;
+    if (!count || count > 158 || table < 0x80000000u || table > 0x80800000u - count * 32) return -1;
+    int32_t next[JFG_POC_SECTION_COUNT];
+    for (uint32_t i = 0; i < JFG_POC_SECTION_COUNT; i++) {
+        const struct PocSection *section = &poc_sections[i];
+        uint32_t base = section->fixed_base;
+        if (section->overlay) {
+            if (section->overlay >= count || guest_word(rdram, table + section->overlay * 32, &base)) return -1;
+        }
+        if (base && ((base & 3) || base < 0x80000000u || base >= 0x80800000u || section->memory_size > 0x80800000u - base)) return -1;
+        next[i] = (int32_t)base;
+    }
+    for (uint32_t i = 0; i < JFG_POC_SECTION_COUNT; i++) {
+        if (!next[i]) continue;
+        for (uint32_t j = 0; j < i; j++) {
+            if (next[j] && (uint32_t)next[i] < (uint32_t)next[j] + poc_sections[j].memory_size &&
+                (uint32_t)next[j] < (uint32_t)next[i] + poc_sections[i].memory_size) return -1;
+        }
+    }
+    memcpy(section_bases, next, sizeof(next));
+    return 0;
+}
+
+POC_EXPORT int jfg_poc_bind_game_linker(uint8_t *rdram, size_t size, uint32_t table_global, uint32_t count_global) {
+    if (!rdram || size != 0x800000u || dispatch_active) return -1;
+    game_table_global = table_global;
+    game_count_global = count_global;
+    int status = sync_game_sections(rdram);
+    if (status) { game_table_global = 0; game_count_global = 0; }
+    return status;
+}
+
+POC_EXPORT void jfg_poc_unbind_game_linker(void) { game_table_global = 0; game_count_global = 0; }
+
 POC_EXPORT int jfg_poc_run(uint32_t address, uint8_t *rdram, size_t size,
                            const uint64_t *input, uint64_t *output) {
     if (!rdram || !input || !output || size != 0x800000u || dispatch_active) return -1;
@@ -143,11 +219,13 @@ POC_EXPORT int jfg_poc_run(uint32_t address, uint8_t *rdram, size_t size,
     call_count = 0;
     last_call_target = 0;
     last_return_address = 0;
+    indirect_prepared = 0;
     if (setjmp(dispatch_guard)) {
         dispatch_active = 0;
         return dispatch_error;
     }
     function(rdram, &ctx);
+    if (game_table_global && sync_game_sections(rdram)) dispatch_fail(-7);
     dispatch_active = 0;
     memcpy(output, &ctx.r0, sizeof(uint64_t) * 32);
     return 0;

@@ -26,7 +26,7 @@ int main(void) {
     uint32_t stored;
     memcpy(&stored, memory + (POC_GAME_MODE - 0x80000000u), sizeof(stored));
     if (stored != 0x12345678u) goto cleanup;
-    printf("PASS: JFG native x64 CPU diagnostic (%u compiled functions).\n", jfg_poc_function_count());
+    printf("PASS: JFG native x64 CPU diagnostic (%u registered functions).\n", jfg_poc_function_count());
     puts("This is a CPU proof, not a playable game; no graphics or audio are initialized.");
     status = EXIT_SUCCESS;
 cleanup:

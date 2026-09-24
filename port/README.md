@@ -80,22 +80,37 @@ registra as chamadas JAL como referências a símbolos e emite chamadas pelo
 despachante. Também preserva o endereço de retorno correspondente à posição em
 que o módulo está carregado.
 
+O [perfil de inicialização](boot/README.md) acrescenta captura de destinos
+indiretos antes do delay slot, despacho de callbacks e preparação controlada
+das quatro instruções alteradas pelo próprio jogo durante a inicialização.
+
 O comando `poc/run.py` compila e utiliza esse frontend. O CLI original do
 N64Recomp não interpreta a extensão `target_section` utilizada nesta etapa.
 
-## Limites desta etapa
+## Inicialização da memória e do carregador — 24/09/2026
 
-- O carregamento básico cobre cópia de código/dados, BSS e registro de funções.
-  Ainda faltam o ciclo completo de `runLink`, callbacks de inicialização,
-  gerenciamento do heap, atualização de todas as referências e modificações
-  gerais de código. Ele não aplica todas as tabelas de realocação à imagem MIPS
-  carregada; a prova diferencial usa o linker original para preparar a referência.
-- As referências externas verificadas nesta etapa ligam overlays ao programa
-  principal. Chamadas entre dois overlays, JALR e demais formas de realocação
-  continuam exigindo provas específicas.
-- A prova cobre funções inteiras selecionadas e permanece em execução de uma
-  única thread. Não valida ponto flutuante, exceções, temporização, boot nem a
-  campanha.
+O novo perfil em `port/boot` usa o alocador e o `runLink` originais recompilados.
+Inicializa suas tabelas, carrega os módulos 19, 6, 32 e 44 e executa o callback
+real de inicialização do módulo 44. Inclui 49 funções originais recompiladas,
+três interfaces de plataforma e dois caminhos de áudio explicitamente adiados.
+
+Passaram 56 pontos de comparação com a execução MIPS original, incluindo
+descarga e recarga, nos limites padrão e estendido do heap. A sequência também
+funcionou com o launcher nativo independente do emulador. Os 816 casos da suíte
+anterior continuam aprovados. Consulte [escopo e reprodução](boot/README.md) e
+[evidência](boot/validation.json). O novo pacote foi compilado para Windows,
+mas ainda não executado nessa plataforma.
+
+## Limites atuais
+
+- O perfil inicial `poc` mantém seu carregador básico. O perfil `boot` executa
+  o carregador real para quatro módulos, mas não cobre todos os módulos,
+  dependências entre eles ou todas as formas de modificação de código.
+- A chamada indireta do callback está validada. Novos destinos e chamadas entre
+  dois overlays ainda exigem ampliação do conjunto registrado e dos testes.
+- A execução permanece em uma única thread. Os efeitos na memória das cargas e
+  armazenamentos de ponto flutuante do callback foram comparados, mas não há
+  validação geral de FPU, exceções, temporização, boot completo ou campanha.
 - O N64ModernRuntime está fixado como dependência; nesta etapa usamos seu
   N64Recomp e os cabeçalhos correspondentes. Os serviços completos do runtime
   ainda não estão integrados.
@@ -175,8 +190,8 @@ cmake --build build/port-recomp/windows --parallel 2
 
 ## Próximos marcos
 
-1. Ampliar a prova para referências entre dois overlays, JALR e callbacks reais.
-2. Integrar o carregador ao estado do jogo, às filas, às threads e ao boot.
+1. Executar o novo diagnóstico de memória/carregador no Windows x64.
+2. Ampliar dependências entre overlays e integrar filas, threads e boot completo.
 3. Provar uma via de renderização compatível com F3DJFG, mantendo o alvo
    Windows/NVIDIA definido por Thiago.
 4. Avançar para menu, controles, áudio, saves e uma fase jogável.

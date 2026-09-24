@@ -123,8 +123,11 @@ def convert_relocations(tool, number, section, selected, rom, sections, referenc
                 raise ValueError("HI16 relocation does not refer to a LUI instruction")
             signed_low = struct.unpack(">h", struct.pack(">H", lo_word & 0xFFFF))[0]
             target, target_offset = resolve(entry, ((hi_word & 0xFFFF) << 16) + signed_low)
-            if not 0 <= target_offset < target["memory_size"]:
-                raise ValueError("Relocation target is outside section memory")
+            # JFG's audio-line loop forms an end pointer one word beyond BSS;
+            # ADDIU forms an address and does not dereference that sentinel.
+            address_only_end = lo_word >> 26 == 9 and target["memory_size"] <= target_offset <= target["memory_size"] + 4
+            if not (0 <= target_offset < target["memory_size"] or address_only_end):
+                raise ValueError(f"Relocation target is outside section memory: {section['name']} +{entry.target_offset:X} -> {target_offset:X}/{target['memory_size']:X}")
             for rel, kind in ((entry, "R_MIPS_HI16"), (low, "R_MIPS_LO16")):
                 converted.append({"vram": section["vram"] + rel.target_offset,
                                   "target_vram": target["vram"] + target_offset,
@@ -132,7 +135,7 @@ def convert_relocations(tool, number, section, selected, rom, sections, referenc
                                   "type": kind})
             group.update(kind="pair", consumed=2, hi_offset=entry.target_offset,
                          lo_offset=low.target_offset, target_offset=target_offset,
-                         target_section=target["index"])
+                         target_section=target["index"], address_only_end=address_only_end)
             groups.append(group)
             index += 2
     converted.sort(key=lambda rel: rel["vram"])
@@ -141,13 +144,14 @@ def convert_relocations(tool, number, section, selected, rom, sections, referenc
     return converted, groups
 
 
-def prepare(elf_path: Path, rom_path: Path, out: Path):
+def prepare(elf_path: Path, rom_path: Path, out: Path, *, functions=FUNCTIONS,
+            host_imports=(), deferred=(), extra_symbols=(), runtime_patches=()):
     rom = rom_path.read_bytes()
     if len(rom) != 0x2000000 or hashlib.sha1(rom).hexdigest() != ROM_SHA1:
         raise ValueError("The proof requires the verified, unmodified US ROM")
     out.mkdir(parents=True, exist_ok=True)
     tool = OverlayRelocTool(str(rom_path))
-    sections, functions = [], []
+    sections, output_functions = [], []
     with elf_path.open("rb") as file:
         elf = ELFFile(file)
         if elf.elfclass != 32 or elf.little_endian or elf["e_machine"] != "EM_MIPS":
@@ -156,7 +160,7 @@ def prepare(elf_path: Path, rom_path: Path, out: Path):
         if symtab is None:
             raise ValueError("ELF symbol table is missing")
         by_name = {}
-        for name in FUNCTIONS:
+        for name in functions:
             symbol = unique_symbol(symtab, name)
             if symbol["st_info"]["type"] != "STT_FUNC" or not symbol["st_size"]:
                 raise ValueError(f"Invalid function symbol: {name}")
@@ -187,13 +191,18 @@ def prepare(elf_path: Path, rom_path: Path, out: Path):
                 raise ValueError(f"Function {name} is outside the section")
             function = {"name": name, "vram": symbol["st_value"], "size": symbol["st_size"],
                         "section": info["index"], "offset": offset,
-                        "rom": info["rom"] + offset}
+                        "rom": info["rom"] + offset,
+                        "host_import": name in host_imports, "deferred": name in deferred,
+                        "binding": "jfg_host_" + name if name in host_imports else name}
             info["functions"].append(function)
-            functions.append(function)
-        reference = {name: unique_symbol(symtab, name)["st_value"] for name in REFERENCE_SYMBOLS}
+            output_functions.append(function)
+        reference = {name: unique_symbol(symtab, name)["st_value"] for name in dict.fromkeys((*REFERENCE_SYMBOLS, *extra_symbols))}
         function_count = sum(s["st_info"]["type"] == "STT_FUNC" for s in symtab.iter_symbols())
 
     toml = []
+    for patch in runtime_patches:
+        toml.extend(["[[runtime_patch]]", f'vram = 0x{patch["vram"]:X}',
+                     f'before = 0x{patch["before"]:X}', f'after = 0x{patch["after"]:X}', ""])
     for section in sections:
         relocs, groups = convert_relocations(tool, section["overlay"], section, section["functions"], rom,
                                              sections, reference) if section["overlay"] else ([], [])
@@ -203,8 +212,9 @@ def prepare(elf_path: Path, rom_path: Path, out: Path):
                      f'rom = 0x{section["rom"]:X}', f'vram = 0x{section["vram"]:X}',
                      f'size = 0x{section["size"]:X}', "functions = ["])
         for function in section["functions"]:
-            toml.append('  { name = "%s", vram = 0x%X, size = 0x%X },' %
-                        (function["name"], function["vram"], function["size"]))
+            toml.append('  { name = "%s", vram = 0x%X, size = 0x%X, host_import = %s, deferred = %s },' %
+                        (function["name"], function["vram"], function["size"],
+                         str(function["host_import"]).lower(), str(function["deferred"]).lower()))
         toml.append("]")
         toml.append("relocs = [")
         for rel in relocs:
@@ -219,19 +229,20 @@ def prepare(elf_path: Path, rom_path: Path, out: Path):
         f"{key} = {json.dumps(value)}" for key, value in config.items()) + "\n", encoding="utf-8")
     header = ["/* Generated metadata only; do not edit. */", "#pragma once",
               f"#define JFG_POC_SECTION_COUNT {len(sections)}",
-              f"#define JFG_POC_FUNCTION_COUNT {len(functions)}"]
-    for function in functions:
-        header.append(f'extern void {function["name"]}(uint8_t*, recomp_context*);')
+              f"#define JFG_POC_FUNCTION_COUNT {len(output_functions)}"]
+    for function in output_functions:
+        if not function["deferred"]:
+            header.append(f'extern void {function["binding"]}(uint8_t*, recomp_context*);')
     header.append("static const struct PocFunction poc_functions[] = {")
-    for function in functions:
+    for function in output_functions:
         header.append('    { "%s", %s, %d, 0x%Xu },' %
-                      (function["name"], function["name"], function["section"], function["offset"]))
+                      (function["name"], "NULL" if function["deferred"] else function["binding"], function["section"], function["offset"]))
     header.append("};")
     header.append("static const struct PocSection poc_sections[] = {")
     for section in sections:
-        header.append('    { 0x%Xu, 0x%Xu, 0x%Xu, 0x%Xu },' %
+        header.append('    { 0x%Xu, 0x%Xu, 0x%Xu, 0x%Xu, %du },' %
                       (section["rom"], section["load_size"], section["memory_size"],
-                       0 if section["overlay"] else section["vram"]))
+                       0 if section["overlay"] else section["vram"], section["overlay"]))
     header.append("};")
     (out / "poc_symbols.h").write_text("\n".join(header) + "\n", encoding="utf-8")
     main_section = next(s for s in sections if not s["overlay"])
@@ -242,14 +253,15 @@ def prepare(elf_path: Path, rom_path: Path, out: Path):
         f'#define POC_GAME_MODE 0x{reference["mainGameMode"]:08X}u\n', encoding="utf-8")
     manifest = {"rom_sha1": ROM_SHA1, "rom_path": rom_path.resolve().as_posix(),
                 "elf_path": elf_path.resolve().as_posix(), "elf_function_symbols": function_count,
-                "sections": sections, "functions": functions, "reference_symbols": reference,
+                "sections": sections, "functions": output_functions, "reference_symbols": reference,
+                "runtime_patches": list(runtime_patches),
                 "overlay_rom_table": tool.offsets["overlay_rom_table"],
                 "overlay_table": tool.offsets["overlay_table"],
                 "overlay_data_base": tool.offsets["overlay_data_base"],
                 "limits": ["Selected integer functions only", "Selected local/external HI16/LO16 and external JAL relocations",
                            "No full runLink loader, boot, graphics, audio or gameplay"]}
     (out / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
-    print(f"Prepared {len(functions)} functions in {len(sections)} sections; {sum(len(s['relocation_groups']) for s in sections)} real relocation groups.")
+    print(f"Prepared {len(output_functions)} function entries in {len(sections)} sections; {sum(len(s['relocation_groups']) for s in sections)} real relocation groups.")
     return manifest
 
 

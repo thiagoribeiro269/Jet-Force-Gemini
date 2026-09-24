@@ -16,8 +16,8 @@ from checks_bootstrap import BootstrapSession, configure_bootstrap, require, loa
 
 
 class BootstrapOracle(InitOracle):
-    def __init__(self, *args, boundary_name="amInit"):
-        super().__init__(*args, trap_boundary=False)
+    def __init__(self, *args, boundary_name="amInit", native_imports=()):
+        super().__init__(*args, trap_boundary=False, native_imports=native_imports)
         self.boundary_name = boundary_name
         self.traps = []
         self.boundary_registers = None

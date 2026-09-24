@@ -19,7 +19,7 @@ from checks import HOST, SLOTS
 
 
 class InitOracle(Oracle):
-    def __init__(self, image, rom, manifest, symbols, trap_boundary=True):
+    def __init__(self, image, rom, manifest, symbols, trap_boundary=True, native_imports=()):
         super().__init__(image)
         self.rom, self.manifest, self.symbols = rom, manifest, symbols
         self.queues = set()
@@ -27,7 +27,7 @@ class InitOracle(Oracle):
         self.transfers = []
         self.boundary = None
         self.mask = 0x3FFF01
-        native_messages = {"osCreateMesgQueue", "osSendMesg", "osJamMesg", "osRecvMesg", "osSetEventMesg"}
+        native_messages = {"osCreateMesgQueue", "osSendMesg", "osJamMesg", "osRecvMesg", "osSetEventMesg", *native_imports}
         for function in manifest["functions"]:
             if function["host_import"] and function["name"] not in native_messages:
                 address = sx32(function["vram"])

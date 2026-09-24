@@ -14,6 +14,9 @@
 #ifdef JFG_INIT_PROFILE
 #include "io.h"
 #endif
+#ifdef JFG_AUDIO_MANAGER_PROFILE
+#include "ai.h"
+#endif
 
 int jfg_kernel_attach(uint8_t*, int32_t);
 int jfg_kernel_join_retired(uint32_t);
@@ -200,6 +203,9 @@ int jfg_threads_queue(uint8_t* ram, uint32_t operation, uint32_t queue,
 
 int jfg_threads_end(uint8_t* ram) {
     if (!host_access() || ram != session_ram) return -1;
+#ifdef JFG_AUDIO_MANAGER_PROFILE
+    if (jfg_ai_end(ram)) return -1;
+#endif
 #ifdef JFG_INIT_PROFILE
     if (jfg_io_end(ram)) return -1;
 #endif

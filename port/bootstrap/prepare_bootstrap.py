@@ -22,10 +22,10 @@ BOOTSTRAP_DEFERRED = ("amInit", "amInitAudioMap", "joyInit", "texInitTextures", 
 
 
 def prepare_profile(elf_path, rom_path, out, *, implemented=(), extra_roots=(),
-                    extra_deferred=(), extra_symbols=()):
+                    extra_deferred=(), extra_symbols=(), extra_imports=()):
     state = profile(elf_path, rom_path)
     imports = tuple(dict.fromkeys((*(n for n in PLATFORM_IMPORTS if n != "romCopy"),
-                                  *MESSAGE_IMPORTS, *EVENT_IMPORTS, *IO_IMPORTS)))
+                                  *MESSAGE_IMPORTS, *EVENT_IMPORTS, *IO_IMPORTS, *extra_imports)))
     deferred = tuple(n for n in dict.fromkeys((*DEFERRED, *(n for n in GRAPHICS_DEFERRED if n not in imports),
                       "amStop", "viReset", "rumbleKill", "rumbleTick", *BOOTSTRAP_DEFERRED, *extra_deferred))
                      if n not in implemented)

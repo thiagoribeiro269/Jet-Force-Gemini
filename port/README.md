@@ -226,7 +226,12 @@ os bancos e 90 entradas de sequências, e para antes de `amCreateAudioMgr`.
 Os três cenários passaram no Linux, na referência MIPS e no Windows x64;
 a saída de áudio ainda depende da próxima etapa.
 
-1. Integrar `amCreateAudioMgr`, o sintetizador e os contratos da thread de áudio.
+O [perfil de gerenciador de áudio](audio_manager/README.md) já cria o
+sintetizador, buffers, filas e a thread de áudio, que permanece sem iniciar.
+As três configurações passaram no Linux, contra o MIPS original e no Windows
+x64. A próxima fronteira é o construtor de players `n_alCSPNew`.
+
+1. Inicializar os players e avançar até a thread e o processamento de áudio.
 2. Ampliar dependências entre overlays e alcançar o boot completo.
 3. Provar uma via de renderização compatível com F3DJFG, mantendo o alvo
    Windows/NVIDIA definido por Thiago.

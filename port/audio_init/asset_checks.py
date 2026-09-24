@@ -48,9 +48,10 @@ def _check_bank(session, name: str, source: bytes, pointer: int) -> dict:
             "rom_sha256": hashlib.sha256(source).hexdigest()}
 
 
-def check_audio_assets(session) -> dict:
+def check_audio_assets(session, *, initial_heap_only=True) -> dict:
     """Check original US audio metadata against guest RAM at the manager stop."""
-    profile, symbols, rom = session.manifest["audio_profile"], session.symbols, session.rom
+    profile = session.manifest.get("manager_profile") or session.manifest["audio_profile"]
+    symbols, rom = session.symbols, session.rom
     _require(profile["asset_sections"] == {"offset_table": 0x33, "audio_data": 0x34},
              "Unexpected audio asset indices")
     lut_start, lut_end = symbols["__ASSETS_LUT_START"], symbols["__ASSETS_LUT_END"]
@@ -125,8 +126,11 @@ def check_audio_assets(session) -> dict:
              "libaudio heap base or capacity differs")
     # alHeapDBAlloc reserves one aligned 4-byte S1 header (16 bytes). The
     # full seqFile is subsequently allocated with mmAlloc, outside ALHeap.
-    _require(heap_cur == heap_base + 16 and heap_count == 0,
-             "libaudio heap cursor differs after S1 header allocation")
+    _require(heap_base + 16 <= heap_cur <= heap_base + heap_len and heap_cur % 16 == 0,
+             "libaudio heap cursor is outside its aligned capacity")
+    if initial_heap_only:
+        _require(heap_cur == heap_base + 16 and heap_count == 0,
+                 "libaudio heap cursor differs after S1 header allocation")
     _require(session.read(heap_base, 4) == audio[seq_file_start:seq_file_start + 4],
              "S1 header in libaudio heap differs from ROM")
     return {"asset_table_bytes": len(table), "audio_asset_bytes": len(audio),

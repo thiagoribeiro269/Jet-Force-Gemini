@@ -221,7 +221,12 @@ original, carrega os overlays 36 e 25 e entra no início de `mainInitRlo`.
 Três cenários de bootstrap e nove verificações do linker passaram no Linux
 e no Windows x64, com referência MIPS até a entrada de áudio.
 
-1. Integrar `amInit` e continuar a inicialização iniciada por `mainInitRlo`.
+O [perfil de dados de áudio](audio_init/README.md) avança por `amInit`, prepara
+os bancos e 90 entradas de sequências, e para antes de `amCreateAudioMgr`.
+Os três cenários passaram no Linux, na referência MIPS e no Windows x64;
+a saída de áudio ainda depende da próxima etapa.
+
+1. Integrar `amCreateAudioMgr`, o sintetizador e os contratos da thread de áudio.
 2. Ampliar dependências entre overlays e alcançar o boot completo.
 3. Provar uma via de renderização compatível com F3DJFG, mantendo o alvo
    Windows/NVIDIA definido por Thiago.

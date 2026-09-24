@@ -1,0 +1,866 @@
+{
+  "recorded_at": "2026-09-24T17:56:40.464227-03:00",
+  "stage": "original_audio_banks_before_manager",
+  "game_base": "f409c111053c671ae91051a6cdff277e0af7d95e",
+  "previous_stage": "14733fa6b455dc1b0b92ab0690eee73dc448582d",
+  "runtime_revision": "cdf5abbd5026fef5c364c676e4667c45e42b6863",
+  "recompiler_revision": "81213c1831fab2521a6a5459c67b63437d67e253",
+  "game_and_vendor_sources_modified": false,
+  "profile": {
+    "entries": 198,
+    "original_compiled": 118,
+    "host_imports": 23,
+    "deferred": 57,
+    "audio": {
+      "entry": "amInit",
+      "overlay": 25,
+      "entry_offset": 776,
+      "boundary_function": "amCreateAudioMgr",
+      "boundary_overlay": 0,
+      "boundary_target": 2147490320,
+      "boundary_offset": 5648,
+      "boundary_call_overlay": 25,
+      "boundary_call_offset": 1612,
+      "asset_sections": {
+        "offset_table": 51,
+        "audio_data": 52
+      }
+    }
+  },
+  "native": {
+    "status": "passed",
+    "platform": "Linux-6.8.0-139-generic-x86_64-with-glibc2.39",
+    "cases": [
+      {
+        "name": "audio_data_tv_1",
+        "status": "passed",
+        "boundary": {
+          "function": "amCreateAudioMgr",
+          "status": -3,
+          "target": "0x80001A10",
+          "call_site": "0x801865CC",
+          "overlay36": "0x801852E0",
+          "overlay25": "0x80185F80"
+        },
+        "assets": {
+          "asset_table_bytes": 48,
+          "audio_asset_bytes": 6996800,
+          "banks": {
+            "sequence": {
+              "bytes": 76128,
+              "bank_count": 1,
+              "rom_sha256": "09d1bec1f3c707fe44f87ed1528447dff4b35d3889e6d98dff88de5c719ca3e9"
+            },
+            "sound": {
+              "bytes": 58984,
+              "bank_count": 1,
+              "rom_sha256": "ceb7a06380621cd8c1ee78ae8a4157cf7e83e066cdca858f203cfeaac9c67e03"
+            }
+          },
+          "sequence_count": 90,
+          "max_sequence_bytes": 28028,
+          "seq_index_bytes": 276,
+          "sfx_index_bytes": 6400,
+          "heap_used_bytes": 16
+        },
+        "rom_transfers": 20,
+        "io": {
+          "active": 1,
+          "command_queue": 2148524120,
+          "pending": 0,
+          "submitted": 20,
+          "completed": 20,
+          "bytes": 167836,
+          "dropped": 0,
+          "cancelled": 0,
+          "rejected": 0,
+          "reserved": 0
+        },
+        "threads_joined": 2
+      },
+      {
+        "name": "audio_data_tv_0",
+        "status": "passed",
+        "boundary": {
+          "function": "amCreateAudioMgr",
+          "status": -3,
+          "target": "0x80001A10",
+          "call_site": "0x8018DDCC",
+          "overlay36": "0x8018CAE0",
+          "overlay25": "0x8018D780"
+        },
+        "assets": {
+          "asset_table_bytes": 48,
+          "audio_asset_bytes": 6996800,
+          "banks": {
+            "sequence": {
+              "bytes": 76128,
+              "bank_count": 1,
+              "rom_sha256": "09d1bec1f3c707fe44f87ed1528447dff4b35d3889e6d98dff88de5c719ca3e9"
+            },
+            "sound": {
+              "bytes": 58984,
+              "bank_count": 1,
+              "rom_sha256": "ceb7a06380621cd8c1ee78ae8a4157cf7e83e066cdca858f203cfeaac9c67e03"
+            }
+          },
+          "sequence_count": 90,
+          "max_sequence_bytes": 28028,
+          "seq_index_bytes": 276,
+          "sfx_index_bytes": 6400,
+          "heap_used_bytes": 16
+        },
+        "rom_transfers": 20,
+        "io": {
+          "active": 1,
+          "command_queue": 2148524120,
+          "pending": 0,
+          "submitted": 20,
+          "completed": 20,
+          "bytes": 167836,
+          "dropped": 0,
+          "cancelled": 0,
+          "rejected": 0,
+          "reserved": 0
+        },
+        "threads_joined": 2
+      },
+      {
+        "name": "audio_data_tv_2",
+        "status": "passed",
+        "boundary": {
+          "function": "amCreateAudioMgr",
+          "status": -3,
+          "target": "0x80001A10",
+          "call_site": "0x801865CC",
+          "overlay36": "0x801852E0",
+          "overlay25": "0x80185F80"
+        },
+        "assets": {
+          "asset_table_bytes": 48,
+          "audio_asset_bytes": 6996800,
+          "banks": {
+            "sequence": {
+              "bytes": 76128,
+              "bank_count": 1,
+              "rom_sha256": "09d1bec1f3c707fe44f87ed1528447dff4b35d3889e6d98dff88de5c719ca3e9"
+            },
+            "sound": {
+              "bytes": 58984,
+              "bank_count": 1,
+              "rom_sha256": "ceb7a06380621cd8c1ee78ae8a4157cf7e83e066cdca858f203cfeaac9c67e03"
+            }
+          },
+          "sequence_count": 90,
+          "max_sequence_bytes": 28028,
+          "seq_index_bytes": 276,
+          "sfx_index_bytes": 6400,
+          "heap_used_bytes": 16
+        },
+        "rom_transfers": 20,
+        "io": {
+          "active": 1,
+          "command_queue": 2148524120,
+          "pending": 0,
+          "submitted": 20,
+          "completed": 20,
+          "bytes": 167836,
+          "dropped": 0,
+          "cancelled": 0,
+          "rejected": 0,
+          "reserved": 0
+        },
+        "threads_joined": 2
+      }
+    ],
+    "limits": [
+      "Original audio data preparation only; manager and sample output have not started",
+      "mainInitGame and amInit remain incomplete"
+    ]
+  },
+  "native_isolated": {
+    "status": "passed",
+    "platform": "Linux-6.8.0-139-generic-x86_64-with-glibc2.39",
+    "cases": [
+      {
+        "name": "audio_data_tv_1",
+        "status": "passed",
+        "boundary": {
+          "function": "amCreateAudioMgr",
+          "status": -3,
+          "target": "0x80001A10",
+          "call_site": "0x801865CC",
+          "overlay36": "0x801852E0",
+          "overlay25": "0x80185F80"
+        },
+        "assets": {
+          "asset_table_bytes": 48,
+          "audio_asset_bytes": 6996800,
+          "banks": {
+            "sequence": {
+              "bytes": 76128,
+              "bank_count": 1,
+              "rom_sha256": "09d1bec1f3c707fe44f87ed1528447dff4b35d3889e6d98dff88de5c719ca3e9"
+            },
+            "sound": {
+              "bytes": 58984,
+              "bank_count": 1,
+              "rom_sha256": "ceb7a06380621cd8c1ee78ae8a4157cf7e83e066cdca858f203cfeaac9c67e03"
+            }
+          },
+          "sequence_count": 90,
+          "max_sequence_bytes": 28028,
+          "seq_index_bytes": 276,
+          "sfx_index_bytes": 6400,
+          "heap_used_bytes": 16
+        },
+        "rom_transfers": 20,
+        "io": {
+          "active": 1,
+          "command_queue": 2148524120,
+          "pending": 0,
+          "submitted": 20,
+          "completed": 20,
+          "bytes": 167836,
+          "dropped": 0,
+          "cancelled": 0,
+          "rejected": 0,
+          "reserved": 0
+        },
+        "threads_joined": 2
+      },
+      {
+        "name": "audio_data_tv_0",
+        "status": "passed",
+        "boundary": {
+          "function": "amCreateAudioMgr",
+          "status": -3,
+          "target": "0x80001A10",
+          "call_site": "0x8018DDCC",
+          "overlay36": "0x8018CAE0",
+          "overlay25": "0x8018D780"
+        },
+        "assets": {
+          "asset_table_bytes": 48,
+          "audio_asset_bytes": 6996800,
+          "banks": {
+            "sequence": {
+              "bytes": 76128,
+              "bank_count": 1,
+              "rom_sha256": "09d1bec1f3c707fe44f87ed1528447dff4b35d3889e6d98dff88de5c719ca3e9"
+            },
+            "sound": {
+              "bytes": 58984,
+              "bank_count": 1,
+              "rom_sha256": "ceb7a06380621cd8c1ee78ae8a4157cf7e83e066cdca858f203cfeaac9c67e03"
+            }
+          },
+          "sequence_count": 90,
+          "max_sequence_bytes": 28028,
+          "seq_index_bytes": 276,
+          "sfx_index_bytes": 6400,
+          "heap_used_bytes": 16
+        },
+        "rom_transfers": 20,
+        "io": {
+          "active": 1,
+          "command_queue": 2148524120,
+          "pending": 0,
+          "submitted": 20,
+          "completed": 20,
+          "bytes": 167836,
+          "dropped": 0,
+          "cancelled": 0,
+          "rejected": 0,
+          "reserved": 0
+        },
+        "threads_joined": 2
+      },
+      {
+        "name": "audio_data_tv_2",
+        "status": "passed",
+        "boundary": {
+          "function": "amCreateAudioMgr",
+          "status": -3,
+          "target": "0x80001A10",
+          "call_site": "0x801865CC",
+          "overlay36": "0x801852E0",
+          "overlay25": "0x80185F80"
+        },
+        "assets": {
+          "asset_table_bytes": 48,
+          "audio_asset_bytes": 6996800,
+          "banks": {
+            "sequence": {
+              "bytes": 76128,
+              "bank_count": 1,
+              "rom_sha256": "09d1bec1f3c707fe44f87ed1528447dff4b35d3889e6d98dff88de5c719ca3e9"
+            },
+            "sound": {
+              "bytes": 58984,
+              "bank_count": 1,
+              "rom_sha256": "ceb7a06380621cd8c1ee78ae8a4157cf7e83e066cdca858f203cfeaac9c67e03"
+            }
+          },
+          "sequence_count": 90,
+          "max_sequence_bytes": 28028,
+          "seq_index_bytes": 276,
+          "sfx_index_bytes": 6400,
+          "heap_used_bytes": 16
+        },
+        "rom_transfers": 20,
+        "io": {
+          "active": 1,
+          "command_queue": 2148524120,
+          "pending": 0,
+          "submitted": 20,
+          "completed": 20,
+          "bytes": 167836,
+          "dropped": 0,
+          "cancelled": 0,
+          "rejected": 0,
+          "reserved": 0
+        },
+        "threads_joined": 2
+      }
+    ],
+    "limits": [
+      "Original audio data preparation only; manager and sample output have not started",
+      "mainInitGame and amInit remain incomplete"
+    ]
+  },
+  "mips": {
+    "status": "passed",
+    "cases": [
+      {
+        "name": "original_bootstrap_tv_1",
+        "status": "passed",
+        "boundary": {
+          "function": "amCreateAudioMgr",
+          "status": -3,
+          "target": "0x80001A10",
+          "call_site": "0x801865CC",
+          "overlay36": "0x801852E0",
+          "overlay25": "0x80185F80"
+        },
+        "compared_gprs": [
+          0,
+          4,
+          5,
+          6,
+          7,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          28,
+          29,
+          30,
+          31
+        ],
+        "rom_transfers": 20,
+        "masked_regions": [
+          [
+            "0x807A0000",
+            256
+          ],
+          [
+            "0x807A1000",
+            512
+          ],
+          [
+            "0x800FB4F0",
+            432
+          ],
+          [
+            "0x800FD348",
+            1056
+          ],
+          [
+            "0x8077DFF0",
+            8256
+          ],
+          [
+            "0x800FB480",
+            8
+          ],
+          [
+            "0x800FB4B8",
+            8
+          ],
+          [
+            "0x800FE000",
+            8
+          ],
+          [
+            "0x800FE058",
+            8
+          ],
+          [
+            "0x800FE480",
+            8
+          ],
+          [
+            "0x800FE4A0",
+            8
+          ],
+          [
+            "0x800FE4B8",
+            8
+          ],
+          [
+            "0x800FE8A8",
+            8
+          ],
+          [
+            "0x800FE8E0",
+            8
+          ],
+          [
+            "0x800FE918",
+            8
+          ],
+          [
+            "0x800FEB80",
+            8
+          ]
+        ],
+        "ram_sha256": "f373b1f2c8eac17926275bc336012114638b8aa01a17e1e319376d39418f5d4e",
+        "threads_joined": 2
+      },
+      {
+        "name": "original_bootstrap_tv_0",
+        "status": "passed",
+        "boundary": {
+          "function": "amCreateAudioMgr",
+          "status": -3,
+          "target": "0x80001A10",
+          "call_site": "0x8018DDCC",
+          "overlay36": "0x8018CAE0",
+          "overlay25": "0x8018D780"
+        },
+        "compared_gprs": [
+          0,
+          4,
+          5,
+          6,
+          7,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          28,
+          29,
+          30,
+          31
+        ],
+        "rom_transfers": 20,
+        "masked_regions": [
+          [
+            "0x807A0000",
+            256
+          ],
+          [
+            "0x807A1000",
+            512
+          ],
+          [
+            "0x800FB4F0",
+            432
+          ],
+          [
+            "0x800FD348",
+            1056
+          ],
+          [
+            "0x8077DFF0",
+            8256
+          ],
+          [
+            "0x800FB480",
+            8
+          ],
+          [
+            "0x800FB4B8",
+            8
+          ],
+          [
+            "0x800FE000",
+            8
+          ],
+          [
+            "0x800FE058",
+            8
+          ],
+          [
+            "0x800FE480",
+            8
+          ],
+          [
+            "0x800FE4A0",
+            8
+          ],
+          [
+            "0x800FE4B8",
+            8
+          ],
+          [
+            "0x800FE8A8",
+            8
+          ],
+          [
+            "0x800FE8E0",
+            8
+          ],
+          [
+            "0x800FE918",
+            8
+          ],
+          [
+            "0x800FEB80",
+            8
+          ]
+        ],
+        "ram_sha256": "542c85a05f884e1bda3ce421f155268c52c401c44e0944eaf38cf98aa2baf629",
+        "threads_joined": 2
+      },
+      {
+        "name": "original_bootstrap_tv_2",
+        "status": "passed",
+        "boundary": {
+          "function": "amCreateAudioMgr",
+          "status": -3,
+          "target": "0x80001A10",
+          "call_site": "0x801865CC",
+          "overlay36": "0x801852E0",
+          "overlay25": "0x80185F80"
+        },
+        "compared_gprs": [
+          0,
+          4,
+          5,
+          6,
+          7,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          28,
+          29,
+          30,
+          31
+        ],
+        "rom_transfers": 20,
+        "masked_regions": [
+          [
+            "0x807A0000",
+            256
+          ],
+          [
+            "0x807A1000",
+            512
+          ],
+          [
+            "0x800FB4F0",
+            432
+          ],
+          [
+            "0x800FD348",
+            1056
+          ],
+          [
+            "0x8077DFF0",
+            8256
+          ],
+          [
+            "0x800FB480",
+            8
+          ],
+          [
+            "0x800FB4B8",
+            8
+          ],
+          [
+            "0x800FE000",
+            8
+          ],
+          [
+            "0x800FE058",
+            8
+          ],
+          [
+            "0x800FE480",
+            8
+          ],
+          [
+            "0x800FE4A0",
+            8
+          ],
+          [
+            "0x800FE4B8",
+            8
+          ],
+          [
+            "0x800FE8A8",
+            8
+          ],
+          [
+            "0x800FE8E0",
+            8
+          ],
+          [
+            "0x800FE918",
+            8
+          ],
+          [
+            "0x800FEB80",
+            8
+          ]
+        ],
+        "ram_sha256": "e0cfcbfea80498382bfa4da9388b4c21759161ce5f957237f960b0e3f7c3f3ec",
+        "threads_joined": 2
+      }
+    ],
+    "limits": [
+      "Explicit platform hooks; private kernel structures and call stacks excluded from RAM comparison",
+      "Only argument/callee-saved/stack/return GPRs compared; FPU registers are not compared",
+      "PI completion is immediate in MIPS and owner-pumped natively; no console timing proof",
+      "Stops before executing amCreateAudioMgr"
+    ]
+  },
+  "windows": {
+    "recorded_at": "2026-09-24T20:54:25.1560910Z",
+    "exit_code": 0,
+    "windows": "Microsoft Windows NT 10.0.26200.0",
+    "python": "Python 3.12.10",
+    "package_sha256": "feef17f870c092b942d3f567206f9927d4dc48f708b018fb953147382e7a7675",
+    "report": {
+      "status": "passed",
+      "platform": "Windows-11-10.0.26200-SP0",
+      "cases": [
+        {
+          "name": "audio_data_tv_1",
+          "status": "passed",
+          "boundary": {
+            "function": "amCreateAudioMgr",
+            "status": -3,
+            "target": "0x80001A10",
+            "call_site": "0x801865CC",
+            "overlay36": "0x801852E0",
+            "overlay25": "0x80185F80"
+          },
+          "assets": {
+            "asset_table_bytes": 48,
+            "audio_asset_bytes": 6996800,
+            "banks": {
+              "sequence": {
+                "bytes": 76128,
+                "bank_count": 1,
+                "rom_sha256": "09d1bec1f3c707fe44f87ed1528447dff4b35d3889e6d98dff88de5c719ca3e9"
+              },
+              "sound": {
+                "bytes": 58984,
+                "bank_count": 1,
+                "rom_sha256": "ceb7a06380621cd8c1ee78ae8a4157cf7e83e066cdca858f203cfeaac9c67e03"
+              }
+            },
+            "sequence_count": 90,
+            "max_sequence_bytes": 28028,
+            "seq_index_bytes": 276,
+            "sfx_index_bytes": 6400,
+            "heap_used_bytes": 16
+          },
+          "rom_transfers": 20,
+          "io": {
+            "active": 1,
+            "command_queue": 2148524120,
+            "pending": 0,
+            "submitted": 20,
+            "completed": 20,
+            "bytes": 167836,
+            "dropped": 0,
+            "cancelled": 0,
+            "rejected": 0,
+            "reserved": 0
+          },
+          "threads_joined": 2
+        },
+        {
+          "name": "audio_data_tv_0",
+          "status": "passed",
+          "boundary": {
+            "function": "amCreateAudioMgr",
+            "status": -3,
+            "target": "0x80001A10",
+            "call_site": "0x8018DDCC",
+            "overlay36": "0x8018CAE0",
+            "overlay25": "0x8018D780"
+          },
+          "assets": {
+            "asset_table_bytes": 48,
+            "audio_asset_bytes": 6996800,
+            "banks": {
+              "sequence": {
+                "bytes": 76128,
+                "bank_count": 1,
+                "rom_sha256": "09d1bec1f3c707fe44f87ed1528447dff4b35d3889e6d98dff88de5c719ca3e9"
+              },
+              "sound": {
+                "bytes": 58984,
+                "bank_count": 1,
+                "rom_sha256": "ceb7a06380621cd8c1ee78ae8a4157cf7e83e066cdca858f203cfeaac9c67e03"
+              }
+            },
+            "sequence_count": 90,
+            "max_sequence_bytes": 28028,
+            "seq_index_bytes": 276,
+            "sfx_index_bytes": 6400,
+            "heap_used_bytes": 16
+          },
+          "rom_transfers": 20,
+          "io": {
+            "active": 1,
+            "command_queue": 2148524120,
+            "pending": 0,
+            "submitted": 20,
+            "completed": 20,
+            "bytes": 167836,
+            "dropped": 0,
+            "cancelled": 0,
+            "rejected": 0,
+            "reserved": 0
+          },
+          "threads_joined": 2
+        },
+        {
+          "name": "audio_data_tv_2",
+          "status": "passed",
+          "boundary": {
+            "function": "amCreateAudioMgr",
+            "status": -3,
+            "target": "0x80001A10",
+            "call_site": "0x801865CC",
+            "overlay36": "0x801852E0",
+            "overlay25": "0x80185F80"
+          },
+          "assets": {
+            "asset_table_bytes": 48,
+            "audio_asset_bytes": 6996800,
+            "banks": {
+              "sequence": {
+                "bytes": 76128,
+                "bank_count": 1,
+                "rom_sha256": "09d1bec1f3c707fe44f87ed1528447dff4b35d3889e6d98dff88de5c719ca3e9"
+              },
+              "sound": {
+                "bytes": 58984,
+                "bank_count": 1,
+                "rom_sha256": "ceb7a06380621cd8c1ee78ae8a4157cf7e83e066cdca858f203cfeaac9c67e03"
+              }
+            },
+            "sequence_count": 90,
+            "max_sequence_bytes": 28028,
+            "seq_index_bytes": 276,
+            "sfx_index_bytes": 6400,
+            "heap_used_bytes": 16
+          },
+          "rom_transfers": 20,
+          "io": {
+            "active": 1,
+            "command_queue": 2148524120,
+            "pending": 0,
+            "submitted": 20,
+            "completed": 20,
+            "bytes": 167836,
+            "dropped": 0,
+            "cancelled": 0,
+            "rejected": 0,
+            "reserved": 0
+          },
+          "threads_joined": 2
+        }
+      ],
+      "limits": [
+        "Original audio data preparation only; manager and sample output have not started",
+        "mainInitGame and amInit remain incomplete"
+      ]
+    }
+  },
+  "package": {
+    "package": "jfg-audio-init-windows-x64.zip",
+    "size": 374991,
+    "sha256": "feef17f870c092b942d3f567206f9927d4dc48f708b018fb953147382e7a7675",
+    "files": {
+      "checks_audio.py": {
+        "size": 3201,
+        "sha256": "0a52af560d3b0425ffd4a7c3c189e88fbefdda18d2572472d1ee7fb6f4a051c7"
+      },
+      "asset_checks.py": {
+        "size": 7228,
+        "sha256": "0668c0321242ae66d4730f344cd61c8532dc4ce693b8cf5f2e697a0b2bd058bc"
+      },
+      "checks_bootstrap.py": {
+        "size": 3937,
+        "sha256": "ca78d043ee7ee35f01856c17f189a2f34bf7fc158ca90de8f21d805b6c37a9bf"
+      },
+      "checks_init.py": {
+        "size": 12714,
+        "sha256": "78e1d99a41cb90b7dbc984570b30f52c9c4b23ed63d5b7a5ddf2e70e9e8acd29"
+      },
+      "checks_events.py": {
+        "size": 12308,
+        "sha256": "c768038a627b9afa94a8178c2183c21b895bfe486819f61538a6c2fda7e25b9c"
+      },
+      "thread_checks.py": {
+        "size": 15140,
+        "sha256": "0bb3547d9dd907424347d49228ab18b973c4f858ed9fdc84d8456d2ead3a8ec5"
+      },
+      "native.py": {
+        "size": 8102,
+        "sha256": "35efe8ae165c428a11c5b8309119855c1caa8b17aece84afee0b8010298517d0"
+      },
+      "jfg_poc.dll": {
+        "size": 973312,
+        "sha256": "5a2f5c77838b3c6146ad118908085798cf1d6edff74b300fa572af82df05a661"
+      },
+      "audio-config.json": {
+        "size": 217295,
+        "sha256": "57d23778b9d286b8249d21fb8b2f98618173578e03252bae1b3cf51874bcfe49"
+      },
+      "README.txt": {
+        "size": 727,
+        "sha256": "b5186a8ce772c8aa88970097ba75e4099213aa56e921db9115962ccacbcc07e1"
+      }
+    }
+  },
+  "regressions": {
+    "bootstrap_native_cases": 3,
+    "linker_checks": 9,
+    "bootstrap_mips_cases": 3,
+    "n64_binary_identical": true
+  },
+  "delegation": {
+    "agents": 2,
+    "model": "gpt-6-sol",
+    "reasoning_effort": "medium",
+    "fork_turns": "none",
+    "scope": [
+      "audio dependencies and preparation profile",
+      "independent audio asset checks"
+    ],
+    "review": "Coordinator integrated tests and corrected metadata labels/offset and the distinction between temporary ALHeap header and final seqFile allocation",
+    "cost_measurement": "No comparable token or cost measurements; qualitative usefulness only"
+  }
+}

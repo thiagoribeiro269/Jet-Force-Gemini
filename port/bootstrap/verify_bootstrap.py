@@ -16,12 +16,19 @@ from checks_bootstrap import BootstrapSession, configure_bootstrap, require, loa
 
 
 class BootstrapOracle(InitOracle):
-    def __init__(self, *args):
+    def __init__(self, *args, boundary_name="amInit"):
         super().__init__(*args, trap_boundary=False)
+        self.boundary_name = boundary_name
         self.traps = []
         self.boundary_registers = None
         trap = sx32(self.symbols["TrapDanglingJump"])
         self.cpu.hook_add(UC_HOOK_CODE, self.observe_trap, begin=trap, end=trap)
+        if boundary_name != "amInit":
+            function = next(f for f in self.manifest["functions"] if f["name"] == boundary_name)
+            section = self.manifest["sections"][function["section"]]
+            require(section["overlay"] == 0, "Additional oracle boundary must be in main")
+            address = sx32(function["vram"])
+            self.cpu.hook_add(UC_HOOK_CODE, self.stop_at_audio, begin=address, end=address)
 
     def observe_trap(self, cpu, pc, size, data):
         self.traps.append((cpu.reg_read(mips_const.UC_MIPS_REG_RA) - 8) & 0xFFFFFFFF)
@@ -33,7 +40,7 @@ class BootstrapOracle(InitOracle):
         cpu.reg_write(mips_const.UC_MIPS_REG_PC, sx32(RETURN))
 
     def platform(self, cpu, pc, size, name):
-        if name == "osPiStartDma":
+        if name == "osPiStartDma" and self.boundary_name == "amInit":
             source = cpu.reg_read(mips_const.UC_MIPS_REG_7) & 0xFFFFFFFF
             sp = cpu.reg_read(mips_const.UC_MIPS_REG_SP) & 0xFFFFFFFF
             section = next(s for s in self.manifest["sections"] if s["overlay"] == 25)
@@ -43,7 +50,8 @@ class BootstrapOracle(InitOracle):
         super().platform(cpu, pc, size, name)
 
 
-def run(elf_path, rom_path, manifest_path, library_path, report_path):
+def run(elf_path, rom_path, manifest_path, library_path, report_path, *,
+        session_class=BootstrapSession, boundary_name="amInit"):
     manifest, rom = json.loads(manifest_path.read_text()), rom_path.read_bytes()
     with elf_path.open("rb") as file:
         syms = ELFFile(file).get_section_by_name(".symtab")
@@ -53,16 +61,16 @@ def run(elf_path, rom_path, manifest_path, library_path, report_path):
     configure_bootstrap(lib)
     cases = []
     for tv in (1, 0, 2):
-        session = BootstrapSession(lib, rom, manifest, tv, dirty_heap=True)
+        session = session_class(lib, rom, manifest, tv, dirty_heap=True)
         try:
-            oracle = BootstrapOracle(session.native.snapshot(), rom, manifest, symbols)
+            oracle = BootstrapOracle(session.native.snapshot(), rom, manifest, symbols, boundary_name=boundary_name)
             registers = [0] * 32
             registers[29], registers[31] = sx32(0x80780000 - 0x10), sx32(RETURN)
             oracle.call(symbols["mainInitGame"], registers, budget=12000000)
             boundary = session.bootstrap()
             require(oracle.boundary == {"target": int(boundary["target"], 16), "call_site": int(boundary["call_site"], 16)},
                     "MIPS audio boundary differs")
-            require(oracle.traps == [0x80044EF8, int(boundary["call_site"], 16)], "Original lazy-loader path differs")
+            require(oracle.traps == [0x80044EF8, int(boundary["overlay36"], 16) + 0x14], "Original lazy-loader path differs")
             actual_registers = session.poll(SLOTS)[2]
             # Platform contracts do not model libultra scratch registers.
             # Trap itself restores arguments, return address and stack.
@@ -90,7 +98,7 @@ def run(elf_path, rom_path, manifest_path, library_path, report_path):
         "Explicit platform hooks; private kernel structures and call stacks excluded from RAM comparison",
         "Only argument/callee-saved/stack/return GPRs compared; FPU registers are not compared",
         "PI completion is immediate in MIPS and owner-pumped natively; no console timing proof",
-        "Stops at amInit entry before audio initialization"]}
+        f"Stops before executing {boundary_name}"]}
     report_path.write_text(json.dumps(report, indent=2) + "\n")
 
 

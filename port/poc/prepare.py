@@ -73,14 +73,15 @@ def rom_offset(elf, section):
 
 
 def convert_relocations(tool, number, section, selected, rom, sections, reference):
-    """Translate proven local/external HI16/LO16 pairs and external JALs.
+    """Translate proven HI16/LO16 pairs and external/local JALs.
 
     The oracle independently executes the original linker for every group.
     Other forms and unlisted dependencies remain explicit errors.
     """
     converted, groups = [], []
     by_overlay = {s["overlay"]: s for s in sections}
-    ranges = [(f["offset"], f["offset"] + f["size"]) for f in selected]
+    ranges = [(f["offset"], f["offset"] + f["size"]) for f in selected
+              if not f["host_import"] and not f["deferred"]]
 
     def resolve(entry, addend):
         if entry.reloc_type == 1:
@@ -110,14 +111,18 @@ def convert_relocations(tool, number, section, selected, rom, sections, referenc
                 continue
             group = {"table": "secondary" if secondary else "primary", "index": index,
                      "symbol_index": entry.symbol_index, "source_type": entry.reloc_type}
-            if entry.reloc_type == 0 and entry.patch_type == 4:
+            if entry.reloc_type in (0, 2) and entry.patch_type == 4:
                 word = struct.unpack_from(">I", rom, section["rom"] + entry.target_offset)[0]
                 if word >> 26 != 3:
-                    raise ValueError("This proof supports external JAL relocation, not other jump forms")
-                target, target_offset = resolve(entry, 0)
+                    raise ValueError("This proof supports JAL relocation, not other jump forms")
+                if entry.reloc_type == 2:
+                    target, target_offset = section, (word & 0x03FFFFFF) << 2
+                else:
+                    target, target_offset = resolve(entry, 0)
                 callee = next((f for f in target["functions"] if f["offset"] == target_offset), None)
                 if callee is None:
-                    raise ValueError(f"Unlisted function dependency: {tool.get_symbol_name(entry.symbol_index)}")
+                    name = "local" if entry.reloc_type == 2 else tool.get_symbol_name(entry.symbol_index)
+                    raise ValueError(f"Unlisted function dependency: {name}")
                 converted.append({"vram": section["vram"] + entry.target_offset,
                                   "target_vram": target["vram"] + target_offset,
                                   "target_section": target["index"], "type": "R_MIPS_26"})
@@ -276,7 +281,7 @@ def prepare(elf_path: Path, rom_path: Path, out: Path, *, functions=FUNCTIONS,
                 "overlay_rom_table": tool.offsets["overlay_rom_table"],
                 "overlay_table": tool.offsets["overlay_table"],
                 "overlay_data_base": tool.offsets["overlay_data_base"],
-                "limits": ["Selected integer functions only", "Selected local/external HI16/LO16 and external JAL relocations",
+                "limits": ["Selected integer functions only", "Selected local/external HI16/LO16 and JAL relocations",
                            "No full runLink loader, boot, graphics, audio or gameplay"]}
     (out / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
     print(f"Prepared {len(output_functions)} function entries in {len(sections)} sections; {sum(len(s['relocation_groups']) for s in sections)} real relocation groups.")

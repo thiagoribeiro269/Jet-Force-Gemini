@@ -16,6 +16,7 @@ class JfgGenerator final : public N64Recomp::Generator {
     const N64Recomp::Context& context_;
     std::ostream& out_;
     N64Recomp::CGenerator delegate_;
+    bool live_relocated_calls_;
 
     void call_target(size_t index) const {
         const auto& function = context_.functions.at(index);
@@ -24,8 +25,8 @@ class JfgGenerator final : public N64Recomp::Generator {
                             function.section_index, function.vram - section.ram_addr);
     }
 public:
-    JfgGenerator(const N64Recomp::Context& context, std::ostream& out)
-        : context_(context), out_(out), delegate_(out) {}
+    JfgGenerator(const N64Recomp::Context& context, std::ostream& out, bool live_relocated_calls)
+        : context_(context), out_(out), delegate_(out), live_relocated_calls_(live_relocated_calls) {}
     void process_binary_op(const N64Recomp::BinaryOp& op, const N64Recomp::InstructionContext& ctx) const override { delegate_.process_binary_op(op, ctx); }
     void process_unary_op(const N64Recomp::UnaryOp& op, const N64Recomp::InstructionContext& ctx) const override { delegate_.process_unary_op(op, ctx); }
     void process_store_op(const N64Recomp::StoreOp& op, const N64Recomp::InstructionContext& ctx) const override { delegate_.process_store_op(op, ctx); }
@@ -44,6 +45,12 @@ public:
     }
     void emit_function_call_by_register(int) const override { out_ << "jfg_poc_call_indirect(rdram, ctx);\n"; }
     void emit_function_call_reference_symbol(const N64Recomp::Context& context, uint16_t section, size_t symbol, uint32_t) const override {
+        if (live_relocated_calls_) {
+            // runLink may point an unresolved overlay call at TrapDanglingJump.
+            // Read its real patched JAL rather than bypassing the game's loader.
+            out_ << "jfg_poc_call_jal(rdram, ctx);\n";
+            return;
+        }
         const auto& reference = context.get_reference_symbol(section, symbol);
         auto function = context_.functions_by_name.find(reference.name);
         if (function == context_.functions_by_name.end()) throw std::runtime_error("Unlisted reference dependency");
@@ -211,7 +218,7 @@ int main(int argc, char** argv) {
         if (!output) throw std::runtime_error("Cannot create generated C output");
         output << "#include \"runtime.h\"\n";
         std::vector<std::vector<uint32_t>> static_functions(context.sections.size());
-        JfgGenerator generator(context, output);
+        JfgGenerator generator(context, output, metadata["live_relocated_calls"].value_or(false));
         for (size_t i = 0; i < context.functions.size(); i++) {
             if (excluded.contains(i)) continue;
             if (!N64Recomp::recompile_function_custom(generator, context, i, output, static_functions, false)) {

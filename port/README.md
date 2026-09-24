@@ -216,7 +216,12 @@ cmake --build build/port-recomp/windows --parallel 2
 
 ## Próximos marcos
 
-1. Integrar a chamada dinâmica e o código de `mainInitRlo`, no overlay 36.
+O [perfil de bootstrap dinâmico](bootstrap/README.md) já executa o trampolim
+original, carrega os overlays 36 e 25 e entra no início de `mainInitRlo`.
+Três cenários de bootstrap e nove verificações do linker passaram no Linux
+e no Windows x64, com referência MIPS até a entrada de áudio.
+
+1. Integrar `amInit` e continuar a inicialização iniciada por `mainInitRlo`.
 2. Ampliar dependências entre overlays e alcançar o boot completo.
 3. Provar uma via de renderização compatível com F3DJFG, mantendo o alvo
    Windows/NVIDIA definido por Thiago.

@@ -39,10 +39,15 @@ static _Thread_local uint64_t indirect_target;
 static _Thread_local int indirect_prepared;
 static _Thread_local uint32_t error_target;
 static _Thread_local uint32_t error_site;
+static _Thread_local uint64_t missing_function_registers[32];
+static _Thread_local int missing_function_registers_valid;
 static uint32_t game_table_global;
 static uint32_t game_count_global;
+static int game_linker_pending;
 
 static int sync_game_sections(uint8_t *rdram);
+static int guest_word(uint8_t *rdram, uint32_t address, uint32_t *value);
+static int sync_watched_game_sections(uint8_t *rdram);
 
 static _Noreturn void dispatch_fail(int error) {
     if (dispatch_active) {
@@ -67,7 +72,10 @@ void jfg_poc_prepare_indirect(uint64_t target) {
 }
 
 void jfg_poc_require_section(uint32_t section) {
-    if (section >= JFG_POC_SECTION_COUNT || !section_bases[section]) dispatch_fail(-3);
+    if (section >= JFG_POC_SECTION_COUNT || !section_bases[section]) {
+        fprintf(stderr, "Unregistered recompilation section %u\n", section);
+        dispatch_fail(-3);
+    }
 }
 
 static recomp_func_t *find_function(uint32_t address) {
@@ -100,6 +108,8 @@ void jfg_poc_call(uint32_t section, uint32_t offset, uint8_t *rdram, recomp_cont
     if (!function) {
         error_target = (uint32_t)section_bases[section] + offset;
         error_site = (uint32_t)ctx->r31 - 8;
+        memcpy(missing_function_registers, &ctx->r0, sizeof(missing_function_registers));
+        missing_function_registers_valid = 1;
         dispatch_fail(-3);
     }
     call_count++;
@@ -112,17 +122,33 @@ void jfg_poc_call_indirect(uint8_t *rdram, recomp_context *ctx) {
     if (!indirect_prepared) dispatch_fail(-3);
     uint32_t target = (uint32_t)indirect_target;
     indirect_prepared = 0;
-    if (game_table_global && sync_game_sections(rdram)) dispatch_fail(-7);
+    if (game_table_global && sync_watched_game_sections(rdram)) dispatch_fail(-7);
     recomp_func_t *function = find_function(target);
     if (!function) {
         error_target = target;
         error_site = (uint32_t)ctx->r31 - 8;
+        memcpy(missing_function_registers, &ctx->r0, sizeof(missing_function_registers));
+        missing_function_registers_valid = 1;
         dispatch_fail(-3);
     }
     call_count++;
     last_call_target = target;
     last_return_address = ctx->r31;
     function(rdram, ctx);
+}
+
+void jfg_poc_call_jal(uint8_t *rdram, recomp_context *ctx) {
+    uint32_t site = (uint32_t)ctx->r31 - 8u;
+    uint32_t word = 0;
+    if (guest_word(rdram, site, &word) || (word >> 26) != 3u) {
+        error_site = site;
+        error_target = 0;
+        fprintf(stderr, "Invalid patched JAL at %08x: %08x\n", site, word);
+        dispatch_fail(-3);
+    }
+    uint32_t target = ((site + 4u) & 0xF0000000u) | ((word & 0x03FFFFFFu) << 2);
+    jfg_poc_prepare_indirect(target);
+    jfg_poc_call_indirect(rdram, ctx);
 }
 
 POC_EXPORT uint32_t jfg_poc_address(const char *name) {
@@ -209,20 +235,54 @@ static int sync_game_sections(uint8_t *rdram) {
     return 0;
 }
 
+static int sync_watched_game_sections(uint8_t *rdram) {
+    if (game_linker_pending) {
+        uint32_t table, count;
+        if (guest_word(rdram, game_table_global, &table) ||
+            guest_word(rdram, game_count_global, &count)) return -1;
+        if (!table && !count) return 0;
+        if (!table || !count) return -1;
+    }
+    if (sync_game_sections(rdram)) return -1;
+    game_linker_pending = 0;
+    return 0;
+}
+
 POC_EXPORT int jfg_poc_bind_game_linker(uint8_t *rdram, size_t size, uint32_t table_global, uint32_t count_global) {
     if (!rdram || size != 0x800000u || dispatch_active) return -1;
     game_table_global = table_global;
     game_count_global = count_global;
+    game_linker_pending = 0;
     int status = sync_game_sections(rdram);
     if (status) { game_table_global = 0; game_count_global = 0; }
     return status;
 }
 
-POC_EXPORT void jfg_poc_unbind_game_linker(void) { game_table_global = 0; game_count_global = 0; }
+POC_EXPORT int jfg_poc_watch_game_linker(uint8_t *rdram, size_t size, uint32_t table_global, uint32_t count_global) {
+    if (!rdram || size != 0x800000u || dispatch_active || table_global == count_global) return -1;
+    uint32_t table, count;
+    if (guest_word(rdram, table_global, &table) || guest_word(rdram, count_global, &count)) return -1;
+    if ((!table && count) || (table && !count)) return -1;
+    game_table_global = table_global;
+    game_count_global = count_global;
+    game_linker_pending = !table;
+    if (!game_linker_pending && sync_game_sections(rdram)) {
+        game_table_global = game_count_global = 0;
+        return -1;
+    }
+    return 0;
+}
+
+POC_EXPORT void jfg_poc_unbind_game_linker(void) {
+    game_table_global = game_count_global = 0;
+    game_linker_pending = 0;
+}
 
 POC_EXPORT int jfg_poc_run(uint32_t address, uint8_t *rdram, size_t size,
                            const uint64_t *input, uint64_t *output) {
     if (!rdram || !input || !output || size != 0x800000u || dispatch_active) return -1;
+    /* Reject stale overlay entries before executing any guest instruction. */
+    if (game_table_global && sync_watched_game_sections(rdram)) return -7;
     recomp_func_t *function = find_function(address);
     if (!function) return -2;
     recomp_context ctx;
@@ -237,12 +297,16 @@ POC_EXPORT int jfg_poc_run(uint32_t address, uint8_t *rdram, size_t size,
     last_return_address = 0;
     indirect_prepared = 0;
     error_target = error_site = 0;
+    missing_function_registers_valid = 0;
     if (setjmp(dispatch_guard)) {
         dispatch_active = 0;
+        if (missing_function_registers_valid) {
+            memcpy(output, missing_function_registers, sizeof(missing_function_registers));
+        }
         return dispatch_error;
     }
     function(rdram, &ctx);
-    if (game_table_global && sync_game_sections(rdram)) dispatch_fail(-7);
+    if (game_table_global && sync_watched_game_sections(rdram)) dispatch_fail(-7);
     dispatch_active = 0;
     memcpy(output, &ctx.r0, sizeof(uint64_t) * 32);
     return 0;

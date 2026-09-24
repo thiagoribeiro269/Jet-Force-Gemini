@@ -19,7 +19,7 @@ from checks import HOST, SLOTS
 
 
 class InitOracle(Oracle):
-    def __init__(self, image, rom, manifest, symbols):
+    def __init__(self, image, rom, manifest, symbols, trap_boundary=True):
         super().__init__(image)
         self.rom, self.manifest, self.symbols = rom, manifest, symbols
         self.queues = set()
@@ -32,7 +32,7 @@ class InitOracle(Oracle):
             if function["host_import"] and function["name"] not in native_messages:
                 address = sx32(function["vram"])
                 self.cpu.hook_add(UC_HOOK_CODE, self.platform, function["name"], begin=address, end=address)
-        for name in ("__osDisableInt", "__osRestoreInt", "TrapDanglingJump"):
+        for name in ("__osDisableInt", "__osRestoreInt", *(("TrapDanglingJump",) if trap_boundary else ())):
             address = sx32(symbols[name])
             self.cpu.hook_add(UC_HOOK_CODE, self.platform, name, begin=address, end=address)
         address = sx32(symbols["osCreateMesgQueue"])

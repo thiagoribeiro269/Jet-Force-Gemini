@@ -1,0 +1,716 @@
+{
+  "recorded_at": "2026-09-24T12:41:32.554145-03:00",
+  "stage": "headless_original_scheduler_events_and_timers",
+  "game_base": "f409c111053c671ae91051a6cdff277e0af7d95e",
+  "runtime_revision": "cdf5abbd5026fef5c364c676e4667c45e42b6863",
+  "recompiler_revision": "81213c1831fab2521a6a5459c67b63437d67e253",
+  "game_and_vendor_sources_modified": false,
+  "rom_sha1": "493ced9008dbe932d6e91179b68e8630cf23a023",
+  "profile": {
+    "registered_entries": 103,
+    "compiled_functions": [
+      "mainGetZBCheck",
+      "mainGameWindowChanging",
+      "mainSetAnimGroup",
+      "mainGetAnimGroup",
+      "mainChangeCameras",
+      "mainGetNextCharacter",
+      "mainGetNextLevel",
+      "mainSyncNextLevel",
+      "mainSetMode",
+      "mainGetGame",
+      "mainGetCurrentLevel",
+      "mainGetGameArrayPtr",
+      "mainGetNumberOfCameras",
+      "GetRegionIndex",
+      "pauseGetScreen",
+      "pauseGetPauseCharacter",
+      "frontSetInstrumentsHide",
+      "func_overlay_18_0120207C_1F31A54",
+      "func_overlay_32_02001D2C_1F526FC",
+      "func_overlay_32_02001D84_1F52754",
+      "GetSymbolName",
+      "PatchInstruction",
+      "ProcessRelocationEntry",
+      "ResolveRelocAddress",
+      "RevealReturnAddresses",
+      "__scHandleRetrace",
+      "__scMain",
+      "__scSchedule",
+      "__scTaskReady",
+      "_bzero",
+      "func_80050670",
+      "mainResetPressed",
+      "mempool_free_addr",
+      "mempool_free_queue",
+      "mempool_get_pool",
+      "mempool_init",
+      "mempool_slot_assign",
+      "mempool_slot_clear",
+      "mempool_slot_find",
+      "mmAlloc",
+      "mmAlloc2",
+      "mmAllocAtAddr",
+      "mmFree",
+      "mmGetDelay",
+      "mmInit",
+      "mmSetDelay",
+      "osCreateScheduler",
+      "osScAddClient",
+      "osScGetCmdQ",
+      "osScGetInterruptQ",
+      "osScRemoveClient",
+      "rcpWaitDP",
+      "runlinkCallResumeFunction",
+      "runlinkDownloadCode",
+      "runlinkGetAddressInfo",
+      "runlinkInitialise",
+      "runlinkIsModuleLoaded",
+      "runlinkResumeCode",
+      "runlinkUnloadOverlay",
+      "_AutoInit00044",
+      "amAudioLinesReset"
+    ],
+    "host_imports": [
+      "osCreateMesgQueue",
+      "osCreateThread",
+      "osCreateViManager",
+      "osInvalICache",
+      "osRecvMesg",
+      "osSendMesg",
+      "osSetEventMesg",
+      "osSetIntMask",
+      "osStartThread",
+      "osViBlack",
+      "osViSetEvent",
+      "osViSetMode",
+      "osWritebackDCache",
+      "romCopy",
+      "osJamMesg",
+      "osGetCount",
+      "osGetTime",
+      "osSetTime",
+      "osSetTimer"
+    ],
+    "deferred_paths": [
+      "TrapDanglingJump",
+      "__osSpSetStatus",
+      "__scAppendList",
+      "__scExec",
+      "__scHandleRDP",
+      "__scHandleRSP",
+      "__scYield",
+      "amAudioMgrGetNextFrameCount",
+      "diPrintf",
+      "diPrintfAll",
+      "diPrintfSetXY",
+      "func_800507A4",
+      "func_80050AA4",
+      "osDpSetStatus",
+      "osScGetTaskType",
+      "osSpTaskLoad",
+      "osSpTaskStartGo",
+      "osViGetCurrentFramebuffer",
+      "osViGetNextFramebuffer",
+      "osWritebackDCacheAll",
+      "segSetBase",
+      "amSndStop",
+      "amAmbientStop"
+    ],
+    "explicit_function_boundaries": [
+      {
+        "name": "__scAppendList",
+        "vram": 2147814152,
+        "size": 104,
+        "end_symbol": "__scExec"
+      },
+      {
+        "name": "__scExec",
+        "vram": 2147814256,
+        "size": 204,
+        "end_symbol": "__scYield"
+      },
+      {
+        "name": "__scHandleRDP",
+        "vram": 2147813668,
+        "size": 140,
+        "end_symbol": "__scTaskReady"
+      },
+      {
+        "name": "__scHandleRSP",
+        "vram": 2147813368,
+        "size": 300,
+        "end_symbol": "__scHandleRDP"
+      },
+      {
+        "name": "__scMain",
+        "vram": 2147809656,
+        "size": 440,
+        "end_symbol": "func_80050670"
+      }
+    ]
+  },
+  "native_linux": {
+    "status": "passed",
+    "scope": "headless_original_scheduler_events_and_timers",
+    "host_os": "Linux",
+    "host_arch": "x86_64",
+    "cases": [
+      {
+        "name": "original_scheduler_mode_0",
+        "status": "passed",
+        "threads_joined": 1,
+        "timer_firings": 0,
+        "vi_fields": 4,
+        "nominal_hz": 60,
+        "game_frames": 4
+      },
+      {
+        "name": "original_scheduler_mode_14",
+        "status": "passed",
+        "threads_joined": 1,
+        "timer_firings": 0,
+        "vi_fields": 4,
+        "nominal_hz": 50,
+        "game_frames": 4
+      },
+      {
+        "name": "original_scheduler_mode_28",
+        "status": "passed",
+        "threads_joined": 1,
+        "timer_firings": 0,
+        "vi_fields": 4,
+        "nominal_hz": 60,
+        "game_frames": 4
+      },
+      {
+        "name": "vi_retrace_divisor",
+        "status": "passed",
+        "threads_joined": 1,
+        "timer_firings": 0,
+        "vi_fields": 2
+      },
+      {
+        "name": "guest_prenmi_to_original_reset_consumer",
+        "status": "passed",
+        "threads_joined": 1,
+        "timer_firings": 0,
+        "vi_fields": 0
+      },
+      {
+        "name": "all_event_bindings_disable_and_invalid_id",
+        "status": "passed",
+        "threads_joined": 0,
+        "timer_firings": 0,
+        "vi_fields": 0
+      },
+      {
+        "name": "one_shot_timer_resumes_thread",
+        "status": "passed",
+        "threads_joined": 1,
+        "timer_firings": 1,
+        "vi_fields": 0
+      },
+      {
+        "name": "periodic_timer_cancel_and_reuse",
+        "status": "passed",
+        "threads_joined": 0,
+        "timer_firings": 4,
+        "vi_fields": 0
+      },
+      {
+        "name": "timer_full_queue_drop",
+        "status": "passed",
+        "threads_joined": 0,
+        "timer_firings": 1,
+        "vi_fields": 0
+      },
+      {
+        "name": "counter_wrap_time_and_64bit_timer_abi",
+        "status": "passed",
+        "threads_joined": 0,
+        "timer_firings": 1,
+        "vi_fields": 0
+      },
+      {
+        "name": "equal_deadline_ordering",
+        "status": "passed",
+        "threads_joined": 0,
+        "timer_firings": 2,
+        "vi_fields": 0
+      },
+      {
+        "name": "close_cancels_pending_timer_and_waiter",
+        "status": "passed",
+        "threads_joined": 1,
+        "timer_firings": 0,
+        "vi_fields": 0
+      },
+      {
+        "name": "monotonic_host_clock_timer",
+        "status": "passed",
+        "threads_joined": 1,
+        "timer_firings": 1,
+        "vi_fields": 0
+      },
+      {
+        "name": "unimplemented_rsp_completion_is_explicit_error",
+        "status": "passed",
+        "threads_joined": 1,
+        "timer_firings": 0,
+        "vi_fields": 0
+      },
+      {
+        "name": "clock_overflow_and_terminal_tick",
+        "status": "passed",
+        "threads_joined": 0,
+        "timer_firings": 1,
+        "vi_fields": 0
+      }
+    ],
+    "threads_created_and_joined": 9,
+    "counter_hz": 46875000,
+    "clock_modes": [
+      "deterministic_test",
+      "steady_host"
+    ],
+    "background_timer_threads": 0,
+    "emulator_used": false,
+    "gpu_initialized": false,
+    "full_boot": false,
+    "library_sha256": "1a71ea75aea570cb5802e6f404f1e431de685fdd0d3d83004e4c655d9dd69b0d",
+    "limits": [
+      "Original scheduler with headless VI/events; no RSP/RDP execution or image",
+      "Cooperative guest execution; monotonic host time or explicit deterministic test clock",
+      "Graphics/audio task paths remain explicit unresolved dependencies",
+      "Not full boot, mainThread or mainInitGame"
+    ]
+  },
+  "native_windows": {
+    "recorded_at": "2026-09-24T15:38:35.8924069Z",
+    "exit_code": 0,
+    "windows": "Microsoft Windows NT 10.0.26200.0",
+    "python": "Python 3.12.10",
+    "package_sha256": "a315c74d2375879327c0d1ef4207996107edb328e7da2c94b2197f665f1fd81c",
+    "report": {
+      "status": "passed",
+      "scope": "headless_original_scheduler_events_and_timers",
+      "host_os": "Windows",
+      "host_arch": "AMD64",
+      "cases": [
+        {
+          "name": "original_scheduler_mode_0",
+          "status": "passed",
+          "threads_joined": 1,
+          "timer_firings": 0,
+          "vi_fields": 4,
+          "nominal_hz": 60,
+          "game_frames": 4
+        },
+        {
+          "name": "original_scheduler_mode_14",
+          "status": "passed",
+          "threads_joined": 1,
+          "timer_firings": 0,
+          "vi_fields": 4,
+          "nominal_hz": 50,
+          "game_frames": 4
+        },
+        {
+          "name": "original_scheduler_mode_28",
+          "status": "passed",
+          "threads_joined": 1,
+          "timer_firings": 0,
+          "vi_fields": 4,
+          "nominal_hz": 60,
+          "game_frames": 4
+        },
+        {
+          "name": "vi_retrace_divisor",
+          "status": "passed",
+          "threads_joined": 1,
+          "timer_firings": 0,
+          "vi_fields": 2
+        },
+        {
+          "name": "guest_prenmi_to_original_reset_consumer",
+          "status": "passed",
+          "threads_joined": 1,
+          "timer_firings": 0,
+          "vi_fields": 0
+        },
+        {
+          "name": "all_event_bindings_disable_and_invalid_id",
+          "status": "passed",
+          "threads_joined": 0,
+          "timer_firings": 0,
+          "vi_fields": 0
+        },
+        {
+          "name": "one_shot_timer_resumes_thread",
+          "status": "passed",
+          "threads_joined": 1,
+          "timer_firings": 1,
+          "vi_fields": 0
+        },
+        {
+          "name": "periodic_timer_cancel_and_reuse",
+          "status": "passed",
+          "threads_joined": 0,
+          "timer_firings": 4,
+          "vi_fields": 0
+        },
+        {
+          "name": "timer_full_queue_drop",
+          "status": "passed",
+          "threads_joined": 0,
+          "timer_firings": 1,
+          "vi_fields": 0
+        },
+        {
+          "name": "counter_wrap_time_and_64bit_timer_abi",
+          "status": "passed",
+          "threads_joined": 0,
+          "timer_firings": 1,
+          "vi_fields": 0
+        },
+        {
+          "name": "equal_deadline_ordering",
+          "status": "passed",
+          "threads_joined": 0,
+          "timer_firings": 2,
+          "vi_fields": 0
+        },
+        {
+          "name": "close_cancels_pending_timer_and_waiter",
+          "status": "passed",
+          "threads_joined": 1,
+          "timer_firings": 0,
+          "vi_fields": 0
+        },
+        {
+          "name": "monotonic_host_clock_timer",
+          "status": "passed",
+          "threads_joined": 1,
+          "timer_firings": 1,
+          "vi_fields": 0
+        },
+        {
+          "name": "unimplemented_rsp_completion_is_explicit_error",
+          "status": "passed",
+          "threads_joined": 1,
+          "timer_firings": 0,
+          "vi_fields": 0
+        },
+        {
+          "name": "clock_overflow_and_terminal_tick",
+          "status": "passed",
+          "threads_joined": 0,
+          "timer_firings": 1,
+          "vi_fields": 0
+        }
+      ],
+      "threads_created_and_joined": 9,
+      "counter_hz": 46875000,
+      "clock_modes": [
+        "deterministic_test",
+        "steady_host"
+      ],
+      "background_timer_threads": 0,
+      "emulator_used": false,
+      "gpu_initialized": false,
+      "full_boot": false,
+      "library_sha256": "716534702f66e432b73f0198adc22a92cb6672c8bc8f5a0ee2cde56a8522f93f",
+      "limits": [
+        "Original scheduler with headless VI/events; no RSP/RDP execution or image",
+        "Cooperative guest execution; monotonic host time or explicit deterministic test clock",
+        "Graphics/audio task paths remain explicit unresolved dependencies",
+        "Not full boot, mainThread or mainInitGame"
+      ]
+    },
+    "thread_regression": {
+      "status": "passed",
+      "scope": "cooperative_threads_and_real_game_message_consumers",
+      "host_os": "Windows",
+      "host_arch": "AMD64",
+      "cases": [
+        {
+          "name": "game_wait_without_active_dp",
+          "status": "passed",
+          "threads_joined": 1,
+          "return_v0": 0
+        },
+        {
+          "name": "game_wait_event_order_021",
+          "status": "passed",
+          "threads_joined": 2,
+          "return_v0": 305419896,
+          "flags": {
+            "D_800A4034": 0,
+            "blurTaskActive": 0,
+            "refractTaskActive": 0,
+            "cloneTaskActive": 0
+          },
+          "synthetic_completion_events": [
+            0,
+            2,
+            1
+          ]
+        },
+        {
+          "name": "game_wait_event_order_210",
+          "status": "passed",
+          "threads_joined": 2,
+          "return_v0": 305419896,
+          "flags": {
+            "D_800A4034": 0,
+            "blurTaskActive": 0,
+            "refractTaskActive": 0,
+            "cloneTaskActive": 0
+          },
+          "synthetic_completion_events": [
+            2,
+            1,
+            0
+          ]
+        },
+        {
+          "name": "blocking_osSendMesg",
+          "status": "passed",
+          "threads_joined": 2,
+          "remaining_messages": [
+            99
+          ]
+        },
+        {
+          "name": "blocking_osJamMesg",
+          "status": "passed",
+          "threads_joined": 2,
+          "remaining_messages": [
+            99,
+            2
+          ]
+        },
+        {
+          "name": "priority_order",
+          "status": "passed",
+          "threads_joined": 3,
+          "receive_priority_order": [
+            10,
+            7,
+            5
+          ]
+        },
+        {
+          "name": "cancel_blocked_non_head_threads",
+          "status": "passed",
+          "threads_joined": 3
+        },
+        {
+          "name": "cancel_created_before_start",
+          "status": "passed",
+          "threads_joined": 1
+        },
+        {
+          "name": "original_reset_queue_consumer",
+          "status": "passed",
+          "threads_joined": 0
+        },
+        {
+          "name": "queue_recreation_and_invalid_entry_rejected",
+          "status": "passed",
+          "threads_joined": 1
+        },
+        {
+          "name": "unsupported_clone_path_is_controlled_error",
+          "status": "passed",
+          "threads_joined": 1
+        },
+        {
+          "name": "create_and_start_from_running_guest_thread",
+          "status": "passed",
+          "threads_joined": 3
+        }
+      ],
+      "threads_created_and_joined": 21,
+      "library_sha256": "716534702f66e432b73f0198adc22a92cb6672c8bc8f5a0ee2cde56a8522f93f",
+      "rom_sha1": "493ced9008dbe932d6e91179b68e8630cf23a023",
+      "emulator_used": false,
+      "gpu_initialized": false,
+      "full_boot": false,
+      "limits": [
+        "Original scheduler with headless VI/events; no RSP/RDP execution or image",
+        "Cooperative guest execution; monotonic host time or explicit deterministic test clock",
+        "Graphics/audio task paths remain explicit unresolved dependencies",
+        "Not full boot, mainThread or mainInitGame"
+      ]
+    }
+  },
+  "original_mips_reference": {
+    "status": "passed",
+    "cases": [
+      {
+        "name": "event_registration",
+        "checks": 16,
+        "status": "passed",
+        "threads_joined": 0
+      },
+      {
+        "name": "time_abi_0000000000000000",
+        "checks": 2,
+        "status": "passed",
+        "threads_joined": 0
+      },
+      {
+        "name": "time_abi_7FFFFFFF80000001",
+        "checks": 2,
+        "status": "passed",
+        "threads_joined": 0
+      },
+      {
+        "name": "time_abi_FEDCBA9887654321",
+        "checks": 2,
+        "status": "passed",
+        "threads_joined": 0
+      },
+      {
+        "name": "timer_one_shot",
+        "checks": 4,
+        "status": "passed",
+        "threads_joined": 0
+      },
+      {
+        "name": "timer_periodic",
+        "checks": 4,
+        "status": "passed",
+        "threads_joined": 0
+      },
+      {
+        "name": "timer_full_queue",
+        "checks": 4,
+        "status": "passed",
+        "threads_joined": 0
+      },
+      {
+        "name": "timer_equal_deadlines_forward",
+        "checks": 3,
+        "status": "passed",
+        "threads_joined": 0
+      },
+      {
+        "name": "timer_equal_deadlines_reverse",
+        "checks": 3,
+        "status": "passed",
+        "threads_joined": 0
+      },
+      {
+        "name": "original_idle_retrace_body",
+        "checks": 3,
+        "status": "passed",
+        "threads_joined": 1
+      }
+    ],
+    "comparisons": 43,
+    "reference": "Original JFG US MIPS/libultra under controlled count, compare-register and serialized interrupt hooks",
+    "limits": [
+      "Compare event table, API returns, timer message ordering and selected scheduler observable memory",
+      "Private timer list/deadline representations and physical interrupt timing are not compared",
+      "Time ABI samples start with base counter zero; host SetTime uses the runtime offset contract",
+      "No GPU, rendering or whole-console timing validation"
+    ]
+  },
+  "regressions": {
+    "heap_linker": {
+      "status": "passed",
+      "checkpoints": 56
+    },
+    "threads_linux": {
+      "status": "passed",
+      "scenarios": 12,
+      "threads_joined": 21
+    },
+    "game_body": {
+      "status": "passed",
+      "cases": 4
+    },
+    "basic_cpu": {
+      "status": "passed",
+      "total_cases": 816,
+      "original_linker_groups_executed": 792,
+      "native_cross_section_calls": 162
+    }
+  },
+  "windows_package": {
+    "name": "jfg-events-windows-x64.zip",
+    "size": 316955,
+    "sha256": "a315c74d2375879327c0d1ef4207996107edb328e7da2c94b2197f665f1fd81c",
+    "toolchain": "LLVM-MinGW 20260922 / Clang 23.1.2",
+    "files": {
+      "jfg_poc.dll": {
+        "size": 883712,
+        "sha256": "716534702f66e432b73f0198adc22a92cb6672c8bc8f5a0ee2cde56a8522f93f",
+        "dll_imports": [
+          "KERNEL32.dll",
+          "api-ms-win-crt-stdio-l1-1-0.dll",
+          "api-ms-win-crt-private-l1-1-0.dll",
+          "api-ms-win-crt-runtime-l1-1-0.dll",
+          "api-ms-win-crt-math-l1-1-0.dll",
+          "api-ms-win-crt-heap-l1-1-0.dll",
+          "api-ms-win-crt-string-l1-1-0.dll",
+          "api-ms-win-crt-convert-l1-1-0.dll",
+          "api-ms-win-crt-locale-l1-1-0.dll",
+          "api-ms-win-crt-environment-l1-1-0.dll",
+          "api-ms-win-crt-filesystem-l1-1-0.dll"
+        ]
+      },
+      "checks_events.py": {
+        "size": 12308,
+        "sha256": "c768038a627b9afa94a8178c2183c21b895bfe486819f61538a6c2fda7e25b9c"
+      },
+      "thread_checks.py": {
+        "size": 15140,
+        "sha256": "0bb3547d9dd907424347d49228ab18b973c4f858ed9fdc84d8456d2ead3a8ec5"
+      },
+      "native.py": {
+        "size": 8102,
+        "sha256": "35efe8ae165c428a11c5b8309119855c1caa8b17aece84afee0b8010298517d0"
+      },
+      "event-config.json": {
+        "size": 73929,
+        "sha256": "6e0ccd48182f142e27da80bc2dbf1891c53bc199d0b51f7782a99f72a3df6be9"
+      },
+      "README.txt": {
+        "size": 1289,
+        "sha256": "ccd6ed1c417b3014e14b4c125b9e0a9410de21a3cd2991d716c3b057efd5d3c5"
+      }
+    }
+  },
+  "remote_execution": {
+    "method": "SSH console",
+    "existing_processes_or_services_changed": false,
+    "all_diagnostic_threads_joined": true,
+    "background_timer_threads": 0
+  },
+  "platform_contracts": [
+    "Timers and headless events belong to the session and are pumped by its controller",
+    "Monotonic steady clock or explicit deterministic test clock; 46875000 counter ticks per second",
+    "One-shot and periodic messages are nonblocking; full queue drops the notification",
+    "Newest insertion wins equal timer deadlines; missed intervals are coalesced",
+    "Host SetTime uses a counter offset and does not change monotonic timer deadlines",
+    "osStopTimer has no ELF symbol in this ROM; cancellation is an adapter API",
+    "VI tracks modes, black state and retrace notifications without rendering"
+  ],
+  "matching_n64_build": {
+    "status": "passed",
+    "verify": "OK",
+    "byte_comparison": "identical"
+  },
+  "limits": [
+    "Original scheduler with headless VI/events; no RSP/RDP execution or image",
+    "Cooperative guest execution; monotonic host time or explicit deterministic test clock",
+    "Graphics/audio task paths remain explicit unresolved dependencies",
+    "Not full boot, mainThread or mainInitGame",
+    "Logical interrupt mask and cooperative scheduling do not provide hardware preemption",
+    "No cycle-accurate console timing or private timer structure equivalence is claimed"
+  ]
+}

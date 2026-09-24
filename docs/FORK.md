@@ -59,6 +59,8 @@ O [adaptador de filas](../port/runtime/README.md) valida os serviços de mensage
 
 O [perfil de threads cooperativas](../port/threads/README.md) conecta filas e criação/início de threads a funções recompiladas. A rotina original `rcpWaitDP` suspende e retoma por mensagens, enquanto outra thread executa código do jogo. Os testes cobrem prioridades e fechamento de todas as threads criadas. A integração completa de `mainInitGame` e os gráficos continuam pendentes.
 
+O [perfil de eventos e timers](../port/events/README.md) inicia o scheduler original na ordem US, antes do heap, processa notificações de VI e entrega eventos aos clientes do jogo. Os temporizadores usam relógio controlado ou monotônico do computador e pertencem à sessão. Essa execução ainda não desenha frames nem completa `mainInitGame`.
+
 ## Melhorias futuras
 
 As ideias para depois da base jogável incluem dublagem em inglês, modelos com mais detalhes e melhorias visuais. São possibilidades para uma etapa posterior; não fazem parte da prova atual de CPU. A prioridade permanece chegar a um port funcional que preserve a identidade do jogo.

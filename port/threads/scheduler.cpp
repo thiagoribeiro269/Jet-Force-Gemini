@@ -8,6 +8,9 @@
 #include <vector>
 #include "scheduler.h"
 #include "ultramodern/ultramodern.hpp"
+#ifdef JFG_EVENT_PROFILE
+#include "events.h"
+#endif
 
 int jfg_kernel_attach(uint8_t*, int32_t);
 int jfg_kernel_join_retired(uint32_t);
@@ -51,6 +54,14 @@ bool host_access() {
 }
 uint64_t sign_extend(uint32_t value) { return uint64_t(int64_t(int32_t(value))); }
 } // namespace
+
+int jfg_threads_context(uint8_t* ram, int owner_only) {
+    return owner_only ? (host_access() && ram == session_ram) : access(ram);
+}
+
+int jfg_threads_queue_known(uint8_t* ram, uint32_t queue) {
+    return access(ram) && message_queues.contains(queue);
+}
 
 // Called by the original runtime on the native thread's own stack. Each
 // recompiled invocation retains its context while queue operations suspend it.
@@ -164,6 +175,9 @@ int jfg_threads_queue(uint8_t* ram, uint32_t operation, uint32_t queue,
 
 int jfg_threads_end(uint8_t* ram) {
     if (!host_access() || ram != session_ram) return -1;
+#ifdef JFG_EVENT_PROFILE
+    if (jfg_events_end(ram)) return -1;
+#endif
     for (auto& worker : workers) {
         auto* thread = reinterpret_cast<OSThread*>(ram + worker->slot - ram_base);
         if (thread->context) {

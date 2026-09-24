@@ -45,6 +45,22 @@ def unique_symbol(symtab, name):
     return candidates[0]
 
 
+def sized_function(symtab, name, function_ends=None):
+    symbol = unique_symbol(symtab, name)
+    if name in (function_ends or {}):
+        end = unique_symbol(symtab, function_ends[name])
+        if (symbol["st_size"] or symbol["st_info"]["type"] != "STT_FUNC" or
+                end["st_info"]["type"] != "STT_FUNC" or end["st_shndx"] != symbol["st_shndx"] or
+                end["st_value"] <= symbol["st_value"]):
+            raise ValueError(f"Invalid explicit function boundary: {name}")
+        for other in symtab.iter_symbols():
+            if (other["st_info"]["type"] == "STT_FUNC" and other["st_shndx"] == symbol["st_shndx"] and
+                    symbol["st_value"] < other["st_value"] < end["st_value"]):
+                raise ValueError(f"Function boundary crosses {other.name}: {name}")
+        symbol.entry["st_size"] = end["st_value"] - symbol["st_value"]
+    return symbol
+
+
 def rom_offset(elf, section):
     candidates = [
         p["p_paddr"] + section["sh_offset"] - p["p_offset"]
@@ -145,7 +161,7 @@ def convert_relocations(tool, number, section, selected, rom, sections, referenc
 
 
 def prepare(elf_path: Path, rom_path: Path, out: Path, *, functions=FUNCTIONS,
-            host_imports=(), deferred=(), extra_symbols=(), runtime_patches=()):
+            host_imports=(), deferred=(), extra_symbols=(), runtime_patches=(), function_ends=None):
     rom = rom_path.read_bytes()
     if len(rom) != 0x2000000 or hashlib.sha1(rom).hexdigest() != ROM_SHA1:
         raise ValueError("The proof requires the verified, unmodified US ROM")
@@ -161,7 +177,7 @@ def prepare(elf_path: Path, rom_path: Path, out: Path, *, functions=FUNCTIONS,
             raise ValueError("ELF symbol table is missing")
         by_name = {}
         for name in functions:
-            symbol = unique_symbol(symtab, name)
+            symbol = sized_function(symtab, name, function_ends)
             if symbol["st_info"]["type"] != "STT_FUNC" or not symbol["st_size"]:
                 raise ValueError(f"Invalid function symbol: {name}")
             section = elf.get_section(symbol["st_shndx"])
@@ -194,6 +210,8 @@ def prepare(elf_path: Path, rom_path: Path, out: Path, *, functions=FUNCTIONS,
                         "rom": info["rom"] + offset,
                         "host_import": name in host_imports, "deferred": name in deferred,
                         "binding": "jfg_host_" + name if name in host_imports else name}
+            if name in (function_ends or {}):
+                function["end_symbol"] = function_ends[name]
             info["functions"].append(function)
             output_functions.append(function)
         reference = {name: unique_symbol(symtab, name)["st_value"] for name in dict.fromkeys((*REFERENCE_SYMBOLS, *extra_symbols))}

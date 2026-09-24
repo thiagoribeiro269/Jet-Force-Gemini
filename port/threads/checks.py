@@ -39,21 +39,25 @@ def configure(library):
 
 
 class Session:
-    def __init__(self, library, rom, manifest):
+    def __init__(self, library, rom, manifest, initialize_game=True):
         self.lib = library
         self.manifest = manifest
         self.symbols = manifest["reference_symbols"]
         state = {"rom": rom, "symbols": self.symbols, "stack_top": manifest["boot_profile"]["stack_top"]}
         self.native = NativeBoot(library, state, manifest)
-        for name in ("RevealReturnAddresses", "mmInit", "runlinkInitialise"):
-            self.native.invoke(name)
-        self.native.bind()
-        for number in manifest["boot_profile"]["loaded_modules"]:
-            require(self.native.invoke("runlinkDownloadCode", number)[2] == 1, "Original module load failed")
+        if initialize_game:
+            self.initialize_game()
         self.before_host = bytes(self.native.memory[physical(HOST):physical(HOST) + 0x100])
         self.count = 0
         self.closed = False
         require_success(library.jfg_threads_begin(self.native.memory, RAM_SIZE, HOST), "Attach host scheduler")
+
+    def initialize_game(self):
+        for name in ("RevealReturnAddresses", "mmInit", "runlinkInitialise"):
+            self.native.invoke(name)
+        self.native.bind()
+        for number in self.manifest["boot_profile"]["loaded_modules"]:
+            require(self.native.invoke("runlinkDownloadCode", number)[2] == 1, "Original module load failed")
 
     def set(self, address, value):
         struct.pack_into("<I", self.native.memory, physical(address), value & 0xFFFFFFFF)

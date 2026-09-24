@@ -11,7 +11,7 @@ import sys
 from elftools.elf.elffile import ELFFile
 
 from reference import ROOT, SYMBOLS, PLATFORM_IMPORTS, profile, return_address_patches
-from prepare import FUNCTIONS, prepare
+from prepare import FUNCTIONS, prepare, sized_function
 
 ROOTS = ("RevealReturnAddresses", "mmInit", "mmAlloc2", "runlinkInitialise",
          "runlinkDownloadCode", "runlinkUnloadOverlay", "runlinkIsModuleLoaded")
@@ -22,12 +22,15 @@ CALLBACKS = ("_AutoInit00044", "amAudioLinesReset")
 DEFERRED = ("amSndStop", "amAmbientStop")
 
 
-def closure(elf_path, roots=ROOTS, host_imports=PLATFORM_IMPORTS, deferred=()):
+def closure(elf_path, roots=ROOTS, host_imports=PLATFORM_IMPORTS, deferred=(), function_ends=None):
     with elf_path.open("rb") as file:
         elf = ELFFile(file)
         sections = list(elf.iter_sections())
-        symbols = [s for s in elf.get_section_by_name(".symtab").iter_symbols()
-                   if s["st_info"]["type"] == "STT_FUNC" and isinstance(s["st_shndx"], int) and s["st_size"]]
+        symtab = elf.get_section_by_name(".symtab")
+        symbols = [sized_function(symtab, s.name, function_ends) if s.name in (function_ends or {}) else s
+                   for s in symtab.iter_symbols()
+                   if s["st_info"]["type"] == "STT_FUNC" and isinstance(s["st_shndx"], int)
+                   and (s["st_size"] or s.name in (function_ends or {}))]
         by_name = {s.name: s for s in symbols}
         by_address = {}
         for symbol in symbols:

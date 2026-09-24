@@ -126,8 +126,9 @@ drivers, serviços ou processos preexistentes.
 
 ## Limites e próxima etapa
 
-Faltam as demais APIs de threads, eventos, timers, inicialização do scheduler
-do jogo, vídeo e outras dependências de `mainInitGame`. O perfil não oferece
+O [perfil posterior de eventos](../events/README.md) integra relógios, timers
+e o scheduler original em execução sem renderização. Faltam as demais APIs
+de threads, vídeo e outras dependências de `mainInitGame`. Este perfil não oferece
 preempção de hardware nem trata todos os formatos de alteração de código.
 `amSndStop`, `amAmbientStop` e `TrapDanglingJump` permanecem explícitos como
 dependências não executáveis. O caminho clone não devolve sucesso fictício.

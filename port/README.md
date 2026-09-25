@@ -240,16 +240,28 @@ O [perfil de início de áudio](audio_start/README.md) completa `amInit`, inicia
 a thread e verifica sua primeira espera, o despertar por mensagem de controle
 e a falha explícita ao solicitar um frame ainda não implementado. Passou no
 Linux e no Windows x64, com referência MIPS para a inicialização. A próxima
-fronteira do bootstrap é `amInitAudioMap`; ainda não há saída de som.
+fronteira desse perfil é `amInitAudioMap`; ainda não há saída de som.
+
+O [perfil do mapa de áudio](audio_map/README.md) executa a inicialização
+original dos 40 slots de som e suas listas. O [perfil de controles](controllers/README.md)
+avança também por `joyInit` e `joyResetMap`, com um backend de teste que declara
+quatro portas ausentes e entrega a conclusão SI de forma controlada. Seus
+três cenários de boot e oito testes de protocolo passaram no Linux e no
+Windows x64 da RTX. A fronteira atual é `texInitTextures`, antes de executar
+a inicialização de texturas. Controles físicos, renderização e som continuam
+pendentes.
 
 As dependências e pendências de distribuição estão no
 [inventário de licenças](THIRD_PARTY_NOTICES.md).
 
-1. Integrar `amInitAudioMap` e o processamento de eventos/amostras de áudio.
+1. Integrar `texInitTextures` e continuar o bootstrap; avançar também no
+   processamento de eventos/amostras de áudio.
 2. Ampliar dependências entre overlays e alcançar o boot completo.
 3. Provar uma via de renderização compatível com F3DJFG, mantendo o alvo
    Windows/NVIDIA definido por Thiago.
 4. Avançar para menu, controles, áudio, saves e uma fase jogável.
 
-Desenvolvimento desta infraestrutura assistido por OpenAI Codex; as verificações
-usam execução independente do código MIPS original.
+Desenvolvimento desta infraestrutura assistido por OpenAI Codex. As verificações
+usam execução independente do código MIPS original dentro dos limites de cada
+perfil. No bootstrap de controles, as APIs de plataforma usam contratos lógicos
+de ausência; o decodificador MIPS de status é conferido separadamente.

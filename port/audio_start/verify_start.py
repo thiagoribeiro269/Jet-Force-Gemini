@@ -22,8 +22,8 @@ RECV_SITE = 0x80001DFC
 
 
 class StartOracle(ManagerOracle):
-    def __init__(self, image, rom, manifest, symbols):
-        super().__init__(image, rom, manifest, symbols, boundary_name="amInitAudioMap")
+    def __init__(self, image, rom, manifest, symbols, boundary_name="amInitAudioMap"):
+        super().__init__(image, rom, manifest, symbols, boundary_name=boundary_name)
         self.first_wait = None
         self.audio_phase = False
         recv = sx32(symbols["osRecvMesg"])
@@ -55,10 +55,12 @@ class StartOracle(ManagerOracle):
         cpu.reg_write(mips_const.UC_MIPS_REG_PC, sx32(RETURN))
 
 
-def run(elf_path, rom_path, manifest_path, library_path, report_path):
+def run(elf_path, rom_path, manifest_path, library_path, report_path, *,
+        session_class=StartSession, boundary_name="amInitAudioMap", compare_a0=False,
+        oracle_class=StartOracle):
     manifest, rom = json.loads(manifest_path.read_text()), rom_path.read_bytes()
-    profile = manifest["start_profile"]
-    require(profile["boundary_function"] == "amInitAudioMap" and
+    profile = manifest[session_class.profile_key]
+    require(profile["boundary_function"] == boundary_name and
             profile["thread_function"] == "__amMain", "Unexpected audio-start profile")
     with elf_path.open("rb") as file:
         syms = ELFFile(file).get_section_by_name(".symtab")
@@ -69,12 +71,12 @@ def run(elf_path, rom_path, manifest_path, library_path, report_path):
     lib = load_native_library(library_path)
     cases = []
     for tv in (1, 0, 2):
-        session = StartSession(lib, rom, manifest, tv, dirty_heap=True)
+        session = session_class(lib, rom, manifest, tv, dirty_heap=True)
         try:
             # The oracle owns the image from before the native main thread is
             # started. Never seed it from a native snapshot after audio starts:
             # osScAddClient would then insert its client a second time.
-            oracle = StartOracle(session.native.snapshot(), rom, manifest, symbols)
+            oracle = oracle_class(session.native.snapshot(), rom, manifest, symbols, boundary_name=boundary_name)
             registers = [0] * 32
             registers[29], registers[31] = sx32(0x80780000 - 0x10), sx32(RETURN)
             oracle.call(symbols["mainInitGame"], registers, budget=18000000)
@@ -100,15 +102,17 @@ def run(elf_path, rom_path, manifest_path, library_path, report_path):
                     main_boundary["call_site"] == int(boundary["overlay36"], 16) + profile["boundary_call_offset"],
                     "Audio-map boundary address or call site differs")
             actual_registers = session.poll(SLOTS)[2]
+            compared_gprs = tuple(sorted((*MAIN_GPRS, 4))) if compare_a0 else MAIN_GPRS
             gpr_differences = {i: [f"0x{main_registers[i]:016X}", f"0x{actual_registers[i]:016X}"]
-                               for i in MAIN_GPRS if actual_registers[i] != main_registers[i]}
+                               for i in compared_gprs if actual_registers[i] != main_registers[i]}
             # The final mainPreNMI polls resetMsgQueue. Original libultra's
             # osRecvMesg leaves a0 holding the interrupt mask (1), while its
             # native import preserves the queue argument. The following
             # amInitAudioMap entry takes no arguments and overwrites a0.
-            reset_queue = session.symbols["resetMsgQueue"]
-            require(main_registers[4] == 1 and actual_registers[4] == sx32(reset_queue),
-                    "Unexpected a0 values after the reset-queue poll")
+            if not compare_a0:
+                reset_queue = session.symbols["resetMsgQueue"]
+                require(main_registers[4] == 1 and actual_registers[4] == sx32(reset_queue),
+                        "Unexpected a0 values after the reset-queue poll")
             ai = session.ai()
             ai_writes = [[ai["write0"], ai["dac"]], [ai["write1"], ai["bitrate"]],
                          [ai["write2"], ai["control"]]]
@@ -144,15 +148,15 @@ def run(elf_path, rom_path, manifest_path, library_path, report_path):
                 offset = next(i for i, (left, right) in enumerate(zip(expected, actual)) if left != right)
                 raise AssertionError(f"Audio-start RAM differs at {offset:08X}: "
                                      f"{expected[offset:offset+16].hex()} != {actual[offset:offset+16].hex()}")
-            cases.append({"name": f"original_audio_start_tv_{tv}", "status": "passed",
+            cases.append({"name": f"original_{session_class.profile_key.removesuffix('_profile')}_tv_{tv}", "status": "passed",
                           "boundary": boundary, "first_wait": oracle.first_wait,
-                          "compared_gprs": list(MAIN_GPRS), "rom_transfers": len(transfers),
+                          "compared_gprs": list(compared_gprs), "rom_transfers": len(transfers),
                           "caller_saved_a0": {"mips": f"0x{main_registers[4]:016X}",
                                               "native": f"0x{actual_registers[4]:016X}"},
                           "ai_writes": ai_writes,
                           "masked_regions": [[f"0x{address:08X}", size] for address, size in regions],
                           "ram_sha256": hashlib.sha256(actual).hexdigest()})
-            print(f"PASS MIPS audio startup TV {tv}", flush=True)
+            print(f"PASS MIPS {session_class.profile_key} TV {tv}", flush=True)
         finally:
             joined = session.close()
         cases[-1]["threads_joined"] = joined
@@ -160,7 +164,8 @@ def run(elf_path, rom_path, manifest_path, library_path, report_path):
         "The MIPS oracle executes main then the audio-thread prefix serially on one original RAM image; this is not a timing or scheduling proof",
         "Stops before the first empty blocking osRecvMesg executes; no retrace or audio frame is simulated",
         "Private kernel structures, queue wait lists and prior main-thread call stacks are excluded; the new audio frame and scheduler client are compared",
-        "Explicit platform hooks retained; 16 main-thread GPRs compared; a0 after the reset-queue poll is recorded separately because the native queue import preserves the argument while libultra leaves the interrupt mask",
+        ("Explicit platform hooks retained; 17 main-thread GPRs compared directly" if compare_a0 else
+         "Explicit platform hooks retained; 16 main-thread GPRs compared; a0 after the reset-queue poll is recorded separately because the native queue import preserves the argument while libultra leaves the interrupt mask"),
         "No general FPU/FCSR proof"]}
     report_path.write_text(json.dumps(report, indent=2) + "\n")
     return report

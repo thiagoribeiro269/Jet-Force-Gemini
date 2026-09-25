@@ -50,8 +50,7 @@ def _check_bank(session, name: str, source: bytes, pointer: int) -> dict:
 
 def check_audio_assets(session, *, initial_heap_only=True) -> dict:
     """Check original US audio metadata against guest RAM at the manager stop."""
-    profile = (session.manifest.get("start_profile") or session.manifest.get("players_profile") or session.manifest.get("manager_profile")
-               or session.manifest["audio_profile"])
+    profile = session.manifest[getattr(session, "profile_key", "audio_profile")]
     symbols, rom = session.symbols, session.rom
     _require(profile["asset_sections"] == {"offset_table": 0x33, "audio_data": 0x34},
              "Unexpected audio asset indices")

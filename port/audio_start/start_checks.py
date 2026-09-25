@@ -7,7 +7,7 @@ def require(condition, message):
 
 
 def check_audio_start(session):
-    syms, profile = session.symbols, session.manifest["start_profile"]
+    syms, profile = session.symbols, session.manifest[session.profile_key]
     queue, client = profile["thread_queue"], profile["thread_client"]
     require(session.word(queue) == profile["thread_address"] and session.word(queue + 8) == 0,
             "Audio receiver is not waiting on the empty queue")

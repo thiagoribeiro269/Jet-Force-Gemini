@@ -1,0 +1,884 @@
+{
+  "recorded_at": "2026-09-24T21:11:37.505797-03:00",
+  "status": "passed",
+  "base_game_commit": "f409c111053c671ae91051a6cdff277e0af7d95e",
+  "rom_sha1": "493ced9008dbe932d6e91179b68e8630cf23a023",
+  "profile": {
+    "original_functions": 148,
+    "host_imports": 24,
+    "deferred_entries": 53,
+    "total_entries": 225
+  },
+  "dependencies": {
+    "N64ModernRuntime": "cdf5abbd5026fef5c364c676e4667c45e42b6863",
+    "N64Recomp": "81213c1831fab2521a6a5459c67b63437d67e253",
+    "Unicorn": "2.1.4",
+    "pyelftools": "0.32",
+    "windows_compiler": "LLVM-MinGW 20260922, Clang 23.1.2"
+  },
+  "native_linux": {
+    "status": "passed",
+    "platform": "Linux-6.8.0-139-generic-x86_64-with-glibc2.39",
+    "cases": [
+      {
+        "name": "map_creation_tv_1",
+        "status": "passed",
+        "boundary": {
+          "function": "joyInit",
+          "status": -3,
+          "target": "0x80042FEC",
+          "call_site": "0x80185314",
+          "overlay36": "0x801852E0",
+          "overlay25": "0x00000000"
+        },
+        "threads_joined": 3,
+        "rom_transfers": 20,
+        "extra_checks": {
+          "startup": {
+            "audio_thread": "blocked_on_empty_queue",
+            "client_id": 1,
+            "scheduler_client": "0x800E97A8",
+            "receive_queue": "0x800F1AF4",
+            "overlay25_released": true,
+            "amInit_returned": true,
+            "animation_queue_capacity": 1,
+            "queued_sequence_events": {
+              "tune": 1,
+              "ambient": 2
+            },
+            "surround_output_flags": [
+              1,
+              0,
+              0
+            ],
+            "audio_frames_processed": 0
+          },
+          "map": {
+            "sound_slots": 40,
+            "slot_bytes": 36,
+            "allocations": [
+              {
+                "address": "0x801A9870",
+                "bytes": 1440
+              },
+              {
+                "address": "0x801A9E10",
+                "bytes": 160
+              },
+              {
+                "address": "0x801A9EB0",
+                "bytes": 160
+              }
+            ],
+            "free_stack_index": 39,
+            "active_points": 0,
+            "cleared_ambient_handles": 12
+          }
+        }
+      },
+      {
+        "name": "map_creation_tv_0",
+        "status": "passed",
+        "boundary": {
+          "function": "joyInit",
+          "status": -3,
+          "target": "0x80042FEC",
+          "call_site": "0x8018CB14",
+          "overlay36": "0x8018CAE0",
+          "overlay25": "0x00000000"
+        },
+        "threads_joined": 3,
+        "rom_transfers": 20,
+        "extra_checks": {
+          "startup": {
+            "audio_thread": "blocked_on_empty_queue",
+            "client_id": 1,
+            "scheduler_client": "0x800E97A8",
+            "receive_queue": "0x800F1AF4",
+            "overlay25_released": true,
+            "amInit_returned": true,
+            "animation_queue_capacity": 1,
+            "queued_sequence_events": {
+              "tune": 1,
+              "ambient": 2
+            },
+            "surround_output_flags": [
+              1,
+              0,
+              0
+            ],
+            "audio_frames_processed": 0
+          },
+          "map": {
+            "sound_slots": 40,
+            "slot_bytes": 36,
+            "allocations": [
+              {
+                "address": "0x801B1070",
+                "bytes": 1440
+              },
+              {
+                "address": "0x801B1610",
+                "bytes": 160
+              },
+              {
+                "address": "0x801B16B0",
+                "bytes": 160
+              }
+            ],
+            "free_stack_index": 39,
+            "active_points": 0,
+            "cleared_ambient_handles": 12
+          }
+        }
+      },
+      {
+        "name": "map_creation_tv_2",
+        "status": "passed",
+        "boundary": {
+          "function": "joyInit",
+          "status": -3,
+          "target": "0x80042FEC",
+          "call_site": "0x80185314",
+          "overlay36": "0x801852E0",
+          "overlay25": "0x00000000"
+        },
+        "threads_joined": 3,
+        "rom_transfers": 20,
+        "extra_checks": {
+          "startup": {
+            "audio_thread": "blocked_on_empty_queue",
+            "client_id": 1,
+            "scheduler_client": "0x800E97A8",
+            "receive_queue": "0x800F1AF4",
+            "overlay25_released": true,
+            "amInit_returned": true,
+            "animation_queue_capacity": 1,
+            "queued_sequence_events": {
+              "tune": 1,
+              "ambient": 2
+            },
+            "surround_output_flags": [
+              1,
+              0,
+              0
+            ],
+            "audio_frames_processed": 0
+          },
+          "map": {
+            "sound_slots": 40,
+            "slot_bytes": 36,
+            "allocations": [
+              {
+                "address": "0x801A9870",
+                "bytes": 1440
+              },
+              {
+                "address": "0x801A9E10",
+                "bytes": 160
+              },
+              {
+                "address": "0x801A9EB0",
+                "bytes": 160
+              }
+            ],
+            "free_stack_index": 39,
+            "active_points": 0,
+            "cleared_ambient_handles": 12
+          }
+        }
+      }
+    ],
+    "limits": [
+      "Audio thread started and waiting; no samples or device output",
+      "Stops before joyInit"
+    ]
+  },
+  "mips_reference_linux": {
+    "status": "passed",
+    "cases": [
+      {
+        "name": "original_map_tv_1",
+        "status": "passed",
+        "boundary": {
+          "function": "joyInit",
+          "status": -3,
+          "target": "0x80042FEC",
+          "call_site": "0x80185314",
+          "overlay36": "0x801852E0",
+          "overlay25": "0x00000000"
+        },
+        "first_wait": {
+          "call_site": "0x80001DFC",
+          "queue": "0x800F1AF4",
+          "message_slot": "0x800F17A4",
+          "flags": 1,
+          "stack_pointer": "0x800F1760",
+          "entry_to_wait_stack_delta": -72
+        },
+        "compared_gprs": [
+          0,
+          4,
+          5,
+          6,
+          7,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          28,
+          29,
+          30,
+          31
+        ],
+        "rom_transfers": 20,
+        "caller_saved_a0": {
+          "mips": "0x000000000000002C",
+          "native": "0x000000000000002C"
+        },
+        "ai_writes": [
+          [
+            72351760,
+            2210
+          ],
+          [
+            72351764,
+            15
+          ],
+          [
+            72351752,
+            1
+          ]
+        ],
+        "masked_regions": [
+          [
+            "0x807A0000",
+            256
+          ],
+          [
+            "0x807A1000",
+            512
+          ],
+          [
+            "0x800FB4F0",
+            432
+          ],
+          [
+            "0x800FD348",
+            1056
+          ],
+          [
+            "0x8077DFF0",
+            8256
+          ],
+          [
+            "0x800F17C0",
+            432
+          ],
+          [
+            "0x800E9780",
+            8
+          ],
+          [
+            "0x800F1AF4",
+            8
+          ],
+          [
+            "0x800F1B0C",
+            8
+          ],
+          [
+            "0x800F2898",
+            8
+          ],
+          [
+            "0x800FB480",
+            8
+          ],
+          [
+            "0x800FB4B8",
+            8
+          ],
+          [
+            "0x800FE000",
+            8
+          ],
+          [
+            "0x800FE058",
+            8
+          ],
+          [
+            "0x800FE480",
+            8
+          ],
+          [
+            "0x800FE4A0",
+            8
+          ],
+          [
+            "0x800FE4B8",
+            8
+          ],
+          [
+            "0x800FE8A8",
+            8
+          ],
+          [
+            "0x800FE8E0",
+            8
+          ],
+          [
+            "0x800FE918",
+            8
+          ],
+          [
+            "0x800FEB80",
+            8
+          ]
+        ],
+        "ram_sha256": "b00cc96316489ab916d17af51adf4d4a2b51d593175f7d48df0d87d71e6ebb6e",
+        "threads_joined": 3
+      },
+      {
+        "name": "original_map_tv_0",
+        "status": "passed",
+        "boundary": {
+          "function": "joyInit",
+          "status": -3,
+          "target": "0x80042FEC",
+          "call_site": "0x8018CB14",
+          "overlay36": "0x8018CAE0",
+          "overlay25": "0x00000000"
+        },
+        "first_wait": {
+          "call_site": "0x80001DFC",
+          "queue": "0x800F1AF4",
+          "message_slot": "0x800F17A4",
+          "flags": 1,
+          "stack_pointer": "0x800F1760",
+          "entry_to_wait_stack_delta": -72
+        },
+        "compared_gprs": [
+          0,
+          4,
+          5,
+          6,
+          7,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          28,
+          29,
+          30,
+          31
+        ],
+        "rom_transfers": 20,
+        "caller_saved_a0": {
+          "mips": "0x000000000000002C",
+          "native": "0x000000000000002C"
+        },
+        "ai_writes": [
+          [
+            72351760,
+            2254
+          ],
+          [
+            72351764,
+            15
+          ],
+          [
+            72351752,
+            1
+          ]
+        ],
+        "masked_regions": [
+          [
+            "0x807A0000",
+            256
+          ],
+          [
+            "0x807A1000",
+            512
+          ],
+          [
+            "0x800FB4F0",
+            432
+          ],
+          [
+            "0x800FD348",
+            1056
+          ],
+          [
+            "0x8077DFF0",
+            8256
+          ],
+          [
+            "0x800F17C0",
+            432
+          ],
+          [
+            "0x800E9780",
+            8
+          ],
+          [
+            "0x800F1AF4",
+            8
+          ],
+          [
+            "0x800F1B0C",
+            8
+          ],
+          [
+            "0x800F2898",
+            8
+          ],
+          [
+            "0x800FB480",
+            8
+          ],
+          [
+            "0x800FB4B8",
+            8
+          ],
+          [
+            "0x800FE000",
+            8
+          ],
+          [
+            "0x800FE058",
+            8
+          ],
+          [
+            "0x800FE480",
+            8
+          ],
+          [
+            "0x800FE4A0",
+            8
+          ],
+          [
+            "0x800FE4B8",
+            8
+          ],
+          [
+            "0x800FE8A8",
+            8
+          ],
+          [
+            "0x800FE8E0",
+            8
+          ],
+          [
+            "0x800FE918",
+            8
+          ],
+          [
+            "0x800FEB80",
+            8
+          ]
+        ],
+        "ram_sha256": "51c8c16e268b31c9b41f5a2c18767a285ceee9909d9874a4a645f13dcc55e5f2",
+        "threads_joined": 3
+      },
+      {
+        "name": "original_map_tv_2",
+        "status": "passed",
+        "boundary": {
+          "function": "joyInit",
+          "status": -3,
+          "target": "0x80042FEC",
+          "call_site": "0x80185314",
+          "overlay36": "0x801852E0",
+          "overlay25": "0x00000000"
+        },
+        "first_wait": {
+          "call_site": "0x80001DFC",
+          "queue": "0x800F1AF4",
+          "message_slot": "0x800F17A4",
+          "flags": 1,
+          "stack_pointer": "0x800F1760",
+          "entry_to_wait_stack_delta": -72
+        },
+        "compared_gprs": [
+          0,
+          4,
+          5,
+          6,
+          7,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          28,
+          29,
+          30,
+          31
+        ],
+        "rom_transfers": 20,
+        "caller_saved_a0": {
+          "mips": "0x000000000000002C",
+          "native": "0x000000000000002C"
+        },
+        "ai_writes": [
+          [
+            72351760,
+            2207
+          ],
+          [
+            72351764,
+            15
+          ],
+          [
+            72351752,
+            1
+          ]
+        ],
+        "masked_regions": [
+          [
+            "0x807A0000",
+            256
+          ],
+          [
+            "0x807A1000",
+            512
+          ],
+          [
+            "0x800FB4F0",
+            432
+          ],
+          [
+            "0x800FD348",
+            1056
+          ],
+          [
+            "0x8077DFF0",
+            8256
+          ],
+          [
+            "0x800F17C0",
+            432
+          ],
+          [
+            "0x800E9780",
+            8
+          ],
+          [
+            "0x800F1AF4",
+            8
+          ],
+          [
+            "0x800F1B0C",
+            8
+          ],
+          [
+            "0x800F2898",
+            8
+          ],
+          [
+            "0x800FB480",
+            8
+          ],
+          [
+            "0x800FB4B8",
+            8
+          ],
+          [
+            "0x800FE000",
+            8
+          ],
+          [
+            "0x800FE058",
+            8
+          ],
+          [
+            "0x800FE480",
+            8
+          ],
+          [
+            "0x800FE4A0",
+            8
+          ],
+          [
+            "0x800FE4B8",
+            8
+          ],
+          [
+            "0x800FE8A8",
+            8
+          ],
+          [
+            "0x800FE8E0",
+            8
+          ],
+          [
+            "0x800FE918",
+            8
+          ],
+          [
+            "0x800FEB80",
+            8
+          ]
+        ],
+        "ram_sha256": "5872a64acf1ef0009dafdc8cf0e774389e5a1bacb6c0279d6ce0733d69de7ffe",
+        "threads_joined": 3
+      }
+    ],
+    "limits": [
+      "The MIPS oracle executes main then the audio-thread prefix serially on one original RAM image; this is not a timing or scheduling proof",
+      "Stops before the first empty blocking osRecvMesg executes; no retrace or audio frame is simulated",
+      "Private kernel structures, queue wait lists and prior main-thread call stacks are excluded; the new audio frame and scheduler client are compared",
+      "Explicit platform hooks retained; 17 main-thread GPRs compared directly",
+      "No general FPU/FCSR proof"
+    ]
+  },
+  "native_windows": {
+    "recorded_at": "2026-09-25T00:10:04.3723169Z",
+    "exit_code": 0,
+    "windows": "Microsoft Windows NT 10.0.26200.0",
+    "python": "Python 3.12.10",
+    "package_sha256": "6794d6b5f7fb7aaf9e56eee6c0850be8dd141fdd64d1fd57c822f34d4aab4e06",
+    "execution": "SSH console, isolated project folder, Python -I -O, package and every file hash verified",
+    "report": {
+      "status": "passed",
+      "platform": "Windows-11-10.0.26200-SP0",
+      "cases": [
+        {
+          "name": "map_creation_tv_1",
+          "status": "passed",
+          "boundary": {
+            "function": "joyInit",
+            "status": -3,
+            "target": "0x80042FEC",
+            "call_site": "0x80185314",
+            "overlay36": "0x801852E0",
+            "overlay25": "0x00000000"
+          },
+          "threads_joined": 3,
+          "rom_transfers": 20,
+          "extra_checks": {
+            "startup": {
+              "audio_thread": "blocked_on_empty_queue",
+              "client_id": 1,
+              "scheduler_client": "0x800E97A8",
+              "receive_queue": "0x800F1AF4",
+              "overlay25_released": true,
+              "amInit_returned": true,
+              "animation_queue_capacity": 1,
+              "queued_sequence_events": {
+                "tune": 1,
+                "ambient": 2
+              },
+              "surround_output_flags": [
+                1,
+                0,
+                0
+              ],
+              "audio_frames_processed": 0
+            },
+            "map": {
+              "sound_slots": 40,
+              "slot_bytes": 36,
+              "allocations": [
+                {
+                  "address": "0x801A9870",
+                  "bytes": 1440
+                },
+                {
+                  "address": "0x801A9E10",
+                  "bytes": 160
+                },
+                {
+                  "address": "0x801A9EB0",
+                  "bytes": 160
+                }
+              ],
+              "free_stack_index": 39,
+              "active_points": 0,
+              "cleared_ambient_handles": 12
+            }
+          }
+        },
+        {
+          "name": "map_creation_tv_0",
+          "status": "passed",
+          "boundary": {
+            "function": "joyInit",
+            "status": -3,
+            "target": "0x80042FEC",
+            "call_site": "0x8018CB14",
+            "overlay36": "0x8018CAE0",
+            "overlay25": "0x00000000"
+          },
+          "threads_joined": 3,
+          "rom_transfers": 20,
+          "extra_checks": {
+            "startup": {
+              "audio_thread": "blocked_on_empty_queue",
+              "client_id": 1,
+              "scheduler_client": "0x800E97A8",
+              "receive_queue": "0x800F1AF4",
+              "overlay25_released": true,
+              "amInit_returned": true,
+              "animation_queue_capacity": 1,
+              "queued_sequence_events": {
+                "tune": 1,
+                "ambient": 2
+              },
+              "surround_output_flags": [
+                1,
+                0,
+                0
+              ],
+              "audio_frames_processed": 0
+            },
+            "map": {
+              "sound_slots": 40,
+              "slot_bytes": 36,
+              "allocations": [
+                {
+                  "address": "0x801B1070",
+                  "bytes": 1440
+                },
+                {
+                  "address": "0x801B1610",
+                  "bytes": 160
+                },
+                {
+                  "address": "0x801B16B0",
+                  "bytes": 160
+                }
+              ],
+              "free_stack_index": 39,
+              "active_points": 0,
+              "cleared_ambient_handles": 12
+            }
+          }
+        },
+        {
+          "name": "map_creation_tv_2",
+          "status": "passed",
+          "boundary": {
+            "function": "joyInit",
+            "status": -3,
+            "target": "0x80042FEC",
+            "call_site": "0x80185314",
+            "overlay36": "0x801852E0",
+            "overlay25": "0x00000000"
+          },
+          "threads_joined": 3,
+          "rom_transfers": 20,
+          "extra_checks": {
+            "startup": {
+              "audio_thread": "blocked_on_empty_queue",
+              "client_id": 1,
+              "scheduler_client": "0x800E97A8",
+              "receive_queue": "0x800F1AF4",
+              "overlay25_released": true,
+              "amInit_returned": true,
+              "animation_queue_capacity": 1,
+              "queued_sequence_events": {
+                "tune": 1,
+                "ambient": 2
+              },
+              "surround_output_flags": [
+                1,
+                0,
+                0
+              ],
+              "audio_frames_processed": 0
+            },
+            "map": {
+              "sound_slots": 40,
+              "slot_bytes": 36,
+              "allocations": [
+                {
+                  "address": "0x801A9870",
+                  "bytes": 1440
+                },
+                {
+                  "address": "0x801A9E10",
+                  "bytes": 160
+                },
+                {
+                  "address": "0x801A9EB0",
+                  "bytes": 160
+                }
+              ],
+              "free_stack_index": 39,
+              "active_points": 0,
+              "cleared_ambient_handles": 12
+            }
+          }
+        }
+      ],
+      "limits": [
+        "Audio thread started and waiting; no samples or device output",
+        "Stops before joyInit"
+      ]
+    }
+  },
+  "package": {
+    "name": "jfg-audio-map-windows-x64.zip",
+    "size": 418083,
+    "sha256": "6794d6b5f7fb7aaf9e56eee6c0850be8dd141fdd64d1fd57c822f34d4aab4e06",
+    "dll_sha256": "651e373bc02d84610dc536611911dc70f3ebf7215a981d1f4c001add5eed6b9d",
+    "published": false
+  },
+  "regressions": {
+    "audio_start_linux_native_cases": 3,
+    "audio_start_linux_wake_cases": 2,
+    "audio_start_linux_mips_cases": 3,
+    "n64_make_version_us": "passed",
+    "n64_binary_identical": true
+  },
+  "scope_limits": [
+    "No sound, sample synthesis, image, GPU initialization or playable game",
+    "No physical controller access or device input",
+    "ROM, extracted assets, generated game source and binaries remain private under ignored build/",
+    "No change to inherited game sources or vendors"
+  ],
+  "delegation": {
+    "agents": 2,
+    "model": "gpt-6-sol",
+    "reasoning_effort": "medium",
+    "fork_turns": "none",
+    "scope": [
+      "profile, runner, packaging and README preparation",
+      "controller C backend and independent final review"
+    ],
+    "coordinator": "Integration, map/controller checks, protocol and MIPS reference, Windows execution and evidence review",
+    "cost_measurement": "No comparable token or cost measurements"
+  },
+  "source_sha256": {
+    "port/audio_init/asset_checks.py": "f0ac9042d9d89444a10d0bbbee56b774b0cf7a370ed9a8b693dd0a2782b0d00d",
+    "port/audio_map/checks_map.py": "1e5533130a37c0e172ab6dc43ad2362f358e32ac08a1c77be39bdbaf3222c0ca",
+    "port/audio_map/map_checks.py": "2175e8518ca1c667f33de19e05dae12438d8e4ae0055eb114da1589d4ca820bc",
+    "port/audio_map/package_windows.py": "59e0c9779f3d3787eef9cad6c6452abd3b8fd266657222c01ec443339741045d",
+    "port/audio_map/prepare_map.py": "d101e6cb3c974267e867f57b9fde19428ea819459210b31dadbf04b9f1c798b1",
+    "port/audio_map/run.py": "5e33a93e291c90806543fad37ab9ca97f7416fa13b6ab8f8448553301f3c027c",
+    "port/audio_map/verify_map.py": "dff2aae982ddfbfd0a35250dbc7f7a18d5a9aba814708f5c3079daea11365245",
+    "port/audio_start/start_checks.py": "b35c789e1b1e1fd98f619d80d9df463e455406714ba2f0ff8727ff6f96c3dde8",
+    "port/audio_start/verify_start.py": "ceb97cf19345668f6c6bb0f3eda58832544e66aab6e98a61b4d0053f69570e14",
+    "port/poc/CMakeLists.txt": "adf9b1ca194a7b16ab3f6fa4a2db1912b9cec09e2505c6dea0f1085f57935543",
+    "port/threads/scheduler.cpp": "497aebdb429ed2dc24dbc8e73fab66fe01a43ed9fe48d0495ed92702719a7a6b"
+  },
+  "local_report_sha256": {
+    "build/port-audio-map/native-report.json": "2c966b485d69cafb510e2e9e98bc354713213c0e770f204a339b6a8a87601569",
+    "build/port-audio-map/mips-report.json": "23c8c65d03d7764ddcf4351d3ca5e2b3a50cb0e20a89b9ec96c01c450604e788",
+    "build/port-audio-map/rtx-windows-result.json": "fc8088d0193a318dc12273268c7240095fe91c92653f71b70259223f0c13c952",
+    "build/port-audio-map/package-report.json": "046f0a337638091fcffcfc0d3f4a756a4918cf37928ba6e3060814dbe84bf6f3"
+  }
+}

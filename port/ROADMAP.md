@@ -15,6 +15,11 @@ ao primeiro frame e regressão da pose neutra aprovada. Ainda falta ligar
 seleção/transição de animações ao estado do jogo e integrar o ciclo nativo.
 Detalhes em [native/README.md](native/README.md).
 
+O controlador nativo já seleciona e mistura os clipes 1026/1030, com tempo
+em segundos, interrupção de transições e preservação do relógio em comandos
+repetidos. A sequência de diagnóstico passou na RTX; ainda falta ligar essa
+API ao estado real do personagem e às entradas do jogo.
+
 Planejamento registrado antes da implementação do próximo bloco, a partir
 do checkpoint `68cfa4d`. O objetivo é chegar a uma partida de JFG no Windows
 x64 com NVIDIA. A base do jogo permanece em

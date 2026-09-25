@@ -77,3 +77,45 @@ bytes idênticos ao primeiro. A pose neutra também permaneceu idêntica à
 referência nativa anterior. Inspeção de quatro fases confirmou articulação
 do corpo e da mão. Vídeo privado de três ciclos gerado, com velocidade
 controlada e sem reivindicar comportamento completo de gameplay.
+
+## Terceiro pacote: seleção e transição de clipes
+
+Plano fechado antes da implementação, a partir de `73aa7e3`. Acrescentar
+o clipe 1030 (índice 14 do Juno), com dez quadros, stride de dez bytes e
+77 bits por quadro. A inspeção do formato confirmou loop, 21 canais de
+esqueleto e ausência de escala animada, como no clipe 1026 já validado.
+
+1. Evoluir a cena para `JFGNAT3`, guardando os dois clipes e preservando
+   leitura de `JFGNAT1/2`. Continuar convertendo dados da ROM diretamente.
+2. Criar um controlador C++ com seleção por ID, relógio em segundos e
+   transição angular/local. A origem será uma captura da pose visível;
+   o destino continuará avançando. Uma nova seleção durante a transição
+   capturará a pose misturada, evitando salto de pose. Pedidos repetidos
+   para o mesmo ID não deverão reiniciar o clipe nem a transição.
+3. Validar tempo/IDs antes de alterar estado. Usar testes matemáticos de
+   início/fim, interrupção, repetição e passos de tempo equivalentes.
+   Os resultados não serão apresentados como o algoritmo de blending
+   original do N64 ou como transição de gameplay já integrada.
+4. Alimentar comandos explícitos por arquivo de diagnóstico, sem teclado
+   ou controle físico: B em frame 32, repetição em 34, A em 36 (interrupção),
+   B em 56 e A em 80. Renderizar 96 frames a 30 fps, com durações controladas
+   de 0,20 a 0,30 segundo. Conferir ausência de salto no instante do comando.
+5. Revalidar o ciclo anterior e a pose neutra, executar na RTX por console
+   SSH e produzir vídeo privado da sequência. Publicar somente código,
+   documentação e métricas, mantendo o trabalho solo e sem emulação.
+
+Este bloco prepara a API para futuras entradas do jogo. Não implementa
+locomoção, colisão, câmera jogável, áudio, eventos, IK ou controle físico.
+
+A primeira validação visual detectou pés cortados durante a mistura, embora
+as poses finais coubessem na câmera. A sequência recebe um enquadramento
+fixo mais amplo; as regressões anteriores continuam usando a câmera original.
+Um ciclo isolado com a câmera ampla permite comparar os frames da sequência
+antes dos comandos e depois do fim das transições. Isso não resolve nem
+promete contato físico dos pés com o chão: foot planting/IK segue fora do escopo.
+
+Resultado: dois clipes convertidos, controlador C++ validado e sequência
+de 96 frames concluída na RTX. Quatro seleções efetivas, uma repetição
+ignorada, interrupção sem salto instantâneo de matrizes e 72 imagens
+distintas. Pose neutra e ciclo anterior byte a byte preservados. A câmera
+ampla eliminou o corte no teste; vídeo e traços continuam privados.

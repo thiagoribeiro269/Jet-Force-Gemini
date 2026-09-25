@@ -1,0 +1,164 @@
+{
+  "status": "passed",
+  "recorded_date": "2026-09-25",
+  "previous_checkpoint": "73aa7e3ce8dce9e47f8c97c91ca5602924b8bc68",
+  "architecture": "native_C++_clip_selection_and_D3D11",
+  "scene_version": 3,
+  "clips": [
+    {
+      "id": 1026,
+      "model_clip_index": 0,
+      "model_clip_count": 52,
+      "keyframes": 16,
+      "loop": true,
+      "frame_stride": 25,
+      "bits_per_frame": 193,
+      "source_sha256": "0693bf4740d35faa69637a37dede4a81fc84e2d9aabc812da03fdb6164de1d78",
+      "bit_readers_compared": 2,
+      "source_fps_controlled": 15,
+      "semantic_name": null,
+      "scale_channels": 0
+    },
+    {
+      "id": 1030,
+      "model_clip_index": 14,
+      "model_clip_count": 52,
+      "keyframes": 10,
+      "loop": true,
+      "frame_stride": 10,
+      "bits_per_frame": 77,
+      "source_sha256": "34249a9c5934237043508075b33b274fb158230d079105763d053d81f4937dfb",
+      "bit_readers_compared": 2,
+      "source_fps_controlled": 15,
+      "semantic_name": null,
+      "scale_channels": 0
+    }
+  ],
+  "scene_sha256": "282b2e57d8c472fd8390bb25468fa17ee036d1c928819bc57ff60bee70f2f30d",
+  "build": {
+    "status": "built",
+    "source": "port/native/render.cpp",
+    "api": "D3D11",
+    "executable_sha256": "be4b5fdbd74b8ad24766e0d8e3e8e6a17d777590d567140aab7f96fe3bca1068",
+    "animation_math_executable_sha256": "eaec8f60177bcdbf90b9410e83fb2ec9058442ef9c2bbeb4ee7de1819c188a3e",
+    "animation_player_executable_sha256": "72adfbb81f1229748d1f3a0afe5634eecea34c2e6fadc8a369eb5db8c0b4c8e5",
+    "emulator_dependencies": [],
+    "graphics_libraries": [
+      "Windows D3D11",
+      "Windows D3DCompiler",
+      "Windows DXGI"
+    ]
+  },
+  "windows": "Windows-11-10.0.26200-SP0",
+  "gpu": {
+    "api": "D3D11",
+    "vendor": 4318,
+    "width": 640,
+    "height": 480,
+    "triangles": 534,
+    "draws": 21,
+    "textures": 17,
+    "frame_count": 96,
+    "camera": "transition_wide"
+  },
+  "tests": {
+    "linux": "Animation math and player checks passed with ASAN/UBSAN",
+    "windows_math": {
+      "status": "passed",
+      "math_cases": 6,
+      "rejected_cases": 4
+    },
+    "windows_controller": {
+      "status": "passed",
+      "controller_cases": 8,
+      "rejected_cases": 6
+    }
+  },
+  "transition": {
+    "status": "passed",
+    "clip_ids": [
+      1026,
+      1030
+    ],
+    "frames": 96,
+    "unique_frames": 72,
+    "requests": [
+      {
+        "frame": 32,
+        "id": 1030,
+        "accepted": true,
+        "duration": 0.3,
+        "instant_matrix_delta": 0
+      },
+      {
+        "frame": 34,
+        "id": 1030,
+        "accepted": false,
+        "duration": 0.3,
+        "instant_matrix_delta": 0
+      },
+      {
+        "frame": 36,
+        "id": 1026,
+        "accepted": true,
+        "duration": 0.2,
+        "instant_matrix_delta": 0
+      },
+      {
+        "frame": 56,
+        "id": 1030,
+        "accepted": true,
+        "duration": 0.3,
+        "instant_matrix_delta": 0
+      },
+      {
+        "frame": 80,
+        "id": 1026,
+        "accepted": true,
+        "duration": 0.25,
+        "instant_matrix_delta": 0
+      }
+    ],
+    "accepted_switches": 4,
+    "repeated_requests_ignored": 1,
+    "interrupted_transition": true,
+    "instantaneous_selection_matrix_delta": 0,
+    "neutral_byte_equal_to_prior": true,
+    "prior_cycle_33_frames_byte_equal": true,
+    "first_32_controller_frames_match_cycle": true,
+    "completed_blend_frames_match_destination": [
+      42,
+      88
+    ],
+    "coverage_range": [
+      18816,
+      25487
+    ],
+    "rgb_pixels_changed_second_clip": 30965,
+    "camera": "transition_wide",
+    "original_camera_retained_for_prior_regressions": true,
+    "raw_sha256": "6ffd16529b7924a52293f0c833784987ed829dcf11977af7722d03689386c97e",
+    "video_sha256": "d57a637a0988cd3a16cd34a2c7879e542067a5c72bbe466d97ffd6adf65cb80c",
+    "fps_controlled": 30,
+    "duration_seconds": 3.2,
+    "limits": [
+      "Scripted PC clip-selection commands, no physical controller or gameplay state",
+      "Native local-angle blend from a captured source pose toward an advancing destination; original blend algorithm not claimed",
+      "Pose continuity is tested at selection; velocity continuity and foot planting/IK are not guaranteed",
+      "No emulation, audio, animation events, locomotion or collision"
+    ]
+  },
+  "video": {
+    "codec": "H.264",
+    "width": 640,
+    "height": 480,
+    "fps": 30,
+    "frames": 96,
+    "duration_seconds": 3.2,
+    "private": true
+  },
+  "matching_rom_byte_equal": true,
+  "rom_sha1": "493ced9008dbe932d6e91179b68e8630cf23a023",
+  "emulation_used": false,
+  "visual_review": "Source, intermediate and destination poses inspected; full character fits the wider diagnostic camera; hand stays articulated"
+}

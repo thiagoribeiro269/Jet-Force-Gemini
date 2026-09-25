@@ -14,8 +14,11 @@ def clip_for_model(assets, model_id, clip_index=0):
     raw = region(assets.section(0x2B), start, end - start)
     frame_offset = struct.unpack_from(">H", raw, 2)[0]
     channel_bones, frame_count, stride = raw[9], raw[11], raw[13]
-    require(animation_id == 1026 and channel_bones == 21 and frame_count == 16 and stride == 25,
-            "This first native animation package selects Juno clip 1026 only")
+    supported = {0: (1026, 16, 25, 193), 14: (1030, 10, 10, 77)}
+    require(model_id == 220 and clip_index in supported, "Animation index outside the validated native subset")
+    expected_id, expected_count, expected_stride, expected_bits = supported[clip_index]
+    require((animation_id, channel_bones, frame_count, stride) == (expected_id, 21, expected_count, expected_stride),
+            "Selected native animation header differs")
     mapping_start, mapping_end = struct.unpack(">II", region(assets.section(0x2C), model_id * 4, 8))
     mappings = region(assets.section(0x2D), mapping_start, mapping_end - mapping_start)
     mapping = region(mappings, clip_index * 21, 21)
@@ -26,7 +29,7 @@ def clip_for_model(assets, model_id, clip_index=0):
     require(not any(d & 16 for d in descriptors), "Animated scale requires a separate decoder extension")
     require(frame_offset == 142 and region(raw, 136, 6) == bytes(6), "Unexpected auxiliary channel descriptors")
     bits_per_frame = sum(root_widths) + sum(d & 15 for d in descriptors)
-    require(bits_per_frame == 193 and bits_per_frame <= stride * 8, "Packed frame stride differs")
+    require(bits_per_frame == expected_bits and bits_per_frame <= stride * 8, "Packed frame stride differs")
     payload = region(raw, frame_offset, stride * frame_count)
     frames = []
     for frame in range(frame_count):

@@ -41,9 +41,10 @@ inline float interpolateAngle(float from, float to, float fraction) {
     return from + std::remainder(to - from, 2 * Pi) * fraction;
 }
 
-inline std::vector<Matrix> pose(const std::vector<Bone> &bones, const Clip *clip, float frame) {
-    if (bones.empty() || bones.size() > 64 || !std::isfinite(frame) || frame < 0)
+inline Keyframe sampleClip(const Clip *clip, size_t boneCount, float frame) {
+    if (boneCount == 0 || boneCount > 64 || !std::isfinite(frame) || frame < 0)
         throw std::runtime_error("Invalid native pose input");
+    Keyframe result{{0, 0, 0}, std::vector<Vec3>(boneCount)};
     size_t first = 0, second = 0;
     float fraction = 0;
     if (clip) {
@@ -53,24 +54,51 @@ inline std::vector<Matrix> pose(const std::vector<Bone> &bones, const Clip *clip
         first = size_t(std::floor(frame));
         second = first + 1 < clip->keys.size() ? first + 1 : clip->loop ? 0 : first;
         fraction = frame - float(first);
-        if (clip->keys[first].angles.size() != bones.size() || clip->keys[second].angles.size() != bones.size())
+        if (clip->keys[first].angles.size() != boneCount || clip->keys[second].angles.size() != boneCount)
             throw std::runtime_error("Animation/skeleton channel mismatch");
+        for (unsigned axis = 0; axis < 3; ++axis) {
+            result.root[axis] = clip->keys[first].root[axis] * (1 - fraction) + clip->keys[second].root[axis] * fraction;
+            for (size_t bone = 0; bone < boneCount; ++bone)
+                result.angles[bone][axis] = interpolateAngle(clip->keys[first].angles[bone][axis], clip->keys[second].angles[bone][axis], fraction);
+        }
     }
+    return result;
+}
+
+inline Keyframe mixPoses(const Keyframe &from, const Keyframe &to, float weight) {
+    if (from.angles.empty() || from.angles.size() != to.angles.size() || !std::isfinite(weight) || weight < 0 || weight > 1)
+        throw std::runtime_error("Invalid local-pose blend");
+    // Copy exact endpoints, including their angular representation.
+    if (weight == 0) return from;
+    if (weight == 1) return to;
+    Keyframe result{{0, 0, 0}, std::vector<Vec3>(from.angles.size())};
+    for (unsigned axis = 0; axis < 3; ++axis) {
+        result.root[axis] = from.root[axis] * (1 - weight) + to.root[axis] * weight;
+        for (size_t bone = 0; bone < from.angles.size(); ++bone)
+            result.angles[bone][axis] = interpolateAngle(from.angles[bone][axis], to.angles[bone][axis], weight);
+    }
+    return result;
+}
+
+inline std::vector<Matrix> composePose(const std::vector<Bone> &bones, const Keyframe &local) {
+    if (bones.empty() || bones.size() > 64 || local.angles.size() != bones.size())
+        throw std::runtime_error("Invalid native skeleton/pose size");
     std::vector<Matrix> matrices;
     for (size_t bone = 0; bone < bones.size(); ++bone) {
         const auto &node = bones[bone];
         if (node.parent < -1 || node.parent >= int32_t(bone) || (node.parent == -1) != (bone == 0))
             throw std::runtime_error("Invalid skeleton parent order");
-        Vec3 translation = node.offset, angles{};
-        if (clip) for (unsigned axis = 0; axis < 3; ++axis) {
-            angles[axis] = interpolateAngle(clip->keys[first].angles[bone][axis], clip->keys[second].angles[bone][axis], fraction);
-            if (bone == 0) translation[axis] += clip->keys[first].root[axis] * (1 - fraction) + clip->keys[second].root[axis] * fraction;
-        }
-        auto matrix = localMatrix(angles, translation);
+        Vec3 translation = node.offset;
+        if (bone == 0) for (unsigned axis = 0; axis < 3; ++axis) translation[axis] += local.root[axis];
+        auto matrix = localMatrix(local.angles[bone], translation);
         if (node.parent >= 0) matrix = multiply(matrix, matrices[size_t(node.parent)]);
         for (float value : matrix) if (!std::isfinite(value)) throw std::runtime_error("Nonfinite bone matrix");
         matrices.push_back(matrix);
     }
     return matrices;
+}
+
+inline std::vector<Matrix> pose(const std::vector<Bone> &bones, const Clip *clip, float frame) {
+    return composePose(bones, sampleClip(clip, bones.size(), frame));
 }
 }

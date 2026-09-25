@@ -13,8 +13,10 @@ out = parser.parse_args().out.resolve()
 if not out.is_relative_to(ROOT / "build"):
     raise ValueError("Private package must remain under ignored build/")
 build = ROOT / "build/port-native"
-files = {name: (build / name).read_bytes() for name in ("jfg_native_preview.exe", "check_animation.exe")}
+files = {name: (build / name).read_bytes() for name in ("jfg_native_preview.exe", "check_animation.exe", "check_player.exe")}
 files["scene.bin"] = (out / "scene.bin").read_bytes()
+if files["scene.bin"][:8] == b"JFGNAT3\0":
+    files["transition_sequence.txt"] = (ROOT / "port/native/transition_sequence.txt").read_bytes()
 files["run_windows.py"] = (ROOT / "port/native/run_windows.py").read_bytes()
 files["PRIVATE.txt"] = b"Private game-derived meshes and textures. Do not publish this package.\n"
 files["hashes.json"] = (json.dumps({n: hashlib.sha256(v).hexdigest() for n, v in files.items()}, indent=2) + "\n").encode()

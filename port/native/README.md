@@ -69,6 +69,43 @@ velocidade original do jogo. O vídeo privado tem três repetições do ciclo,
 colisão ou controle do personagem nesta prova. As evidências ficam em
 [animation-validation.json](animation-validation.json).
 
+## Seleção e transição nativas
+
+A cena `JFGNAT3` acrescenta o clipe **1030**, índice 14 da tabela do Juno,
+com dez quadros, stride de dez bytes e 77 bits por quadro. O conversor
+continua limitado aos dois clipes inspecionados, sem escala animada.
+
+`AnimationPlayer` recebe seleção por ID e avanço de tempo em segundos.
+Durante a transição, mistura a pose visível capturada na origem com o
+clipe destino em andamento, usando curva smoothstep e caminho angular
+curto. Outra seleção durante a mistura começa da pose que estava visível.
+Pedidos repetidos para o mesmo ID preservam o relógio e a transição; IDs ou
+tempos inválidos falham antes de alterar o estado.
+
+Isso é um controlador próprio do port. Não se afirma que seja o algoritmo
+de mistura original do jogo, nem que preserve velocidade ou contato dos
+pés com o chão. IK, foot planting, eventos e transições acionadas pela
+lógica original de gameplay continuam pendentes.
+
+O teste [transition_sequence.txt](transition_sequence.txt) envia cinco
+comandos em 96 frames: quatro trocas efetivas e uma repetição ignorada.
+Uma troca interrompe uma mistura em curso. Resultados observados:
+
+- Oito casos do controlador e seis rejeições passaram no Linux ASAN/UBSAN
+  e no Windows, além dos testes matemáticos anteriores.
+- Diferença máxima das matrizes antes/depois de cada seleção: zero.
+- 72 imagens distintas na sequência; personagem completo no enquadramento.
+- Pose neutra e ciclo anterior de 33 frames continuam idênticos byte a byte.
+- Os primeiros 32 frames do controlador e os frames de duas transições
+  concluídas coincidem com a reprodução isolada do clipe correspondente.
+
+A primeira tentativa cortou os pés em uma pose intermediária. A sequência
+agora usa uma câmera fixa mais ampla, e um ciclo isolado com essa câmera
+serve de referência para as comparações. A câmera anterior permanece nas
+regressões. O vídeo privado tem 3,2 segundos, 640 × 480 e 30 fps. Os comandos
+são de diagnóstico; teclado e controle físico não são acessados. Evidências
+em [transition-validation.json](transition-validation.json).
+
 ## Build e teste
 
 O conversor usa apenas a biblioteca padrão do Python. O build usa o
@@ -86,6 +123,14 @@ Para preparar o clipe e o pacote animado:
 python3 port/native/prepare_assets.py --animation --out build/port-native/animation
 python3 port/native/build.py
 python3 port/native/package.py --out build/port-native/animation
+```
+
+Para preparar a seleção e as transições:
+
+```sh
+python3 port/native/prepare_assets.py --transitions --out build/port-native/transitions
+python3 port/native/build.py
+python3 port/native/package.py --out build/port-native/transitions
 ```
 
 O ZIP em `build/port-native` contém assets privados do jogo. **Não publicar
@@ -108,6 +153,12 @@ Para cenas `JFGNAT2`, o runner executa primeiro os testes matemáticos,
 renderiza o ciclo e produz também `neutral.rgba` para regressão. O executável
 aceita `--animate` explicitamente; sem essa opção, desenha a pose neutra.
 
+Com `JFGNAT3`, o runner também confere o controlador e executa
+`--sequence transition_sequence.txt`. Além de `frame.rgba`, gera
+`cycle.rgba` na câmera anterior, `cycle-wide.rgba` na câmera ampla e
+`neutral.rgba`. O arquivo de comandos é limitado em tamanho, frames e
+quantidade de seleções; IDs são conferidos antes de criar o dispositivo.
+
 Recupere `result.json` como `build/port-native/rtx-result.json` e
 `frame.rgba` no mesmo diretório, depois execute:
 
@@ -121,6 +172,12 @@ O verificador confere fechamento do loop e regressão, gera PNGs de amostra
 e usa FFmpeg local para criar `juno-animation.mp4`. Frames e vídeo ficam
 privados e nunca devem ser incluídos no pacote público do código.
 
+Para transições, recupere `result.json` como `rtx-result.json` e os quatro
+arquivos RGBA para `build/port-native/transitions`, depois execute
+`python3 port/native/check_transition_frames.py`. O vídeo resultante é
+`juno-transitions.mp4`. Os traços de estado ficam no resultado privado;
+o controlador não grava keyframes ou imagens no repositório público.
+
 A inspeção dos imports do executável mostrou somente bibliotecas Windows:
 D3D11, D3DCompiler, DXGI, Kernel32 e Universal CRT. O comando de compilação
 inclui apenas `render.cpp` e essas bibliotecas; nenhuma dependência de
@@ -130,7 +187,7 @@ emulador é compilada estaticamente. As evidências estão em
 ## Continuidade
 
 O port completo ainda exige integrar o código de jogo recompilado/adaptado,
-seleção/transição de animações, materiais especiais, iluminação, áudio, controles, salvamento
+seleção de animações ligada ao estado do personagem, materiais especiais, iluminação, áudio, controles, salvamento
 e a inicialização. A dependência do CIC será retirada no caminho do port
 após mapear os efeitos da chamada, sem implementar um chip virtual.
 O código matching da ROM foi preservado.

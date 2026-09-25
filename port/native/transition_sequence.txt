@@ -1,0 +1,8 @@
+# Controlled native animation requests, not original gameplay commands.
+# Frame, source animation ID, blend duration in seconds.
+frames 96
+32 1030 0.30
+34 1030 0.30
+36 1026 0.20
+56 1030 0.30
+80 1026 0.25

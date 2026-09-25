@@ -109,7 +109,8 @@ def skeleton(model):
     return positions
 
 
-def convert(assets, animated=False):
+def convert(assets, animated=False, transitions=False):
+    animated = animated or transitions
     body, hand = assets.model(220), assets.model(309)
     require(body[:4] == b"Boy\0" and hand[:9] == b"JunoHand\0", "Wrong model names")
     bones = skeleton(body)
@@ -172,7 +173,8 @@ def convert(assets, animated=False):
         reports.append({"id": number, "vertices_stored": vc, "triangles_stored": tc,
                         "triangles_submitted": submitted, "triangles_omitted_by_original_flag": omitted,
                         "decoded_sha256": hashlib.sha256(model).hexdigest()})
-    data = bytearray(struct.pack("<8sIIII", b"JFGNAT2\0" if animated else b"JFGNAT1\0",
+    magic = b"JFGNAT3\0" if transitions else b"JFGNAT2\0" if animated else b"JFGNAT1\0"
+    data = bytearray(struct.pack("<8sIIII", magic,
                                  len(textures), len(draws), len(vertices), len(bones) if animated else 0))
     for texture in textures:
         data.extend(struct.pack("<IIII", texture["id"], texture["width"], texture["height"], len(texture["rgba"])))
@@ -182,21 +184,28 @@ def convert(assets, animated=False):
     for vertex in vertices:
         data.extend(struct.pack("<9fI" if animated else "<9f", *vertex))
     clip_report = None
+    clip_reports = []
     if animated:
         from animation_assets import clip_for_model
-        frames, clip_report = clip_for_model(assets, 220)
         for parent, local in skeleton_nodes(body):
             data.extend(struct.pack("<i3f", parent, *local))
-        data.extend(struct.pack("<IIIf", clip_report["id"], len(frames), int(clip_report["loop"]), 15.0))
-        for root, angles in frames:
-            data.extend(struct.pack("<3f", *root))
-            for rotation in angles:
-                data.extend(struct.pack("<3f", *rotation))
+        indices = (0, 14) if transitions else (0,)
+        if transitions:
+            data.extend(struct.pack("<I", len(indices)))
+        for index in indices:
+            frames, details = clip_for_model(assets, 220, index)
+            clip_reports.append(details)
+            data.extend(struct.pack("<IIIf", details["id"], len(frames), int(details["loop"]), 15.0))
+            for root, angles in frames:
+                data.extend(struct.pack("<3f", *root))
+                for rotation in angles:
+                    data.extend(struct.pack("<3f", *rotation))
+        clip_report = clip_reports[0]
     return bytes(data), {"status": "prepared", "models": reports, "triangles": len(vertices) // 3,
                          "draws": len(draws), "texture_count": len(textures), "bones": len(bones),
                          "hand_bone": attachment, "textures": [{k: v for k, v in t.items() if k != "rgba"} for t in textures],
-                         "scene_version": 2 if animated else 1, "animation": clip_report,
-                         "limits": ["One selected original skeletal clip or neutral pose; ordinary PC materials, texture animation frame zero",
+                         "scene_version": 3 if transitions else 2 if animated else 1, "animation": clip_report, "animations": clip_reports,
+                         "limits": ["Selected original skeletal clips or neutral pose; ordinary PC materials, texture animation frame zero",
                                     "Offline file-format conversion; no MIPS, RSP, RDP, PIF or CIC execution",
                                     "No pixel-equivalence claim with Nintendo 64 hardware"]}
 
@@ -206,10 +215,11 @@ def main():
     parser.add_argument("--rom", type=Path, default=ROOT / "baseroms/baserom.us.z64")
     parser.add_argument("--out", type=Path, default=ROOT / "build/port-native")
     parser.add_argument("--animation", action="store_true")
+    parser.add_argument("--transitions", action="store_true")
     args = parser.parse_args()
     out = args.out.resolve()
     require(out.is_relative_to(ROOT / "build"), "Private assets must remain inside ignored build/")
-    data, report = convert(Assets(args.rom.read_bytes()), animated=args.animation)
+    data, report = convert(Assets(args.rom.read_bytes()), animated=args.animation, transitions=args.transitions)
     out.mkdir(parents=True, exist_ok=True)
     (out / "scene.bin").write_bytes(data)
     report["scene_sha256"] = hashlib.sha256(data).hexdigest()

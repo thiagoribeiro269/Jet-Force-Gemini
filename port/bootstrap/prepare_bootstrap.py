@@ -22,8 +22,9 @@ BOOTSTRAP_DEFERRED = ("amInit", "amInitAudioMap", "joyInit", "texInitTextures", 
 
 
 def prepare_profile(elf_path, rom_path, out, *, implemented=(), extra_roots=(),
-                    extra_deferred=(), extra_symbols=(), extra_imports=()):
+                    extra_deferred=(), extra_symbols=(), extra_imports=(), function_ends=None):
     state = profile(elf_path, rom_path)
+    ends = {**FUNCTION_ENDS, **(function_ends or {})}
     imports = tuple(dict.fromkeys((*(n for n in PLATFORM_IMPORTS if n != "romCopy"),
                                   *MESSAGE_IMPORTS, *EVENT_IMPORTS, *IO_IMPORTS, *extra_imports)))
     deferred = tuple(n for n in dict.fromkeys((*DEFERRED, *(n for n in GRAPHICS_DEFERRED if n not in imports),
@@ -31,11 +32,11 @@ def prepare_profile(elf_path, rom_path, out, *, implemented=(), extra_roots=(),
                      if n not in implemented)
     roots = (*ROOTS, *GAME_FUNCTIONS, *SCHEDULER_FUNCTIONS, *INIT_FUNCTIONS,
              "TrapDanglingJump", "mainInitRlo", *extra_roots)
-    names = tuple(dict.fromkeys((*FUNCTIONS, *closure(elf_path, roots, imports, deferred, FUNCTION_ENDS,
+    names = tuple(dict.fromkeys((*FUNCTIONS, *closure(elf_path, roots, imports, deferred, ends,
                                                      rom_path=rom_path), *CALLBACKS, *imports, *deferred)))
     m = prepare(elf_path, rom_path, out, functions=names, host_imports=imports, deferred=deferred,
                 extra_symbols=(*SYMBOLS, *THREAD_SYMBOLS, *EVENT_SYMBOLS, *INIT_SYMBOLS, *extra_symbols),
-                runtime_patches=return_address_patches(state), function_ends=FUNCTION_ENDS)
+                runtime_patches=return_address_patches(state), function_ends=ends)
     metadata = out / "symbols.toml"
     metadata.write_text("live_relocated_calls = true\n\n" + metadata.read_text())
     m["boot_profile"] = {"stack_top": state["stack_top"], "loaded_modules": [19, 6, 32, 44]}

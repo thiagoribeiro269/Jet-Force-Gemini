@@ -19,7 +19,10 @@ observável e evidência reproduzível.
 
 ## Entrega atual: inicialização dos objetos
 
-**Estado inicial: planejada.** O pacote começa em `objInitObjects`, chamado
+**Estado: concluída e validada no Linux e no Windows x64.** O escopo foi
+registrado no commit `1a478ed`, antes da implementação; os
+[resultados e limites](objects/README.md) estão documentados separadamente.
+O pacote começa em `objInitObjects`, chamado
 por `mainInitRlo+0x60`. Deve completar seu retorno, executar a liberação do
 overlay 34 em `+0x68` e `mainPreNMI` em `+0x70`, e parar antes de
 `explosionFlushBlasts` em `+0x78`. Essa fronteira foi escolhida na análise
@@ -48,7 +51,8 @@ geral de FPU, FCSR ou de todos os ângulos possíveis.
 
 O inventário inicial de dados confirmou as seções `0x30` (índice de objetos),
 `0x2E` (diretório de definições), `0x18`/`0x19` (`Ftables`/`Findex`) e `0x3F`
-(diretório usado por explosões). Os valores esperados da ROM US são
+(diretório usado por explosões), acompanhado pelos dados da seção `0x40`.
+Os valores esperados da ROM US são
 `objindex_max=831`, `MaxTypes=814`, `Fmax=61` e 21 tipos de explosão. O
 helper transforma oito palavras de `Ftables`, delimitadas por
 `Findex[5]=13` e `Findex[6]=21`. A sub-região solicita `0x19000` bytes e
@@ -85,8 +89,8 @@ estimado sem base.
 
 | Marco | Resultado verificável | Dependências e decisão |
 | --- | --- | --- |
-| 1. Estado inicial dos objetos | Retorno de `objInitObjects`, dados corretos e módulos temporários liberados | Pacote descrito acima |
-| 2. Prova gráfica com asset real | Carregar/decodificar ao menos uma textura e um modelo identificados; obter comandos gráficos rastreáveis e testar uma imagem controlada | Mapear o microcódigo F3DJFG e verificar a compatibilidade efetiva do caminho RT64/RSP. Resolver essa incerteza antes de investir em toda a inicialização restante |
+| 1. Estado inicial dos objetos — concluído | Retorno de `objInitObjects`, dados corretos e módulos temporários liberados | Pacote descrito acima; três cenários nativos Linux/Windows e MIPS aprovados |
+| 2. Prova gráfica com asset real — próximo | Carregar/decodificar ao menos uma textura e um modelo identificados; obter comandos gráficos rastreáveis e testar uma imagem controlada | Mapear o microcódigo F3DJFG e verificar a compatibilidade efetiva do caminho RT64/RSP. Resolver essa incerteza antes de investir em toda a inicialização restante |
 | 3. Bootstrap completo e primeiro ciclo do jogo | `mainInitGame` retorna; o caminho de mudança de fase produz uma tarefa gráfica válida e avança o ciclo | Integrar a cadeia restante em grupos de efeitos, fontes/interface e estado do jogo, usando o contrato gráfico comprovado |
 | 4. Menu utilizável | Imagem estável, navegação, áudio produzido e retomada da espera entre frames | Entrada real, scheduler RSP/RDP, síntese de áudio e apresentação; a thread de áudio apenas bloqueada não satisfaz este marco |
 | 5. Fase jogável | Movimento, câmera, combate, transição, salvamento e carregamento exercitados | Ampliar cobertura de objetos, animações, colisões e recursos efetivamente usados; investigar estabilidade e desempenho |

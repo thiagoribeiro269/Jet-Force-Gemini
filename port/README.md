@@ -9,6 +9,10 @@ A base do jogo continua sendo `f409c111053c671ae91051a6cdff277e0af7d95e`.
 O experimento fica na branch `port/recomp-poc` e não importa alterações
 posteriores do projeto original.
 
+O [plano atual](ROADMAP.md) define o caminho até uma partida, os riscos
+abertos e os critérios de cada entrega. A inicialização dos objetos está
+validada; a próxima prioridade é uma prova gráfica com asset real.
+
 ## O que o protótipo faz
 
 1. Confere a ROM US pelo SHA-1 e compara com ela as seções utilizadas do ELF.
@@ -252,19 +256,26 @@ Windows x64 da RTX. Esse perfil para antes de `texInitTextures`.
 O [perfil de texturas e modelos](textures/README.md) inicializa as quatro
 tabelas de índices e os espaços de memória correspondentes: 7.320 entradas
 de texturas, 107 de sprites e 904 de modelos. O carregador original também
-carrega o overlay 34 e corrige sua chamada. A fronteira atual é a entrada de
+carrega o overlay 34 e corrige sua chamada. Esse perfil para na entrada de
 `objInitObjects`; nenhum objeto, modelo ou textura individual é processado
-nesta etapa. Controles físicos, renderização e som continuam pendentes.
+nesta etapa.
+
+O [perfil de objetos](objects/README.md) completa `objInitObjects`, inicializa
+colisão, iluminação e definições de explosão, transforma os dados de
+`Ftables` e libera os overlays 33 e 34. Passou no Linux, contra o MIPS e no
+Windows x64. A fronteira atual do bootstrap é `explosionFlushBlasts`,
+em `mainInitRlo+0x78`, conforme o pacote definido previamente no plano.
+Controles físicos, renderização e som continuam pendentes.
 
 As dependências e pendências de distribuição estão no
 [inventário de licenças](THIRD_PARTY_NOTICES.md).
 
-1. Integrar `objInitObjects` no overlay 34 e continuar o bootstrap; avançar também no
-   processamento de eventos/amostras de áudio.
-2. Ampliar dependências entre overlays e alcançar o boot completo.
-3. Provar uma via de renderização compatível com F3DJFG, mantendo o alvo
-   Windows/NVIDIA definido por Thiago.
-4. Avançar para menu, controles, áudio, saves e uma fase jogável.
+1. Provar a carga de assets individuais e uma via gráfica compatível com
+   F3DJFG no alvo Windows/NVIDIA, conforme o marco 2 do plano.
+2. Completar o bootstrap restante em grupos definidos e alcançar o primeiro
+   ciclo do jogo com tarefas gráficas verificadas.
+3. Integrar menu utilizável, controles e produção de amostras de áudio.
+4. Validar uma fase jogável, transições e salvamento.
 
 Desenvolvimento desta infraestrutura assistido por OpenAI Codex. As verificações
 usam execução independente do código MIPS original dentro dos limites de cada

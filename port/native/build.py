@@ -14,8 +14,12 @@ exe = out / "jfg_native_preview.exe"
 command = [str(compiler), "-std=c++17", "-O2", "-Wall", "-Wextra", "-Werror", "-DNOMINMAX", "-DWIN32_LEAN_AND_MEAN",
            "-static", str(ROOT / "port/native/render.cpp"), "-o", str(exe), "-ld3d11", "-ld3dcompiler", "-ldxgi", "-lole32"]
 subprocess.run(command, check=True)
+math_exe = out / "check_animation.exe"
+subprocess.run([str(compiler), "-std=c++17", "-O2", "-Wall", "-Wextra", "-Werror", "-ffp-contract=off", "-static",
+                str(ROOT / "port/native/check_animation.cpp"), "-o", str(math_exe)], check=True)
 report = {"status": "built", "source": "port/native/render.cpp", "api": "D3D11",
           "executable_sha256": hashlib.sha256(exe.read_bytes()).hexdigest(),
+          "animation_math_executable_sha256": hashlib.sha256(math_exe.read_bytes()).hexdigest(),
           "emulator_dependencies": [], "graphics_libraries": ["Windows D3D11", "Windows D3DCompiler", "Windows DXGI"]}
 (out / "build-report.json").write_text(json.dumps(report, indent=2) + "\n")
 print(json.dumps(report))

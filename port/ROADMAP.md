@@ -8,6 +8,13 @@ RT64 descrita abaixo é histórica, preservada no commit `b1753bb`; ela não
 MIPS deixaram de ser executadas. O restante do roteiro exige replanejamento
 à medida que as adaptações nativas substituírem os contratos de hardware.
 
+**Avanço da rota nativa:** renderização D3D11 própria do personagem composto
+e primeiro clipe original de animação executado em C++ concluídos no escopo
+de diagnóstico. O clipe 1026 produziu 32 amostras distintas, retorno exato
+ao primeiro frame e regressão da pose neutra aprovada. Ainda falta ligar
+seleção/transição de animações ao estado do jogo e integrar o ciclo nativo.
+Detalhes em [native/README.md](native/README.md).
+
 Planejamento registrado antes da implementação do próximo bloco, a partir
 do checkpoint `68cfa4d`. O objetivo é chegar a uma partida de JFG no Windows
 x64 com NVIDIA. A base do jogo permanece em

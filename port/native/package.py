@@ -1,13 +1,20 @@
 #!/usr/bin/env python3
 """Package the native preview and private converted assets; never publish ZIP."""
 import hashlib
+import argparse
 import json
 from pathlib import Path
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[2]
-out = ROOT / "build/port-native"
-files = {name: (out / name).read_bytes() for name in ("jfg_native_preview.exe", "scene.bin")}
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument("--out", type=Path, default=ROOT / "build/port-native")
+out = parser.parse_args().out.resolve()
+if not out.is_relative_to(ROOT / "build"):
+    raise ValueError("Private package must remain under ignored build/")
+build = ROOT / "build/port-native"
+files = {name: (build / name).read_bytes() for name in ("jfg_native_preview.exe", "check_animation.exe")}
+files["scene.bin"] = (out / "scene.bin").read_bytes()
 files["run_windows.py"] = (ROOT / "port/native/run_windows.py").read_bytes()
 files["PRIVATE.txt"] = b"Private game-derived meshes and textures. Do not publish this package.\n"
 files["hashes.json"] = (json.dumps({n: hashlib.sha256(v).hexdigest() for n, v in files.items()}, indent=2) + "\n").encode()

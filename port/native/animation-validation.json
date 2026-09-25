@@ -1,0 +1,92 @@
+{
+  "recorded_date": "2026-09-25",
+  "status": "passed",
+  "previous_checkpoint": "fe5404593ae6fbdd6f220accfedac36e2a5713e2",
+  "architecture": "native_C++_animation_and_D3D11",
+  "source": {
+    "id": 1026,
+    "model_clip_index": 0,
+    "model_clip_count": 52,
+    "keyframes": 16,
+    "loop": true,
+    "frame_stride": 25,
+    "bits_per_frame": 193,
+    "source_sha256": "0693bf4740d35faa69637a37dede4a81fc84e2d9aabc812da03fdb6164de1d78",
+    "bit_readers_compared": 2,
+    "source_fps_controlled": 15,
+    "semantic_name": null,
+    "scale_channels": 0
+  },
+  "build": {
+    "status": "built",
+    "source": "port/native/render.cpp",
+    "api": "D3D11",
+    "executable_sha256": "af3b2b62915afdd25241d7af08b31595bc22f5b4d81825b0e2202f85f6a7b872",
+    "animation_math_executable_sha256": "4ad9601ad11644e69b42a97e84615ff1e67f07c11e383ad07a17edc4ef75d2af",
+    "emulator_dependencies": [],
+    "graphics_libraries": [
+      "Windows D3D11",
+      "Windows D3DCompiler",
+      "Windows DXGI"
+    ]
+  },
+  "gpu": {
+    "api": "D3D11",
+    "vendor": 4318,
+    "width": 640,
+    "height": 480,
+    "triangles": 534,
+    "draws": 21,
+    "textures": 17,
+    "frame_count": 33
+  },
+  "math_tests": {
+    "linux": "ASAN + UBSAN passed",
+    "windows": {
+      "status": "passed",
+      "math_cases": 6,
+      "rejected_cases": 4
+    }
+  },
+  "animation": {
+    "status": "passed",
+    "clip_id": 1026,
+    "keyframes": 16,
+    "frames_rendered": 33,
+    "unique_cycle_frames": 32,
+    "loop_first_last_byte_equal": true,
+    "neutral_pose_matches_previous_frame": true,
+    "rgb_pixels_changed_half_cycle": 41899,
+    "coverage_range": [
+      30701,
+      35926
+    ],
+    "raw_stream_sha256": "1ddb10b23f4316ecbbdbdcc2353cd2236cc0ec24febb25d597707ce24e62ad0f",
+    "width": 640,
+    "height": 480,
+    "output_fps_controlled": 30,
+    "source_keyframes_per_second_controlled": 15,
+    "runtime": "Native C++ interpolation/hierarchy/mesh transforms and D3D11 project shaders",
+    "limits": [
+      "One source clip, controlled speed; no original timing claim",
+      "No blending, IK, animation events, gameplay, audio or physical controls",
+      "No MIPS/RT64/RSP/RDP/PIF/CIC emulation; no bit-exact original-animation execution comparison"
+    ],
+    "video_sha256": "debf99e5be39cf9571ce3deb8c4e697ed0e6d0452839c00795c2ac9bb7d4b8ca"
+  },
+  "scene_sha256": "955a458c6798141442c225308a1736cb400ea07e12041d5fa844bccca01f1e2b",
+  "matching_rom_byte_equal": true,
+  "rom_sha1": "493ced9008dbe932d6e91179b68e8630cf23a023",
+  "emulation_used": false,
+  "visual_review": "Four phases inspected: articulated body and hand remain attached, camera contains the full character",
+  "video": {
+    "codec": "H.264",
+    "width": 640,
+    "height": 480,
+    "fps": 30,
+    "frames": 96,
+    "duration_seconds": 3.2,
+    "repeats": 3,
+    "private": true
+  }
+}

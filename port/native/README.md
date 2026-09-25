@@ -1,4 +1,4 @@
-# Primeira prova gráfica nativa para Windows
+# Renderização e animação nativas para Windows
 
 Esta é a rota ativa desde a decisão de Thiago em 25/09/2026: **sem RT64,
 sem emulação e sem código copiado de emuladores**. O [plano](PLAN.md)
@@ -28,8 +28,46 @@ A aparência usa materiais convencionais do PC: cor de vértice, textura,
 recorte por alfa, transparência e filtragem linear. A última componente
 do vértice original não é tratada como opacidade de material. Os efeitos
 originais mais complexos ainda precisam de materiais/shaders próprios;
-não se afirma equivalência de pixels com o N64. A câmera e a pose são
-controladas, sem animação, áudio, input ou ciclo do jogo.
+não se afirma equivalência de pixels com o N64. A câmera é controlada;
+áudio, input e ciclo do jogo ainda não estão integrados.
+
+## Primeiro clipe de animação
+
+A cena `JFGNAT2` guarda vértices locais, osso de cada vértice, hierarquia
+e quadros de animação. O conversor seleciona a primeira entrada da tabela
+do Juno: clipe **1026**, com 16 quadros, entre 52 clipes associados ao
+modelo. Seus dados originais têm 193 bits por quadro e stride de 25 bytes.
+O remapeamento de canais e a presença de escala são conferidos; esta prova
+aceita somente esse clipe sem canais de escala.
+
+A interpretação do formato foi obtida por leitura estática do carregador
+original e de `src/hasm/gen_anim_data.s`. Não foi executado MIPS nem usado
+código de emulador. Dois leitores de bits independentes concordaram sobre
+os valores extraídos. Os quadros convertidos são dados privados de entrada,
+não imagens de animação pré-renderizadas.
+
+Durante a execução Windows, `animation.h` interpola os ângulos pelo caminho
+curto, compõe rotações X/Y/Z, propaga a hierarquia e transforma a malha em
+C++. O vértice da mão usa o mesmo osso 6 do encaixe original. O buffer de
+vértices D3D11 é atualizado a cada amostra antes do desenho.
+
+Resultados na RTX:
+
+- 33 frames renderizados: 32 amostras distintas e um frame de fechamento.
+- Primeiro e último frames idênticos byte a byte, sem deriva no loop.
+- Pose neutra da nova hierarquia idêntica ao framebuffer estático anterior.
+- 41.899 pixels RGB diferentes entre início e metade do ciclo.
+- Personagem inteiro dentro da câmera em todos os frames; mãos e membros
+  acompanham o movimento em inspeção visual.
+- Seis testes matemáticos e quatro entradas inválidas passaram no Linux
+  com ASAN/UBSAN e no Windows, sem emulação.
+
+A reprodução é controlada: meio quadro de origem por amostra a 30 fps,
+equivalente a 15 quadros de origem por segundo. Isso não estabelece a
+velocidade original do jogo. O vídeo privado tem três repetições do ciclo,
+96 frames e 3,2 segundos. Não há blending de clipes, IK/mira, eventos,
+colisão ou controle do personagem nesta prova. As evidências ficam em
+[animation-validation.json](animation-validation.json).
 
 ## Build e teste
 
@@ -40,6 +78,14 @@ LLVM-MinGW já instalado localmente e as bibliotecas Direct3D do Windows.
 python3 port/native/prepare_assets.py
 python3 port/native/build.py
 python3 port/native/package.py
+```
+
+Para preparar o clipe e o pacote animado:
+
+```sh
+python3 port/native/prepare_assets.py --animation --out build/port-native/animation
+python3 port/native/build.py
+python3 port/native/package.py --out build/port-native/animation
 ```
 
 O ZIP em `build/port-native` contém assets privados do jogo. **Não publicar
@@ -58,12 +104,22 @@ esse filho. O renderer exige uma GPU NVIDIA real e não aceita dispositivo
 de software. O readback sincroniza pela API D3D11. Processos preexistentes
 permanecem preservados.
 
+Para cenas `JFGNAT2`, o runner executa primeiro os testes matemáticos,
+renderiza o ciclo e produz também `neutral.rgba` para regressão. O executável
+aceita `--animate` explicitamente; sem essa opção, desenha a pose neutra.
+
 Recupere `result.json` como `build/port-native/rtx-result.json` e
 `frame.rgba` no mesmo diretório, depois execute:
 
 ```sh
 python3 port/native/check_frame.py
 ```
+
+Para animação, recupere os arquivos em `build/port-native/animation`,
+incluindo `neutral.rgba`, e rode `python3 port/native/check_animation_frames.py`.
+O verificador confere fechamento do loop e regressão, gera PNGs de amostra
+e usa FFmpeg local para criar `juno-animation.mp4`. Frames e vídeo ficam
+privados e nunca devem ser incluídos no pacote público do código.
 
 A inspeção dos imports do executável mostrou somente bibliotecas Windows:
 D3D11, D3DCompiler, DXGI, Kernel32 e Universal CRT. O comando de compilação
@@ -74,7 +130,7 @@ emulador é compilada estaticamente. As evidências estão em
 ## Continuidade
 
 O port completo ainda exige integrar o código de jogo recompilado/adaptado,
-animações, materiais especiais, iluminação, áudio, controles, salvamento
+seleção/transição de animações, materiais especiais, iluminação, áudio, controles, salvamento
 e a inicialização. A dependência do CIC será retirada no caminho do port
 após mapear os efeitos da chamada, sem implementar um chip virtual.
 O código matching da ROM foi preservado.

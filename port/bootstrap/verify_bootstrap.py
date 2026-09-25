@@ -21,14 +21,17 @@ class BootstrapOracle(InitOracle):
         self.boundary_name = boundary_name
         self.traps = []
         self.boundary_registers = None
+        self.overlay_boundary = None
         trap = sx32(self.symbols["TrapDanglingJump"])
         self.cpu.hook_add(UC_HOOK_CODE, self.observe_trap, begin=trap, end=trap)
         if boundary_name != "amInit":
             function = next(f for f in self.manifest["functions"] if f["name"] == boundary_name)
             section = self.manifest["sections"][function["section"]]
-            require(section["overlay"] == 0, "Additional oracle boundary must be in main")
-            address = sx32(function["vram"])
-            self.cpu.hook_add(UC_HOOK_CODE, self.stop_at_audio, begin=address, end=address)
+            if section["overlay"]:
+                self.overlay_boundary = (section, function["offset"])
+            else:
+                address = sx32(function["vram"])
+                self.cpu.hook_add(UC_HOOK_CODE, self.stop_at_audio, begin=address, end=address)
 
     def observe_trap(self, cpu, pc, size, data):
         self.traps.append((cpu.reg_read(mips_const.UC_MIPS_REG_RA) - 8) & 0xFFFFFFFF)
@@ -40,6 +43,13 @@ class BootstrapOracle(InitOracle):
         cpu.reg_write(mips_const.UC_MIPS_REG_PC, sx32(RETURN))
 
     def platform(self, cpu, pc, size, name):
+        if name == "osPiStartDma" and self.overlay_boundary is not None:
+            section, offset = self.overlay_boundary
+            source = cpu.reg_read(mips_const.UC_MIPS_REG_7) & 0xFFFFFFFF
+            if source == section["rom"]:
+                sp = cpu.reg_read(mips_const.UC_MIPS_REG_SP) & 0xFFFFFFFF
+                entry = sx32(self.u32(sp + 0x10) + offset)
+                self.cpu.hook_add(UC_HOOK_CODE, self.stop_at_audio, begin=entry, end=entry)
         if name == "osPiStartDma" and self.boundary_name == "amInit":
             source = cpu.reg_read(mips_const.UC_MIPS_REG_7) & 0xFFFFFFFF
             sp = cpu.reg_read(mips_const.UC_MIPS_REG_SP) & 0xFFFFFFFF

@@ -247,14 +247,19 @@ original dos 40 slots de som e suas listas. O [perfil de controles](controllers/
 avança também por `joyInit` e `joyResetMap`, com um backend de teste que declara
 quatro portas ausentes e entrega a conclusão SI de forma controlada. Seus
 três cenários de boot e oito testes de protocolo passaram no Linux e no
-Windows x64 da RTX. A fronteira atual é `texInitTextures`, antes de executar
-a inicialização de texturas. Controles físicos, renderização e som continuam
-pendentes.
+Windows x64 da RTX. Esse perfil para antes de `texInitTextures`.
+
+O [perfil de texturas e modelos](textures/README.md) inicializa as quatro
+tabelas de índices e os espaços de memória correspondentes: 7.320 entradas
+de texturas, 107 de sprites e 904 de modelos. O carregador original também
+carrega o overlay 34 e corrige sua chamada. A fronteira atual é a entrada de
+`objInitObjects`; nenhum objeto, modelo ou textura individual é processado
+nesta etapa. Controles físicos, renderização e som continuam pendentes.
 
 As dependências e pendências de distribuição estão no
 [inventário de licenças](THIRD_PARTY_NOTICES.md).
 
-1. Integrar `texInitTextures` e continuar o bootstrap; avançar também no
+1. Integrar `objInitObjects` no overlay 34 e continuar o bootstrap; avançar também no
    processamento de eventos/amostras de áudio.
 2. Ampliar dependências entre overlays e alcançar o boot completo.
 3. Provar uma via de renderização compatível com F3DJFG, mantendo o alvo

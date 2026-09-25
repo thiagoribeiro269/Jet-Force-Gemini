@@ -39,6 +39,19 @@ class ManagerSession(BootstrapSession):
         require_success(self.lib.jfg_ai_state(fields, len(fields)), "Read AI configuration")
         return dict(zip(AI_FIELDS, fields))
 
+    def boundary_address(self):
+        profile = self.manifest[self.profile_key]
+        function = next(f for f in self.manifest["functions"] if f["name"] == profile["boundary_function"])
+        section = self.manifest["sections"][function["section"]]
+        require(profile["boundary_overlay"] == section["overlay"] and
+                profile["boundary_target"] == function["vram"], "Boundary metadata differs from the selected function")
+        if section["overlay"] == 0:
+            return function["vram"]
+        base = self.word(self.word(self.symbols["overlayTable"]) + section["overlay"] * 32)
+        require(0x80000000 <= base <= 0x80800000 - section["size"], "Boundary overlay was not loaded into guest RAM")
+        require(profile["boundary_offset"] == function["offset"], "Boundary offset differs from its overlay")
+        return base + function["offset"]
+
     def bootstrap(self):
         slot = self.create("mainInitGame")
         self.start(slot)
@@ -57,7 +70,7 @@ class ManagerSession(BootstrapSession):
         caller_overlay = profile["boundary_call_overlay"]
         caller = next(s for s in self.manifest["sections"] if s["overlay"] == caller_overlay)
         caller_base = self.word(table + caller_overlay * 32) if caller_overlay else caller["vram"]
-        require((state, status, target.value, site.value) == (3, -3, profile["boundary_target"], caller_base + profile["boundary_call_offset"]),
+        require((state, status, target.value, site.value) == (3, -3, self.boundary_address(), caller_base + profile["boundary_call_offset"]),
                 f"Unexpected manager stop: {(state, status, hex(target.value), hex(site.value))}")
         require(created and (thread_state.value, thread_status.value) == (self.expected_audio_state, 0),
                 f"Unexpected audio thread state: {(created, thread_state.value, thread_status.value)}")

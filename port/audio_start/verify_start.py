@@ -98,7 +98,7 @@ def run(elf_path, rom_path, manifest_path, library_path, report_path, *,
             require(main_boundary == {"target": int(boundary["target"], 16),
                                       "call_site": int(boundary["call_site"], 16)},
                     "Original main audio-map boundary differs")
-            require(main_boundary["target"] == profile["boundary_target"] and
+            require(main_boundary["target"] == session.boundary_address() and
                     main_boundary["call_site"] == int(boundary["overlay36"], 16) + profile["boundary_call_offset"],
                     "Audio-map boundary address or call site differs")
             actual_registers = session.poll(SLOTS)[2]

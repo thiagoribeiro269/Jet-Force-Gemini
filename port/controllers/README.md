@@ -76,7 +76,8 @@ perfil. A referência MIPS exige ELF e por isso fica fora do pacote, assim
 como ROM, assets e código gerado. O usuário fornece a ROM US local para
 executar os verificadores Windows.
 
-A próxima fronteira é `texInitTextures`. A integração dos controles reais
-continua pendente; este cenário permite validar o bootstrap sem dispositivo.
+Este perfil para em `texInitTextures`. O [perfil seguinte](../textures/README.md)
+já executa a inicialização de texturas e modelos. A integração dos controles
+reais continua pendente; este cenário permite validar o bootstrap sem dispositivo.
 
 Infraestrutura desenvolvida com assistência de OpenAI Codex.

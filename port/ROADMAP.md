@@ -21,8 +21,13 @@ repetidos. O novo controlador do personagem liga esses clipes e a pose
 constante 1071 a comandos nativos de teste: repouso, deslocamento e postura
 baixa, com posição X/Z e giro. A sequência de 180 frames passou na RTX;
 a política é provisória, sem colisão e sem integração à lógica original.
-O próximo bloco deve mapear os estados/remapeamentos do controle original
-do Juno para definir essa ligação. [Evidência](native/character-validation.json).
+A [evidência desse diagnóstico](native/character-validation.json) permanece
+preservada. Dois seletores originais do Juno já foram portados para C++:
+escolha do movimento e remapeamento de 52 entradas por contexto, ligados ao
+player nativo com fração inicial explícita. Sete clipes foram exercitados
+na RTX em 180 frames. [Mapeamento e limites](native/JUNO_SELECTION.md).
+O próximo bloco deve mapear a cadência/avanço dos clipes e os consumidores
+dos perfis de transição; física e ciclo completo de gameplay seguem pendentes.
 
 Planejamento registrado antes da implementação do próximo bloco, a partir
 do checkpoint `68cfa4d`. O objetivo é chegar a uma partida de JFG no Windows

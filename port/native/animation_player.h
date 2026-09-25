@@ -48,12 +48,20 @@ public:
         return transitioning() ? mixPoses(from_, target, weight()) : target;
     }
     bool select(uint32_t id, double seconds) {
+        return selectAt(id, seconds, 0);
+    }
+    bool selectAt(uint32_t id, double seconds, double startFraction) {
         // Validate before changing anything: failure preserves the old state.
         if (!std::isfinite(seconds) || seconds < 0 || seconds > 10) throw std::runtime_error("Invalid transition duration");
+        if (!std::isfinite(startFraction)) throw std::runtime_error("Invalid initial clip fraction");
         const size_t next = find(id);
         if (next == selected_) return false; // Holding a command never restarts playback.
         auto visible = current();
-        selected_ = next; frame_ = 0; elapsed_ = 0; duration_ = seconds;
+        const auto &clip = clips_[next];
+        const double phase = std::clamp(startFraction, 0.0, 1.0);
+        const double initial = phase * double(clip.loop ? clip.keys.size() : clip.keys.size() - 1);
+        selected_ = next; frame_ = clip.loop ? std::fmod(initial, double(clip.keys.size())) : initial;
+        elapsed_ = 0; duration_ = seconds;
         from_ = std::move(visible);
         return true;
     }

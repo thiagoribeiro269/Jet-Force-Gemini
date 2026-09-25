@@ -14,12 +14,15 @@ def clip_for_model(assets, model_id, clip_index=0):
     raw = region(assets.section(0x2B), start, end - start)
     frame_offset = struct.unpack_from(">H", raw, 2)[0]
     channel_bones, frame_count, stride = raw[9], raw[11], raw[13]
-    supported = {0: (1026, 16, 25, 193), 14: (1030, 10, 10, 77), 51: (1071, 3, 0, 0)}
+    supported = {0: (1026, 16, 25, 193), 1: (1027, 16, 29, 231), 2: (1028, 16, 42, 336),
+                 3: (1025, 16, 27, 212), 14: (1030, 10, 10, 77), 16: (1019, 50, 12, 91),
+                 28: (1055, 16, 14, 110), 36: (1061, 16, 23, 183), 51: (1071, 3, 0, 0)}
     require(model_id == 220 and clip_index in supported, "Animation index outside the validated native subset")
     expected_id, expected_count, expected_stride, expected_bits = supported[clip_index]
     require((animation_id, channel_bones, frame_count, stride) == (expected_id, 21, expected_count, expected_stride),
             "Selected native animation header differs")
-    require(bool(raw[1] & 16) == (clip_index != 51), "Selected native animation loop flag differs")
+    looping = clip_index not in (16, 51)
+    require((raw[1] & 0xF0) == (0x10 if looping else 0), "Selected native animation playback flags differ")
     mapping_start, mapping_end = struct.unpack(">II", region(assets.section(0x2C), model_id * 4, 8))
     mappings = region(assets.section(0x2D), mapping_start, mapping_end - mapping_start)
     mapping = region(mappings, clip_index * 21, 21)

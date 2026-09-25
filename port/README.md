@@ -3,9 +3,10 @@
 **Arquitetura vigente desde 25/09/2026:** Thiago determinou retirar RT64 e
 toda emulação. O novo caminho está em [native/PLAN.md](native/PLAN.md), com
 conversão direta de assets, meshes/texturas de PC e renderizador D3D11
-próprio. O [estado atual](native/README.md) inclui Juno animado, transições
-e um controlador nativo de posição/orientação acionado por comandos de
-teste. Não há partida, colisão ou integração à lógica original de controle.
+próprio. O [estado atual](native/README.md) inclui Juno animado, transições,
+posição/orientação por comandos de teste e duas decisões originais de
+seleção de animações portadas para C++. Não há partida, colisão ou integração
+ao ciclo completo de controle do jogo.
 
 ## Histórico da rota anterior
 

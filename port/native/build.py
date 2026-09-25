@@ -29,5 +29,9 @@ character_exe = out / "check_character.exe"
 subprocess.run([str(compiler), "-std=c++17", "-O2", "-Wall", "-Wextra", "-Werror", "-ffp-contract=off", "-static",
                 str(ROOT / "port/native/check_character.cpp"), "-o", str(character_exe)], check=True)
 report["character_executable_sha256"] = hashlib.sha256(character_exe.read_bytes()).hexdigest()
+juno_exe = out / "check_juno_selection.exe"
+subprocess.run([str(compiler), "-std=c++17", "-O2", "-Wall", "-Wextra", "-Werror", "-ffp-contract=off", "-static",
+                str(ROOT / "port/native/check_juno_selection.cpp"), "-o", str(juno_exe)], check=True)
+report["juno_selection_executable_sha256"] = hashlib.sha256(juno_exe.read_bytes()).hexdigest()
 (out / "build-report.json").write_text(json.dumps(report, indent=2) + "\n")
 print(json.dumps(report))

@@ -173,6 +173,27 @@ Ainda não é uma partida nem o controle original do JFG. A integração às
 rotinas de gameplay, cenário/colisão, gravidade, câmera jogável, áudio,
 eventos, IK e entrada física permanece pendente.
 
+## Seleção recuperada do código original
+
+O [mapeamento das rotinas do Juno](JUNO_SELECTION.md) acrescenta duas
+decisões portadas para C++: escolher o índice de movimento pelos componentes
+e campos de estado, e remapeá-lo conforme o contexto da arma/objeto na mão.
+A tabela original de 52 movimentos é convertida para um arquivo privado
+do PC; o renderer dispõe de nove clipes e rejeita destinos ainda não
+convertidos antes de alterar a animação.
+
+O novo repouso usa o clipe 1019, solicitado pelo caminho original analisado.
+O 1071 do diagnóstico anterior continua documentado como escolha provisória.
+As três faixas de movimento, o retorno e duas variantes de contexto foram
+renderizados na RTX, com 167 imagens distintas em 180 frames. O vídeo é no
+lugar: ainda não associa os componentes originais à física ou posição X/Z.
+
+`AnimationPlayer::selectAt` separa a fração inicial do clipe do tempo de
+mistura nativa. A ponte preserva o relógio em solicitações repetidas e
+propaga o perfil original de transição, cujo conteúdo ainda não foi portado.
+Testes no Linux ASAN/UBSAN e Windows, auditoria estática e quatro regressões
+gráficas passaram. Detalhes em [juno-selection-validation.json](juno-selection-validation.json).
+
 ## Build e teste
 
 O conversor usa apenas a biblioteca padrão do Python. O build usa o
@@ -206,6 +227,14 @@ Para preparar o controlador do personagem com três clipes:
 python3 port/native/prepare_assets.py --character --out build/port-native/character
 python3 port/native/build.py
 python3 port/native/package.py --out build/port-native/character
+```
+
+Para preparar o seletor recuperado e seus nove clipes:
+
+```sh
+python3 port/native/prepare_assets.py --juno-selection --out build/port-native/juno-selection
+python3 port/native/build.py
+python3 port/native/package.py --out build/port-native/juno-selection
 ```
 
 O ZIP em `build/port-native` contém assets privados do jogo. **Não publicar
@@ -270,6 +299,22 @@ zero: comandos do frame são aplicados antes do desenho; o avanço de 1/30
 segundo ocorre depois. O controlador rejeita passos acima de 0,25 segundo;
 uma integração futura precisa subdividir intervalos maiores explicitamente.
 
+O perfil `--juno-selection` usa `JFGNAT3` com nove clipes e acrescenta
+`juno-selection.bin`, no formato próprio `JFGSEL1`: cabeçalho de 16 bytes
+e 52 registros de oito bytes com destinos, perfis e ID do clipe. O runner
+confere também `check_juno_selection.exe` e executa
+`--juno-selection juno_sequence.txt juno-selection.bin` no renderer.
+Recuperar os arquivos de frames anteriores, mais `character.rgba`, para
+`build/port-native/juno-selection` e executar:
+
+```sh
+python3 port/native/check_juno_frames.py
+```
+
+O vídeo é `juno-selection.mp4`, privado. Os campos de estado e as escolhas
+do RNG são entradas controladas do diagnóstico, não leitura de um controle.
+Os comandos são conferidos antes da criação do dispositivo D3D11.
+
 A inspeção dos imports do executável mostrou somente bibliotecas Windows:
 D3D11, D3DCompiler, DXGI, Kernel32 e Universal CRT. O comando de compilação
 inclui apenas `render.cpp` e essas bibliotecas; nenhuma dependência de
@@ -278,9 +323,10 @@ emulador é compilada estaticamente. As evidências estão em
 
 ## Continuidade
 
-O próximo bloco deve mapear os estados e remapeamentos do controlador
-original do Juno e definir a ligação dessa lógica à API nativa. O estado
-e a movimentação deste diagnóstico ainda são uma política própria.
+Os seletores de movimento e remapeamento já alimentam a API nativa. O
+próximo bloco deve mapear o avanço/término dos clipes em `overlay 16+0x5120`
+e os consumidores de `controlSetTransition`. A cadência, os parâmetros de
+mistura e a movimentação X/Z dos diagnósticos ainda são políticas próprias.
 
 O port completo ainda exige integrar o código de jogo recompilado/adaptado,
 materiais especiais, iluminação, áudio, controles, salvamento e a

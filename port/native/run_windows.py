@@ -46,20 +46,28 @@ def main():
     character_test = owned("character_test", [str(package / "check_character.exe")])
     if character_test["exit_code"] or character_test["timed_out"]:
         raise RuntimeError("Native character controller failed: " + character_test["stderr"])
+    juno = (package / "juno_sequence.txt").is_file()
+    juno_test = owned("juno_selection_test", [str(package / "check_juno_selection.exe"), *([str(package / "juno-selection.bin")] if juno else [])])
+    if juno_test["exit_code"] or juno_test["timed_out"]:
+        raise RuntimeError("Original Juno selection failed: " + juno_test["stderr"])
     magic = (package / "scene.bin").read_bytes()[:8]
     multiple = magic == b"JFGNAT3\0"
     rigged = multiple or magic == b"JFGNAT2\0"
     character = (package / "character_sequence.txt").is_file()
     command = [str(package / "jfg_native_preview.exe"), str(package / "scene.bin")]
-    options = (["--character", str(package / "character_sequence.txt")] if character else
+    options = (["--juno-selection", str(package / "juno_sequence.txt"), str(package / "juno-selection.bin")] if juno else
+               ["--character", str(package / "character_sequence.txt")] if character else
                ["--sequence", str(package / "transition_sequence.txt")] if multiple else ["--animate"] if rigged else [])
     render = owned("render", [*command, str(out / "frame"), *options])
     neutral = None
     cycle = None
     wide_cycle = None
     transitions = None
+    character_regression = None
     if rigged and render["exit_code"] == 0 and not render["timed_out"]:
         if multiple:
+            if juno:
+                character_regression = owned("character", [*command, str(out / "character"), "--character", str(package / "character_sequence.txt")])
             if character:
                 transitions = owned("transitions", [*command, str(out / "transitions"), "--sequence", str(package / "transition_sequence.txt")])
             cycle = owned("cycle", [*command, str(out / "cycle"), "--animate"])
@@ -75,8 +83,11 @@ def main():
               "controller_trace": json.loads((out / "frame.controller.json").read_text()) if (out / "frame.controller.json").exists() else None,
               **render}
     result["character_test"] = character_test
+    result["juno_selection_test"] = juno_test
     result["transition_regression"] = transitions
+    result["character_regression"] = character_regression
     result["ok"] = bool(result["ok"] and (not character or (transitions and transitions["exit_code"] == 0 and not transitions["timed_out"])))
+    result["ok"] = bool(result["ok"] and (not juno or (character_regression and character_regression["exit_code"] == 0 and not character_regression["timed_out"])))
     (out / "result.json").write_text(json.dumps(result, indent=2) + "\n")
     print(json.dumps(result))
 

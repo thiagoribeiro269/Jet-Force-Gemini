@@ -17,6 +17,7 @@
 #include <memory>
 #include <iomanip>
 #include "character_sequence.h"
+#include "juno_sequence.h"
 
 using Microsoft::WRL::ComPtr;
 constexpr unsigned Width = 640, Height = 480;
@@ -50,7 +51,7 @@ struct Draw { uint32_t first, count, texture, flags, model; };
 struct Vertex { float x, y, z, u, v, r, g, b, a; };
 static_assert(sizeof(Vertex) == 36);
 
-enum class Mode { Neutral, Clip, WideClip, Sequence, Character };
+enum class Mode { Neutral, Clip, WideClip, Sequence, Character, JunoSelection };
 struct Selection { uint32_t frame, id; double duration; };
 struct Sequence { uint32_t frames = 0; std::vector<Selection> events; };
 static Sequence readSequence(const char *path, const std::vector<jfg_native::Clip> &clips) {
@@ -122,7 +123,7 @@ static ComPtr<ID3DBlob> compile(const char *entry, const char *target, bool wide
     check(result, "Compile native HLSL"); return code;
 }
 
-static void render(const char *input, const char *prefix, Mode mode, const char *sequencePath) {
+static void render(const char *input, const char *prefix, Mode mode, const char *sequencePath, const char *selectionPath) {
     const bool animate = mode != Mode::Neutral;
     const bool wideCamera = mode == Mode::WideClip || mode == Mode::Sequence;
     Reader reader(input);
@@ -169,13 +170,14 @@ static void render(const char *input, const char *prefix, Mode mode, const char 
             skeleton.push_back({parent, reader.vec3()});
         }
         const uint32_t clipCount = multipleClips ? reader.u32() : 1;
-        require(multipleClips ? (clipCount == 2 || clipCount == 3) : clipCount == 1, "Unsupported clip collection size");
+        require(multipleClips ? (clipCount == 2 || clipCount == 3 || clipCount == 9) : clipCount == 1, "Unsupported clip collection size");
         for (uint32_t i = 0; i < clipCount; ++i) {
             jfg_native::Clip clip;
             clip.id = reader.u32(); const uint32_t keyCount = reader.u32(), looping = reader.u32();
             clip.sourceRate = reader.f32();
-            const uint32_t ids[] = {1026, 1030, 1071}, counts[] = {16, 10, 3};
-            require(clip.id == ids[i] && keyCount == counts[i] && looping == (i < 2 ? 1U : 0U) && clip.sourceRate == 15,
+            const uint32_t ids[] = {1026, 1030, 1071, 1027, 1028, 1025, 1019, 1055, 1061};
+            const uint32_t counts[] = {16, 10, 3, 16, 16, 16, 50, 16, 16}, loops[] = {1, 1, 0, 1, 1, 1, 0, 1, 1};
+            require(clip.id == ids[i] && keyCount == counts[i] && looping == loops[i] && clip.sourceRate == 15,
                     "Unsupported animation profile");
             clip.loop = looping != 0;
             for (uint32_t k = 0; k < keyCount; ++k) {
@@ -195,17 +197,27 @@ static void render(const char *input, const char *prefix, Mode mode, const char 
     std::unique_ptr<jfg_native::AnimationPlayer> player;
     jfg_native::CharacterSequence commands;
     std::unique_ptr<jfg_native::CharacterController> character;
+    jfg_native::JunoSequence junoCommands;
+    std::unique_ptr<jfg_native::JunoAnimationController> juno;
     if (mode == Mode::Sequence) {
         require(multipleClips && sequencePath, "Selection sequence requires the multi-clip scene");
         sequence = readSequence(sequencePath, clips);
         player = std::make_unique<jfg_native::AnimationPlayer>(clips, skeleton.size(), clips.front().id);
     }
     if (mode == Mode::Character) {
-        require(clips.size() == 3 && sequencePath, "Character commands require the three-clip profile");
+        require(clips.size() >= 3 && sequencePath, "Character commands require at least the three-clip profile");
         std::ifstream inputCommands(sequencePath, std::ios::ate);
         require(bool(inputCommands) && inputCommands.tellg() < 65536, "Cannot read bounded character commands");
         inputCommands.seekg(0); commands = jfg_native::readCharacterSequence(inputCommands);
         character = std::make_unique<jfg_native::CharacterController>(clips, skeleton.size(), jfg_native::CharacterClips{1071, 1026, 1030});
+    }
+    if (mode == Mode::JunoSelection) {
+        require(clips.size() == 9 && sequencePath && selectionPath, "Original selection requires the nine-clip profile and private table");
+        const auto selection = jfg_native::readJunoSelection(selectionPath);
+        std::ifstream commandsFile(sequencePath, std::ios::ate);
+        require(bool(commandsFile) && commandsFile.tellg() < 65536, "Cannot read bounded Juno selection commands");
+        commandsFile.seekg(0); junoCommands = jfg_native::readJunoSequence(commandsFile, selection, clips);
+        juno = std::make_unique<jfg_native::JunoAnimationController>(selection, clips, skeleton.size());
     }
     // Select the known hardware vendor. Never fall back to WARP/software.
     ComPtr<IDXGIFactory1> factory;
@@ -237,7 +249,7 @@ static void render(const char *input, const char *prefix, Mode mode, const char 
         check(device->CreateTexture2D(&desc, &data, &resource), "Upload native texture");
         check(device->CreateShaderResourceView(resource.Get(), nullptr, &texture.view), "Texture view");
     }
-    const auto vs = compile("vertexMain", "vs_5_0", wideCamera, bool(character)), ps = compile("pixelMain", "ps_5_0", wideCamera, bool(character));
+    const auto vs = compile("vertexMain", "vs_5_0", wideCamera, bool(character || juno)), ps = compile("pixelMain", "ps_5_0", wideCamera, bool(character || juno));
     ComPtr<ID3D11VertexShader> vertexShader; ComPtr<ID3D11PixelShader> pixelShader;
     check(device->CreateVertexShader(vs->GetBufferPointer(), vs->GetBufferSize(), nullptr, &vertexShader), "Vertex shader");
     check(device->CreatePixelShader(ps->GetBufferPointer(), ps->GetBufferSize(), nullptr, &pixelShader), "Pixel shader");
@@ -294,7 +306,7 @@ static void render(const char *input, const char *prefix, Mode mode, const char 
     std::vector<uint8_t> pixels(Width * Height * 4);
     std::ofstream raw(std::string(prefix) + ".rgba", std::ios::binary);
     require(bool(raw), "Cannot create frame stream");
-    const uint32_t frameCount = character ? commands.frames : player ? sequence.frames : animate ? uint32_t(clips.front().keys.size() * 2 + 1) : 1;
+    const uint32_t frameCount = juno ? junoCommands.frames : character ? commands.frames : player ? sequence.frames : animate ? uint32_t(clips.front().keys.size() * 2 + 1) : 1;
     std::vector<std::string> requestTrace, stateTrace;
     size_t eventIndex = 0;
     uint32_t accepted = 0;
@@ -302,6 +314,34 @@ static void render(const char *input, const char *prefix, Mode mode, const char 
     uint32_t colored = 0, minColored = Width * Height, maxColored = 0;
     for (uint32_t frame = 0; frame < frameCount; ++frame) {
         if (rigged) {
+            if (juno) {
+                if (eventIndex < junoCommands.events.size() && junoCommands.events[eventIndex].frame == frame) {
+                    const auto &event = junoCommands.events[eventIndex++];
+                    const auto before = jfg_native::composePose(skeleton, juno->animation().current());
+                    const bool changed = juno->motion(event.state, event.startFraction, event.blendSeconds);
+                    const auto after = jfg_native::composePose(skeleton, juno->animation().current());
+                    float jump = 0;
+                    for (size_t b = 0; b < before.size(); ++b) for (size_t i = 0; i < 16; ++i)
+                        jump = std::max(jump, std::abs(before[b][i] - after[b][i]));
+                    require(event.blendSeconds == 0 || jump < 0.00001f, "Juno selection caused an instantaneous pose jump");
+                    maximumJump = std::max(maximumJump, jump); accepted += changed;
+                    const auto &selection = juno->selection();
+                    std::ostringstream row;
+                    row << "{\"frame\":" << frame << ",\"requested\":" << selection.requested << ",\"local\":" << selection.local
+                        << ",\"id\":" << selection.clip << ",\"profile\":" << selection.transitionProfile
+                        << ",\"accepted\":" << (changed ? "true" : "false") << ",\"start_fraction\":" << event.startFraction
+                        << ",\"blend_seconds\":" << event.blendSeconds << ",\"instant_matrix_delta\":" << jump << "}";
+                    requestTrace.push_back(row.str());
+                }
+                const auto &animation = juno->animation(); const auto &selection = juno->selection();
+                std::ostringstream row;
+                row << std::setprecision(12) << "{\"frame\":" << frame << ",\"target\":" << animation.id()
+                    << ",\"source_frame\":" << animation.frame() << ",\"weight\":" << animation.weight()
+                    << ",\"transitioning\":" << (animation.transitioning() ? "true" : "false")
+                    << ",\"requested\":" << selection.requested << ",\"local\":" << selection.local
+                    << ",\"profile\":" << selection.transitionProfile << "}";
+                stateTrace.push_back(row.str());
+            }
             if (character) {
                 if (eventIndex < commands.events.size() && commands.events[eventIndex].frame == frame) {
                     const auto &event = commands.events[eventIndex++];
@@ -350,7 +390,8 @@ static void render(const char *input, const char *prefix, Mode mode, const char 
                     << ",\"weight\":" << player->weight() << ",\"transitioning\":" << (player->transitioning() ? "true" : "false") << "}";
                 stateTrace.push_back(row.str());
             }
-            auto matrices = character ? jfg_native::composePose(skeleton, character->animation().current()) :
+            auto matrices = juno ? jfg_native::composePose(skeleton, juno->animation().current()) :
+                character ? jfg_native::composePose(skeleton, character->animation().current()) :
                 player ? jfg_native::composePose(skeleton, player->current()) :
                 jfg_native::pose(skeleton, animate ? &clips.front() : nullptr, float(frame) * 0.5f);
             if (character) for (auto &matrix : matrices) matrix = jfg_native::multiply(matrix, character->world());
@@ -385,9 +426,10 @@ static void render(const char *input, const char *prefix, Mode mode, const char 
         raw.write(reinterpret_cast<const char *>(pixels.data()), pixels.size()); require(bool(raw), "Cannot write readback");
         if (player) player->advance(1.0 / 30);
         if (character) character->advance(1.0 / 30);
+        if (juno) juno->advance(1.0 / 30);
     }
     context->ClearState(); context->Flush();
-    if (player || character) {
+    if (player || character || juno) {
         std::ofstream trace(std::string(prefix) + ".controller.json");
         require(bool(trace), "Cannot create controller trace");
         trace << "{\"requests\":[";
@@ -400,13 +442,14 @@ static void render(const char *input, const char *prefix, Mode mode, const char 
     report << "{\"status\":\"rendered_unreviewed\",\"api\":\"D3D11\",\"vendor\":" << adapterInfo.VendorId
            << ",\"width\":" << Width << ",\"height\":" << Height << ",\"triangles\":" << vertexCount / 3
            << ",\"draws\":" << drawCount << ",\"textures\":" << textureCount << ",\"colored_pixels\":" << colored
-           << ",\"frame_count\":" << frameCount << ",\"animation_id\":" << (character ? 1071 : animate ? clips.front().id : 0)
-           << ",\"source_keyframes\":" << (character ? 3 : clips.empty() ? 0 : clips.front().keys.size()) << ",\"output_fps\":30,\"source_step\":0.5"
+           << ",\"frame_count\":" << frameCount << ",\"animation_id\":" << (juno ? 1019 : character ? 1071 : animate ? clips.front().id : 0)
+           << ",\"source_keyframes\":" << (juno ? 50 : character ? 3 : clips.empty() ? 0 : clips.front().keys.size()) << ",\"output_fps\":30,\"source_step\":0.5"
            << ",\"sequence\":" << (player ? "true" : "false") << ",\"clip_count\":" << clips.size()
            << ",\"character_commands\":" << (character ? "true" : "false")
+           << ",\"juno_selection\":" << (juno ? "true" : "false")
            << ",\"selection_requests\":" << requestTrace.size() << ",\"accepted_switches\":" << accepted
            << ",\"instant_pose_max_matrix_delta\":" << maximumJump
-           << ",\"camera\":\"" << (character ? "character_path" : wideCamera ? "transition_wide" : "original_native_proof") << "\""
+           << ",\"camera\":\"" << (juno ? "juno_selection" : character ? "character_path" : wideCamera ? "transition_wide" : "original_native_proof") << "\""
            << ",\"min_colored_pixels\":" << minColored << ",\"max_colored_pixels\":" << maxColored
            << ",\"emulator_dependencies\":false,\"display_list_interpreter\":false,\"animated\":" << (animate ? "true" : "false") << "}\n";
     require(bool(report), "Cannot write report");
@@ -416,13 +459,14 @@ static void render(const char *input, const char *prefix, Mode mode, const char 
 int main(int argc, char **argv) {
     SetErrorMode(SEM_FAILCRITICALERRORS | SEM_NOGPFAULTERRORBOX);
     try {
-        Mode mode = Mode::Neutral; const char *sequence = nullptr;
+        Mode mode = Mode::Neutral; const char *sequence = nullptr, *selection = nullptr;
         if (argc == 4 && std::string(argv[3]) == "--animate") mode = Mode::Clip;
         else if (argc == 4 && std::string(argv[3]) == "--animate-wide") mode = Mode::WideClip;
         else if (argc == 5 && std::string(argv[3]) == "--sequence") { mode = Mode::Sequence; sequence = argv[4]; }
         else if (argc == 5 && std::string(argv[3]) == "--character") { mode = Mode::Character; sequence = argv[4]; }
-        else require(argc == 3, "usage: jfg_native_preview SCENE OUTPUT_PREFIX [--animate | --animate-wide | --sequence FILE | --character FILE]");
-        render(argv[1], argv[2], mode, sequence); return 0;
+        else if (argc == 6 && std::string(argv[3]) == "--juno-selection") { mode = Mode::JunoSelection; sequence = argv[4]; selection = argv[5]; }
+        else require(argc == 3, "usage: jfg_native_preview SCENE OUTPUT_PREFIX [--animate | --animate-wide | --sequence FILE | --character FILE | --juno-selection FILE TABLE]");
+        render(argv[1], argv[2], mode, sequence, selection); return 0;
     }
     catch (const std::exception &error) { std::cerr << error.what() << '\n'; return 1; }
 }

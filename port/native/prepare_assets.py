@@ -109,8 +109,8 @@ def skeleton(model):
     return positions
 
 
-def convert(assets, animated=False, transitions=False, character=False):
-    transitions = transitions or character
+def convert(assets, animated=False, transitions=False, character=False, juno_selection=False):
+    transitions = transitions or character or juno_selection
     animated = animated or transitions
     body, hand = assets.model(220), assets.model(309)
     require(body[:4] == b"Boy\0" and hand[:9] == b"JunoHand\0", "Wrong model names")
@@ -190,7 +190,7 @@ def convert(assets, animated=False, transitions=False, character=False):
         from animation_assets import clip_for_model
         for parent, local in skeleton_nodes(body):
             data.extend(struct.pack("<i3f", parent, *local))
-        indices = (0, 14, 51) if character else (0, 14) if transitions else (0,)
+        indices = (0, 14, 51, 1, 2, 3, 16, 28, 36) if juno_selection else (0, 14, 51) if character else (0, 14) if transitions else (0,)
         if transitions:
             data.extend(struct.pack("<I", len(indices)))
         for index in indices:
@@ -207,6 +207,7 @@ def convert(assets, animated=False, transitions=False, character=False):
                          "hand_bone": attachment, "textures": [{k: v for k, v in t.items() if k != "rgba"} for t in textures],
                          "scene_version": 3 if transitions else 2 if animated else 1, "animation": clip_report, "animations": clip_reports,
                          "character_profile": character,
+                         "juno_selection_profile": juno_selection,
                          "limits": ["Selected original skeletal clips or neutral pose; ordinary PC materials, texture animation frame zero",
                                     "Offline file-format conversion; no MIPS, RSP, RDP, PIF or CIC execution",
                                     "No pixel-equivalence claim with Nintendo 64 hardware"]}
@@ -219,11 +220,18 @@ def main():
     parser.add_argument("--animation", action="store_true")
     parser.add_argument("--transitions", action="store_true")
     parser.add_argument("--character", action="store_true")
+    parser.add_argument("--juno-selection", action="store_true")
     args = parser.parse_args()
     out = args.out.resolve()
     require(out.is_relative_to(ROOT / "build"), "Private assets must remain inside ignored build/")
-    data, report = convert(Assets(args.rom.read_bytes()), animated=args.animation, transitions=args.transitions, character=args.character)
+    assets = Assets(args.rom.read_bytes())
+    data, report = convert(assets, animated=args.animation, transitions=args.transitions, character=args.character, juno_selection=args.juno_selection)
     out.mkdir(parents=True, exist_ok=True)
+    if args.juno_selection:
+        from juno_selection_assets import prepare_selection
+        selection, audit = prepare_selection(assets, args.rom)
+        (out / "juno-selection.bin").write_bytes(selection)
+        (out / "selection-assets-report.json").write_text(json.dumps(audit, indent=2) + "\n")
     (out / "scene.bin").write_bytes(data)
     report["scene_sha256"] = hashlib.sha256(data).hexdigest()
     (out / "assets-report.json").write_text(json.dumps(report, indent=2) + "\n")

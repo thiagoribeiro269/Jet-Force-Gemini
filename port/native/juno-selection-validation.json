@@ -1,0 +1,433 @@
+{
+  "status": "passed",
+  "recorded_date": "2026-09-25",
+  "previous_checkpoint": "5ca68f337b037dbb496949887717dddba028b23d",
+  "architecture": "native_C++_original_Juno_selection_and_D3D11",
+  "scene_version": 3,
+  "clips": [
+    {
+      "id": 1026,
+      "model_clip_index": 0,
+      "model_clip_count": 52,
+      "keyframes": 16,
+      "loop": true,
+      "frame_stride": 25,
+      "bits_per_frame": 193,
+      "source_sha256": "0693bf4740d35faa69637a37dede4a81fc84e2d9aabc812da03fdb6164de1d78",
+      "bit_readers_compared": 2,
+      "source_fps_controlled": 15,
+      "semantic_name": null,
+      "scale_channels": 0
+    },
+    {
+      "id": 1030,
+      "model_clip_index": 14,
+      "model_clip_count": 52,
+      "keyframes": 10,
+      "loop": true,
+      "frame_stride": 10,
+      "bits_per_frame": 77,
+      "source_sha256": "34249a9c5934237043508075b33b274fb158230d079105763d053d81f4937dfb",
+      "bit_readers_compared": 2,
+      "source_fps_controlled": 15,
+      "semantic_name": null,
+      "scale_channels": 0
+    },
+    {
+      "id": 1071,
+      "model_clip_index": 51,
+      "model_clip_count": 52,
+      "keyframes": 3,
+      "loop": false,
+      "frame_stride": 0,
+      "bits_per_frame": 0,
+      "source_sha256": "4f60b6aa314e09ba3eb4c168dbed3d744e411be89f5ee2ca932f13f8005f3a51",
+      "bit_readers_compared": 2,
+      "source_fps_controlled": 15,
+      "semantic_name": null,
+      "scale_channels": 0
+    },
+    {
+      "id": 1027,
+      "model_clip_index": 1,
+      "model_clip_count": 52,
+      "keyframes": 16,
+      "loop": true,
+      "frame_stride": 29,
+      "bits_per_frame": 231,
+      "source_sha256": "8c0fc9cf37b725f0532a7a08bdc11e67b1a86226d87b49127e2f742e85023817",
+      "bit_readers_compared": 2,
+      "source_fps_controlled": 15,
+      "semantic_name": null,
+      "scale_channels": 0
+    },
+    {
+      "id": 1028,
+      "model_clip_index": 2,
+      "model_clip_count": 52,
+      "keyframes": 16,
+      "loop": true,
+      "frame_stride": 42,
+      "bits_per_frame": 336,
+      "source_sha256": "912e2647b68441947b402c455bd4b50e11a3ee17eecb6287ee9d9824f1dc1068",
+      "bit_readers_compared": 2,
+      "source_fps_controlled": 15,
+      "semantic_name": null,
+      "scale_channels": 0
+    },
+    {
+      "id": 1025,
+      "model_clip_index": 3,
+      "model_clip_count": 52,
+      "keyframes": 16,
+      "loop": true,
+      "frame_stride": 27,
+      "bits_per_frame": 212,
+      "source_sha256": "1a5a58b4ffeb9813d7eea7457846fbfe3d8548ba4082eedb494c4e48ef4eef8c",
+      "bit_readers_compared": 2,
+      "source_fps_controlled": 15,
+      "semantic_name": null,
+      "scale_channels": 0
+    },
+    {
+      "id": 1019,
+      "model_clip_index": 16,
+      "model_clip_count": 52,
+      "keyframes": 50,
+      "loop": false,
+      "frame_stride": 12,
+      "bits_per_frame": 91,
+      "source_sha256": "4c30e43349fd3d9fe000172b45befc7a308acd7361c17759244d3ce16e7854a2",
+      "bit_readers_compared": 2,
+      "source_fps_controlled": 15,
+      "semantic_name": null,
+      "scale_channels": 0
+    },
+    {
+      "id": 1055,
+      "model_clip_index": 28,
+      "model_clip_count": 52,
+      "keyframes": 16,
+      "loop": true,
+      "frame_stride": 14,
+      "bits_per_frame": 110,
+      "source_sha256": "2438cecc4bede3d1f797d2290dd9f2201ffffc35d85bfa83ab1dbe49160cec07",
+      "bit_readers_compared": 2,
+      "source_fps_controlled": 15,
+      "semantic_name": null,
+      "scale_channels": 0
+    },
+    {
+      "id": 1061,
+      "model_clip_index": 36,
+      "model_clip_count": 52,
+      "keyframes": 16,
+      "loop": true,
+      "frame_stride": 23,
+      "bits_per_frame": 183,
+      "source_sha256": "8e12ddb02ab045808d2fc7cdb7dfa38a9fc32e6af96dd49cf7e21b21c0abfdba",
+      "bit_readers_compared": 2,
+      "source_fps_controlled": 15,
+      "semantic_name": null,
+      "scale_channels": 0
+    }
+  ],
+  "scene_sha256": "513eb9d497b3a0dd2319139cad30dc5facf889160c33471487729984d0726942",
+  "source_audit": {
+    "status": "prepared",
+    "row_count": 52,
+    "transition_profiles": 7,
+    "stationary_threshold": 0.10000000149011612,
+    "table_rom_offset": "0x1f25888",
+    "table_sha256": "fe312b51beea7c58ad77d0ffea5eaacee2912068b4003c7f890cd2182167550c",
+    "routine_audits": [
+      {
+        "name": "juno_choose_move",
+        "source": "asm/nonmatchings/overlays/o16/overlay_16/func_overlay_16_01004E08_1F22E20.s",
+        "bytes_checked": 368,
+        "rom_offset": "0x1f22e20",
+        "sha256": "debf74733336a2352ecb302e013b975affeac029e9a6d9f2c1a63287dc557c33"
+      },
+      {
+        "name": "juno_remap_move",
+        "source": "asm/nonmatchings/overlays/o16/overlay_16/func_overlay_16_01004F78_1F22F90.s",
+        "bytes_checked": 424,
+        "rom_offset": "0x1f22f90",
+        "sha256": "1689720b9beaf76643c666cb749e00551286f2bcf60957a50e4a488f12fa2bea"
+      },
+      {
+        "name": "controlPlayerGunWeight",
+        "source": "asm/nonmatchings/charControl/controlPlayerGunWeight.s",
+        "bytes_checked": 88,
+        "rom_offset": "0x3bd14",
+        "sha256": "74c6cc3de22dee7dafc9a041730d77baca49b8d398a60f34bf862adc947c2cba"
+      },
+      {
+        "name": "objAnimSetMove",
+        "source": "asm/nonmatchings/objects/objAnimSetMove.s",
+        "bytes_checked": 544,
+        "rom_offset": "0x1209c",
+        "sha256": "c528af7b90d567ea6ab16f2d4b6385044f3816c5db3a2fb31471ef85ff7143d8"
+      },
+      {
+        "name": "controlSetTransition",
+        "source": "asm/nonmatchings/charControl/controlSetTransition.s",
+        "bytes_checked": 276,
+        "rom_offset": "0x36114",
+        "sha256": "b1f08a758d26806fc828c213ce7b422f4faf477e172b8bee05c6d15ea626ecdf"
+      }
+    ],
+    "call_relocations_checked": 5,
+    "data_relocations_checked": 10,
+    "payload_sha256": "3860f22ae825ae584c79700d713b912d87ae6e533a2271543215cb27286cc2cb",
+    "emulation_used": false,
+    "scope": "Static original selection decisions; transition profile contents and whole gameplay loop are not ported"
+  },
+  "build": {
+    "status": "built",
+    "source": "port/native/render.cpp",
+    "api": "D3D11",
+    "executable_sha256": "b75b000b70fdc43c33062c0ddd99172d26c31b2a37558bae7753d60f182d93b5",
+    "animation_math_executable_sha256": "83fcc945c0f8196955f8a58c7de9f1d6a430d27deed698663e7a2682fe1f96c9",
+    "animation_player_executable_sha256": "a1c9e92201e873e8e8971e8a05a059c19068e18bafaa049c6fbfc8b5d28a42c0",
+    "emulator_dependencies": [],
+    "graphics_libraries": [
+      "Windows D3D11",
+      "Windows D3DCompiler",
+      "Windows DXGI"
+    ],
+    "character_executable_sha256": "a2f7c06822d6bcb19a86a23d9bef097feb7bd0ae52a8a63e35a6f3c66ad690d1",
+    "juno_selection_executable_sha256": "7a3319a68c1bd635df876d14facf50dbf9ed7e4017c0c8968715a03ec499f40c"
+  },
+  "windows": "Windows-11-10.0.26200-SP0",
+  "gpu": {
+    "api": "D3D11",
+    "vendor": 4318,
+    "width": 640,
+    "height": 480,
+    "triangles": 534,
+    "draws": 21,
+    "textures": 17,
+    "frame_count": 180,
+    "camera": "juno_selection"
+  },
+  "tests": {
+    "linux_asan_ubsan": {
+      "check_animation": {
+        "status": "passed",
+        "math_cases": 6,
+        "rejected_cases": 4
+      },
+      "check_player": {
+        "status": "passed",
+        "controller_cases": 8,
+        "rejected_cases": 6
+      },
+      "check_character": {
+        "status": "passed",
+        "character_cases": 10,
+        "rejected_cases": 20
+      },
+      "check_juno_selection": {
+        "status": "passed",
+        "choice_cases": 18,
+        "priority_cases": 8,
+        "bridge_cases": 8,
+        "rejected_cases": 19,
+        "original_table_cases": 20
+      }
+    },
+    "windows": {
+      "math_test": {
+        "status": "passed",
+        "math_cases": 6,
+        "rejected_cases": 4
+      },
+      "controller_test": {
+        "status": "passed",
+        "controller_cases": 8,
+        "rejected_cases": 6
+      },
+      "character_test": {
+        "status": "passed",
+        "character_cases": 10,
+        "rejected_cases": 20
+      },
+      "juno_selection_test": {
+        "status": "passed",
+        "choice_cases": 18,
+        "priority_cases": 8,
+        "bridge_cases": 8,
+        "rejected_cases": 19,
+        "original_table_cases": 20
+      }
+    },
+    "prior_scene_formats": "All four previous scene conversions preserved byte for byte"
+  },
+  "selection": {
+    "status": "passed",
+    "frames": 180,
+    "fps_controlled": 30,
+    "duration_seconds": 6,
+    "unique_frames": 167,
+    "rendered_clips": [
+      1019,
+      1025,
+      1026,
+      1027,
+      1028,
+      1055,
+      1061
+    ],
+    "requests": [
+      {
+        "frame": 0,
+        "requested": 16,
+        "local": 16,
+        "id": 1019,
+        "profile": 0,
+        "accepted": false,
+        "start_fraction": 0,
+        "blend_seconds": 0.2,
+        "instant_matrix_delta": 0
+      },
+      {
+        "frame": 24,
+        "requested": 0,
+        "local": 0,
+        "id": 1026,
+        "profile": 0,
+        "accepted": true,
+        "start_fraction": 0,
+        "blend_seconds": 0.2,
+        "instant_matrix_delta": 0
+      },
+      {
+        "frame": 42,
+        "requested": 1,
+        "local": 1,
+        "id": 1027,
+        "profile": 0,
+        "accepted": true,
+        "start_fraction": 0,
+        "blend_seconds": 0.2,
+        "instant_matrix_delta": 0
+      },
+      {
+        "frame": 60,
+        "requested": 2,
+        "local": 2,
+        "id": 1028,
+        "profile": 0,
+        "accepted": true,
+        "start_fraction": 0,
+        "blend_seconds": 0.2,
+        "instant_matrix_delta": 0
+      },
+      {
+        "frame": 78,
+        "requested": 3,
+        "local": 3,
+        "id": 1025,
+        "profile": 0,
+        "accepted": true,
+        "start_fraction": 0,
+        "blend_seconds": 0.2,
+        "instant_matrix_delta": 0
+      },
+      {
+        "frame": 96,
+        "requested": 0,
+        "local": 36,
+        "id": 1061,
+        "profile": 0,
+        "accepted": true,
+        "start_fraction": 0,
+        "blend_seconds": 0.2,
+        "instant_matrix_delta": 0
+      },
+      {
+        "frame": 114,
+        "requested": 0,
+        "local": 28,
+        "id": 1055,
+        "profile": 3,
+        "accepted": true,
+        "start_fraction": 0,
+        "blend_seconds": 0.2,
+        "instant_matrix_delta": 0
+      },
+      {
+        "frame": 132,
+        "requested": 0,
+        "local": 36,
+        "id": 1061,
+        "profile": 0,
+        "accepted": true,
+        "start_fraction": 0,
+        "blend_seconds": 0.2,
+        "instant_matrix_delta": 0
+      },
+      {
+        "frame": 150,
+        "requested": 16,
+        "local": 16,
+        "id": 1019,
+        "profile": 0,
+        "accepted": true,
+        "start_fraction": 0.5,
+        "blend_seconds": 0.2,
+        "instant_matrix_delta": 0
+      },
+      {
+        "frame": 168,
+        "requested": 16,
+        "local": 16,
+        "id": 1019,
+        "profile": 0,
+        "accepted": false,
+        "start_fraction": 0,
+        "blend_seconds": 0.2,
+        "instant_matrix_delta": 0
+      }
+    ],
+    "state_changes": 8,
+    "unchanged_requests": 2,
+    "instantaneous_selection_matrix_delta": 0,
+    "initial_fraction_at_frame_150": 0.5,
+    "source_frame_at_150": 24.5,
+    "source_frame_at_repeat_168": 33.5,
+    "native_blend_seconds": 0.2,
+    "coverage_range": [
+      11741,
+      15416
+    ],
+    "all_four_previous_gpu_proofs_byte_equal": true,
+    "raw_sha256": "b9a427dd39f3a5ec6bbb6361caa1d03c428db61a55351af78dc30ac853b21ed7",
+    "video_sha256": "fb7d9abc7ec8b208f9cf32dd7f5ad7177c8734ad5c2d814011b54422bbd2f673",
+    "limits": [
+      "Two original selection decisions ported by static analysis; no MIPS execution or emulator reference",
+      "Diagnostic state inputs, supplied idle RNG result and controlled 15-source-frame/second clock",
+      "Transition profile is metadata; original controlSetTransition body is not implemented",
+      "Native blend duration is separate from original initial clip fraction",
+      "Nine decoded clips; unsupported destinations fail before changing selection",
+      "No whole boyControl loop, physics, scene, collision, weapons, audio or physical input"
+    ]
+  },
+  "video": {
+    "codec_name": "h264",
+    "width": 640,
+    "height": 480,
+    "avg_frame_rate": "30/1",
+    "duration": "6.000000",
+    "nb_frames": "180",
+    "private": true
+  },
+  "matching_rom_byte_equal": true,
+  "rom_sha1": "493ced9008dbe932d6e91179b68e8630cf23a023",
+  "emulation_used": false,
+  "visual_review": "Standing idle, movement and arm variants inspected; the full character remains inside the fixed camera with hand attached. Weapons/held objects are not drawn.",
+  "scope": "Two original decisions ported from static analysis. State/RNG inputs and playback cadence remain controlled. Original transition profiles are metadata, and full gameplay is not running.",
+  "next_step": "Map clip advancement/completion in overlay 16+0x5120 and consumers of controlSetTransition profiles before replacing controlled playback timing",
+  "ai_assistance": "OpenAI Codex, main agent only"
+}

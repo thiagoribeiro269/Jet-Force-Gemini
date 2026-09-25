@@ -163,3 +163,51 @@ diagnósticos gráficos anteriores continuam idênticos byte a byte. O teste
 de giro final foi corrigido para considerar a duração de 0,4 segundo:
 72° de giro deixam 18° de orientação, que a parada deve conservar.
 O relatório do renderer identifica o clipe inicial 1071 neste perfil.
+
+## Quinto pacote: seleção original de animações
+
+Plano fechado a partir de `5ca68f3`. A leitura estática identificou duas
+rotinas pequenas do overlay 16: `0x4E08` escolhe um movimento por componentes
+de movimento e campos do personagem; `0x4F78` remapeia o índice conforme
+objeto na mão, `controlPlayerGunWeight` e o campo `+0x1F4`. A tabela tem
+52 registros de cinco bytes em `data+0x280`. Os dois últimos bytes escolhem
+um dos sete perfis enviados a `controlSetTransition`, depois do remapeamento.
+
+1. Extrair a tabela e o limite de repouso (float em rodata+0x144) da ROM
+   local, conferindo SHA-1, bytes das rotinas e realocações. Exportar dados
+   privados num formato pequeno do PC, com IDs globais da tabela do modelo.
+2. Portar as duas decisões para C++ tipado, sem executar instruções MIPS
+   nem representar RAM do console. Conservar os nomes por offset dos campos
+   cujo significado não esteja suficientemente confirmado. A escolha
+   aleatória entre 16 e 19 será um argumento explícito; não inventar RNG.
+3. Ligar a seleção ao `AnimationPlayer`, preservando clipe/relógio em
+   repetição e propagando o perfil de transição como metadado. O parâmetro
+   original de `objAnimSetMove` é a fração inicial do clipe, limitada a
+   [0,1], e não o tempo de mistura. Acrescentar suporte explícito a essa
+   fração; a mistura em segundos continua sendo a política nativa atual.
+4. Converter os clipes necessários a uma sequência limitada de repouso,
+   três faixas de movimento, retorno e variantes por arma/objeto na mão.
+   O repouso original solicitado pela rotina usa índices 16–19; o 51 da
+   prova anterior era uma escolha provisória, não o repouso padrão comprovado.
+   Destinos sem clipe convertido devem falhar antes de alterar o estado.
+5. Testar limites estritos, empates, prioridades, perfil do índice resultante,
+   fração inicial e repetição, usando dados sintéticos e casos reais revisados
+   estaticamente. Executar no Linux ASAN/UBSAN e no Windows; renderizar os
+   destinos selecionados na RTX e revalidar as provas gráficas anteriores.
+   Conferir o build matching e publicar fontes/documentação, sem assets.
+
+O diagnóstico fornecerá estados nos mesmos pontos das APIs originais. Não
+implementará ainda o ciclo inteiro de `boyControl`, física, cadência dos
+pedidos, RNG, armas, colisão, áudio ou o conteúdo de `controlSetTransition`.
+Perfis dessa última função não são durações equivalentes à mistura atual.
+O vídeo mostrará seleção de animações no lugar, sem atribuir às componentes
+originais uma conversão ainda não comprovada para unidades por segundo.
+
+Resultado: as duas decisões foram portadas e ligadas ao player nativo.
+Auditoria de 1.700 bytes de cinco rotinas e 15 realocações aprovada. Linux
+ASAN/UBSAN e Windows passaram nos casos de limites, prioridades, fase,
+repetição, erro sem mutação e 20 seleções da tabela real. A RTX produziu
+180 frames com sete clipes, 167 imagens distintas e oito trocas sem salto
+instantâneo. O início em fração 0,5 do clipe de 50 quadros resultou em fase
+24,5, sem confundir com a mistura nativa de 0,2 segundo. As quatro provas
+gráficas anteriores permaneceram idênticas byte a byte.

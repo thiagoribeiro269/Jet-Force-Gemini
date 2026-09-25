@@ -1,0 +1,16 @@
+# Inputs to recovered Juno selection routines, not PC stick axes or gameplay.
+# Frame, component +04, component +10, diagnostic flags, idle RNG result,
+# original initial clip fraction, native blend seconds.
+# Flags: 1=+1FA, 2=+1F9, 4=+1F4, 8=+198, 16=walkingBack569,
+# 32=heldObject5CC, 64=controlPlayerGunWeight result.
+frames 180
+0   0 0   1 16 0   0.20
+24  1 0   0 16 0   0.20
+42  2 0   0 16 0   0.20
+60  4 0   0 16 0   0.20
+78  1 0  16 16 0   0.20
+96  1 0  64 16 0   0.20
+114 1 0  68 16 0   0.20
+132 1 0 100 16 0   0.20
+150 0 0   1 16 0.5 0.20
+168 0 0   1 16 0   0.20

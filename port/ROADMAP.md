@@ -12,7 +12,9 @@ de `objInitObjects`, com o overlay 34 carregado. Memória, filas, threads,
 carregador, dados de áudio e diretórios de texturas/modelos têm evidências
 nativas e MIPS delimitadas. A [prova de assets reais](graphics/README.md)
 agora carrega e descompacta o modelo 35 e sua textura `0x9097`, com listas
-geradas na RAM. Ainda não há renderizador integrado, saída de som ou partida.
+geradas na RAM. A [prova RT64](rt64/README.md) produziu na RTX, pelo Windows
+D3D12, uma imagem desse painel e outra do Juno em pose neutra com 21 ossos.
+O renderer ainda não está ligado ao ciclo do jogo; não há saída de som ou partida.
 
 O número de funções selecionadas descreve cada diagnóstico; ele não mede
 percentual de conclusão do jogo. Os marcos abaixo exigem comportamento
@@ -91,7 +93,7 @@ estimado sem base.
 | Marco | Resultado verificável | Dependências e decisão |
 | --- | --- | --- |
 | 1. Estado inicial dos objetos — concluído | Retorno de `objInitObjects`, dados corretos e módulos temporários liberados | Pacote descrito acima; três cenários nativos Linux/Windows e MIPS aprovados |
-| 2. Prova gráfica com asset real — em andamento | Carregamento do modelo 35/textura `0x9097` e comandos reais validados; imagem no renderer ainda pendente | O RT64 examinado não reconhece o microcódigo nem implementa os handlers específicos. Próximo pacote: adaptar F3DJFG ou provar a rota RSP original → RDP, com estado DMA/matrizes do chamador |
+| 2. Prova gráfica com asset real — concluída no escopo limitado | Painel e Juno em pose neutra renderizados no RT64/D3D12 da RTX; carga e pose conferidas com MIPS | Adaptador explícito F3DJFG para os dois casos; câmera controlada, sem VI, animação integrada ou ciclo do jogo. Suporte geral ao microcódigo continua pendente |
 | 3. Bootstrap completo e primeiro ciclo do jogo | `mainInitGame` retorna; o caminho de mudança de fase produz uma tarefa gráfica válida e avança o ciclo | Integrar a cadeia restante em grupos de efeitos, fontes/interface e estado do jogo, usando o contrato gráfico comprovado |
 | 4. Menu utilizável | Imagem estável, navegação, áudio produzido e retomada da espera entre frames | Entrada real, scheduler RSP/RDP, síntese de áudio e apresentação; a thread de áudio apenas bloqueada não satisfaz este marco |
 | 5. Fase jogável | Movimento, câmera, combate, transição, salvamento e carregamento exercitados | Ampliar cobertura de objetos, animações, colisões e recursos efetivamente usados; investigar estabilidade e desempenho |
@@ -100,8 +102,13 @@ A análise e o probe do [primeiro pacote gráfico](graphics/PLAN.md) confirmaram
 que o RT64 `43373749` não reconhece o microcódigo presente no snapshot real.
 As listas geradas contêm comandos específicos `0x04`, `0x05` e `0x07`; os
 vértices dependem de uma base DMA externa. A integração gráfica requer essa
-adaptação ou uma rota RSP/RDP verificada. Uma prévia de textura decodificada
-e comandos de display list na RAM não equivalem a um frame renderizado.
+adaptação ou uma rota RSP/RDP verificada. O [adaptador limitado](rt64/README.md)
+agora comprovou dois framebuffers por readback da GPU, incluindo os lotes,
+texturas e matrizes de translação da pose neutra do personagem. Isso ainda
+não cobre matrizes animadas, iluminação original ou todas as listas do jogo.
+
+Preferência atual de Thiago: manter Windows/NVIDIA, sem Android por enquanto,
+e continuar somente com o agente principal após as delegações já concluídas.
 
 ## Ordem restante conhecida do bootstrap
 

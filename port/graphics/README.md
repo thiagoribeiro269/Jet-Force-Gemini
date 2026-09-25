@@ -5,7 +5,9 @@ US verificada, as rotinas originais de CPU carregaram o modelo 35 (`swdoor`) e
 sua textura `0x9097`, descompactaram os dados e produziram duas listas gráficas
 na RAM. O modelo contém quatro vértices e dois triângulos; a textura é RGBA16,
 32 × 64 pixels. As duas listas representam o mesmo lote de dois triângulos.
-Ainda não houve execução de RSP/RDP, uso de GPU ou imagem renderizada.
+Este pacote de carga não executa RSP/RDP ou GPU. A etapa seguinte,
+[RT64/D3D12](../rt64/README.md), já produziu uma imagem desse painel e outra
+do Juno em pose neutra na RTX; seus resultados e limites ficam separados.
 
 ## Evidência de execução
 

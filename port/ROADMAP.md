@@ -17,8 +17,12 @@ Detalhes em [native/README.md](native/README.md).
 
 O controlador nativo já seleciona e mistura os clipes 1026/1030, com tempo
 em segundos, interrupção de transições e preservação do relógio em comandos
-repetidos. A sequência de diagnóstico passou na RTX; ainda falta ligar essa
-API ao estado real do personagem e às entradas do jogo.
+repetidos. O novo controlador do personagem liga esses clipes e a pose
+constante 1071 a comandos nativos de teste: repouso, deslocamento e postura
+baixa, com posição X/Z e giro. A sequência de 180 frames passou na RTX;
+a política é provisória, sem colisão e sem integração à lógica original.
+O próximo bloco deve mapear os estados/remapeamentos do controle original
+do Juno para definir essa ligação. [Evidência](native/character-validation.json).
 
 Planejamento registrado antes da implementação do próximo bloco, a partir
 do checkpoint `68cfa4d`. O objetivo é chegar a uma partida de JFG no Windows

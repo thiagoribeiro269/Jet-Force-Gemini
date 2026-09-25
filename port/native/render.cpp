@@ -15,7 +15,8 @@
 #include <vector>
 #include <sstream>
 #include <memory>
-#include "animation_player.h"
+#include <iomanip>
+#include "character_sequence.h"
 
 using Microsoft::WRL::ComPtr;
 constexpr unsigned Width = 640, Height = 480;
@@ -49,7 +50,7 @@ struct Draw { uint32_t first, count, texture, flags, model; };
 struct Vertex { float x, y, z, u, v, r, g, b, a; };
 static_assert(sizeof(Vertex) == 36);
 
-enum class Mode { Neutral, Clip, WideClip, Sequence };
+enum class Mode { Neutral, Clip, WideClip, Sequence, Character };
 struct Selection { uint32_t frame, id; double duration; };
 struct Sequence { uint32_t frames = 0; std::vector<Selection> events; };
 static Sequence readSequence(const char *path, const std::vector<jfg_native::Clip> &clips) {
@@ -87,7 +88,11 @@ Output vertexMain(Input input) {
     Output output;
     float3 p = input.position;
     // Controlled camera with conventional PC depth range [0,1].
-#if JFG_WIDE_CAMERA
+#if JFG_CHARACTER_CAMERA
+    output.position = float4((-0.939692621 * p.x - 0.342020143 * p.z) / 280.0,
+                             (p.y - 102.0) / 210.0,
+                             0.5 + (-0.342020143 * p.x + 0.939692621 * p.z) / 2048.0, 1.0);
+#elif JFG_WIDE_CAMERA
     output.position = float4((-0.939692621 * p.x - 0.342020143 * p.z) / 216.0,
                              (p.y - 102.0) / 162.0,
                              0.5 + (-0.342020143 * p.x + 0.939692621 * p.z) / 2048.0, 1.0);
@@ -106,9 +111,10 @@ float4 pixelMain(Output input) : SV_TARGET {
 }
 )";
 
-static ComPtr<ID3DBlob> compile(const char *entry, const char *target, bool wide) {
+static ComPtr<ID3DBlob> compile(const char *entry, const char *target, bool wide, bool character) {
     ComPtr<ID3DBlob> code, errors;
-    const D3D_SHADER_MACRO macros[] = {{"JFG_WIDE_CAMERA", wide ? "1" : "0"}, {nullptr, nullptr}};
+    const D3D_SHADER_MACRO macros[] = {{"JFG_WIDE_CAMERA", wide ? "1" : "0"},
+                                     {"JFG_CHARACTER_CAMERA", character ? "1" : "0"}, {nullptr, nullptr}};
     const HRESULT result = D3DCompile(Shader, std::strlen(Shader), "native_preview.hlsl", macros, nullptr,
                                      entry, target, D3DCOMPILE_ENABLE_STRICTNESS | D3DCOMPILE_OPTIMIZATION_LEVEL3,
                                      0, &code, &errors);
@@ -163,14 +169,15 @@ static void render(const char *input, const char *prefix, Mode mode, const char 
             skeleton.push_back({parent, reader.vec3()});
         }
         const uint32_t clipCount = multipleClips ? reader.u32() : 1;
-        require(clipCount == (multipleClips ? 2U : 1U), "Unsupported clip collection size");
+        require(multipleClips ? (clipCount == 2 || clipCount == 3) : clipCount == 1, "Unsupported clip collection size");
         for (uint32_t i = 0; i < clipCount; ++i) {
             jfg_native::Clip clip;
             clip.id = reader.u32(); const uint32_t keyCount = reader.u32(), looping = reader.u32();
             clip.sourceRate = reader.f32();
-            require(clip.id == (i ? 1030U : 1026U) && keyCount == (i ? 10U : 16U) && looping == 1 && clip.sourceRate == 15,
+            const uint32_t ids[] = {1026, 1030, 1071}, counts[] = {16, 10, 3};
+            require(clip.id == ids[i] && keyCount == counts[i] && looping == (i < 2 ? 1U : 0U) && clip.sourceRate == 15,
                     "Unsupported animation profile");
-            clip.loop = true;
+            clip.loop = looping != 0;
             for (uint32_t k = 0; k < keyCount; ++k) {
                 jfg_native::Keyframe key; key.root = reader.vec3();
                 for (uint32_t b = 0; b < boneCount; ++b) key.angles.push_back(reader.vec3());
@@ -186,10 +193,19 @@ static void render(const char *input, const char *prefix, Mode mode, const char 
     }
     Sequence sequence;
     std::unique_ptr<jfg_native::AnimationPlayer> player;
+    jfg_native::CharacterSequence commands;
+    std::unique_ptr<jfg_native::CharacterController> character;
     if (mode == Mode::Sequence) {
         require(multipleClips && sequencePath, "Selection sequence requires the multi-clip scene");
         sequence = readSequence(sequencePath, clips);
         player = std::make_unique<jfg_native::AnimationPlayer>(clips, skeleton.size(), clips.front().id);
+    }
+    if (mode == Mode::Character) {
+        require(clips.size() == 3 && sequencePath, "Character commands require the three-clip profile");
+        std::ifstream inputCommands(sequencePath, std::ios::ate);
+        require(bool(inputCommands) && inputCommands.tellg() < 65536, "Cannot read bounded character commands");
+        inputCommands.seekg(0); commands = jfg_native::readCharacterSequence(inputCommands);
+        character = std::make_unique<jfg_native::CharacterController>(clips, skeleton.size(), jfg_native::CharacterClips{1071, 1026, 1030});
     }
     // Select the known hardware vendor. Never fall back to WARP/software.
     ComPtr<IDXGIFactory1> factory;
@@ -221,7 +237,7 @@ static void render(const char *input, const char *prefix, Mode mode, const char 
         check(device->CreateTexture2D(&desc, &data, &resource), "Upload native texture");
         check(device->CreateShaderResourceView(resource.Get(), nullptr, &texture.view), "Texture view");
     }
-    const auto vs = compile("vertexMain", "vs_5_0", wideCamera), ps = compile("pixelMain", "ps_5_0", wideCamera);
+    const auto vs = compile("vertexMain", "vs_5_0", wideCamera, bool(character)), ps = compile("pixelMain", "ps_5_0", wideCamera, bool(character));
     ComPtr<ID3D11VertexShader> vertexShader; ComPtr<ID3D11PixelShader> pixelShader;
     check(device->CreateVertexShader(vs->GetBufferPointer(), vs->GetBufferSize(), nullptr, &vertexShader), "Vertex shader");
     check(device->CreatePixelShader(ps->GetBufferPointer(), ps->GetBufferSize(), nullptr, &pixelShader), "Pixel shader");
@@ -278,7 +294,7 @@ static void render(const char *input, const char *prefix, Mode mode, const char 
     std::vector<uint8_t> pixels(Width * Height * 4);
     std::ofstream raw(std::string(prefix) + ".rgba", std::ios::binary);
     require(bool(raw), "Cannot create frame stream");
-    const uint32_t frameCount = player ? sequence.frames : animate ? uint32_t(clips.front().keys.size() * 2 + 1) : 1;
+    const uint32_t frameCount = character ? commands.frames : player ? sequence.frames : animate ? uint32_t(clips.front().keys.size() * 2 + 1) : 1;
     std::vector<std::string> requestTrace, stateTrace;
     size_t eventIndex = 0;
     uint32_t accepted = 0;
@@ -286,6 +302,33 @@ static void render(const char *input, const char *prefix, Mode mode, const char 
     uint32_t colored = 0, minColored = Width * Height, maxColored = 0;
     for (uint32_t frame = 0; frame < frameCount; ++frame) {
         if (rigged) {
+            if (character) {
+                if (eventIndex < commands.events.size() && commands.events[eventIndex].frame == frame) {
+                    const auto &event = commands.events[eventIndex++];
+                    const auto before = jfg_native::composePose(skeleton, character->animation().current());
+                    const auto beforeWorld = character->world();
+                    const bool changed = character->command(event.input);
+                    const auto after = jfg_native::composePose(skeleton, character->animation().current());
+                    float jump = 0;
+                    for (size_t b = 0; b < before.size(); ++b) for (size_t i = 0; i < 16; ++i)
+                        jump = std::max(jump, std::abs(before[b][i] - after[b][i]));
+                    require(jump < 0.00001f && beforeWorld == character->world(), "Character input teleported the pose or world transform");
+                    maximumJump = std::max(maximumJump, jump); accepted += changed;
+                    std::ostringstream row;
+                    row << "{\"frame\":" << frame << ",\"x\":" << event.input.x << ",\"z\":" << event.input.z
+                        << ",\"low\":" << (event.input.low ? "true" : "false") << ",\"accepted\":" << (changed ? "true" : "false")
+                        << ",\"instant_matrix_delta\":" << jump << "}";
+                    requestTrace.push_back(row.str());
+                }
+                const auto &animation = character->animation();
+                std::ostringstream row;
+                row << std::setprecision(12) << "{\"frame\":" << frame << ",\"state\":\"" << jfg_native::stateName(character->state())
+                    << "\",\"target\":" << animation.id() << ",\"source_frame\":" << animation.frame()
+                    << ",\"weight\":" << animation.weight() << ",\"transitioning\":" << (animation.transitioning() ? "true" : "false")
+                    << ",\"x\":" << character->x() << ",\"z\":" << character->z() << ",\"yaw\":" << character->yaw()
+                    << ",\"speed\":" << character->speed() << "}";
+                stateTrace.push_back(row.str());
+            }
             if (player) {
                 while (eventIndex < sequence.events.size() && sequence.events[eventIndex].frame == frame) {
                     const auto &event = sequence.events[eventIndex++];
@@ -307,8 +350,10 @@ static void render(const char *input, const char *prefix, Mode mode, const char 
                     << ",\"weight\":" << player->weight() << ",\"transitioning\":" << (player->transitioning() ? "true" : "false") << "}";
                 stateTrace.push_back(row.str());
             }
-            const auto matrices = player ? jfg_native::composePose(skeleton, player->current()) :
+            auto matrices = character ? jfg_native::composePose(skeleton, character->animation().current()) :
+                player ? jfg_native::composePose(skeleton, player->current()) :
                 jfg_native::pose(skeleton, animate ? &clips.front() : nullptr, float(frame) * 0.5f);
+            if (character) for (auto &matrix : matrices) matrix = jfg_native::multiply(matrix, character->world());
             auto posed = vertices;
             for (uint32_t i = 0; i < vertexCount; ++i) {
                 const auto p = jfg_native::transform({vertices[i].x, vertices[i].y, vertices[i].z}, matrices[vertexBones[i]]);
@@ -339,9 +384,10 @@ static void render(const char *input, const char *prefix, Mode mode, const char 
         minColored = std::min(minColored, colored); maxColored = std::max(maxColored, colored);
         raw.write(reinterpret_cast<const char *>(pixels.data()), pixels.size()); require(bool(raw), "Cannot write readback");
         if (player) player->advance(1.0 / 30);
+        if (character) character->advance(1.0 / 30);
     }
     context->ClearState(); context->Flush();
-    if (player) {
+    if (player || character) {
         std::ofstream trace(std::string(prefix) + ".controller.json");
         require(bool(trace), "Cannot create controller trace");
         trace << "{\"requests\":[";
@@ -354,12 +400,13 @@ static void render(const char *input, const char *prefix, Mode mode, const char 
     report << "{\"status\":\"rendered_unreviewed\",\"api\":\"D3D11\",\"vendor\":" << adapterInfo.VendorId
            << ",\"width\":" << Width << ",\"height\":" << Height << ",\"triangles\":" << vertexCount / 3
            << ",\"draws\":" << drawCount << ",\"textures\":" << textureCount << ",\"colored_pixels\":" << colored
-           << ",\"frame_count\":" << frameCount << ",\"animation_id\":" << (animate ? clips.front().id : 0)
-           << ",\"source_keyframes\":" << (clips.empty() ? 0 : clips.front().keys.size()) << ",\"output_fps\":30,\"source_step\":0.5"
+           << ",\"frame_count\":" << frameCount << ",\"animation_id\":" << (character ? 1071 : animate ? clips.front().id : 0)
+           << ",\"source_keyframes\":" << (character ? 3 : clips.empty() ? 0 : clips.front().keys.size()) << ",\"output_fps\":30,\"source_step\":0.5"
            << ",\"sequence\":" << (player ? "true" : "false") << ",\"clip_count\":" << clips.size()
+           << ",\"character_commands\":" << (character ? "true" : "false")
            << ",\"selection_requests\":" << requestTrace.size() << ",\"accepted_switches\":" << accepted
            << ",\"instant_pose_max_matrix_delta\":" << maximumJump
-           << ",\"camera\":\"" << (wideCamera ? "transition_wide" : "original_native_proof") << "\""
+           << ",\"camera\":\"" << (character ? "character_path" : wideCamera ? "transition_wide" : "original_native_proof") << "\""
            << ",\"min_colored_pixels\":" << minColored << ",\"max_colored_pixels\":" << maxColored
            << ",\"emulator_dependencies\":false,\"display_list_interpreter\":false,\"animated\":" << (animate ? "true" : "false") << "}\n";
     require(bool(report), "Cannot write report");
@@ -373,7 +420,8 @@ int main(int argc, char **argv) {
         if (argc == 4 && std::string(argv[3]) == "--animate") mode = Mode::Clip;
         else if (argc == 4 && std::string(argv[3]) == "--animate-wide") mode = Mode::WideClip;
         else if (argc == 5 && std::string(argv[3]) == "--sequence") { mode = Mode::Sequence; sequence = argv[4]; }
-        else require(argc == 3, "usage: jfg_native_preview SCENE OUTPUT_PREFIX [--animate | --sequence FILE]");
+        else if (argc == 5 && std::string(argv[3]) == "--character") { mode = Mode::Character; sequence = argv[4]; }
+        else require(argc == 3, "usage: jfg_native_preview SCENE OUTPUT_PREFIX [--animate | --animate-wide | --sequence FILE | --character FILE]");
         render(argv[1], argv[2], mode, sequence); return 0;
     }
     catch (const std::exception &error) { std::cerr << error.what() << '\n'; return 1; }

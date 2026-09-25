@@ -10,7 +10,7 @@ Para alterações de descompilação, a referência de validação é recompilar
 
 Consulte [a direção e a base do fork](docs/FORK.md) e [as instruções de desenvolvimento](AGENTS.md). ROMs, arquivos extraídos e binários de jogo ficam fora do Git.
 
-Na branch experimental `port/recomp-poc`, a [prova de recompilação para PC](port/README.md) executa funções reais do jogo e compara seus resultados com o MIPS original. O alvo é Windows x64 com GPU NVIDIA; a etapa atual valida CPU e realocações locais, antes da integração gráfica.
+Na branch experimental `port/recomp-poc`, o [protótipo nativo](port/native/README.md) renderiza Juno no Windows x64/NVIDIA por Direct3D 11 próprio, com animações, transições e deslocamento acionados por comandos de teste. A rota atual elimina RT64 e emulação; as comparações MIPS anteriores são somente históricas. O jogo completo, cenário, colisões, áudio e controle físico ainda não estão integrados.
 
 ## Instruções de compilação herdadas
 

@@ -29,7 +29,7 @@ recorte por alfa, transparência e filtragem linear. A última componente
 do vértice original não é tratada como opacidade de material. Os efeitos
 originais mais complexos ainda precisam de materiais/shaders próprios;
 não se afirma equivalência de pixels com o N64. A câmera é controlada;
-áudio, input e ciclo do jogo ainda não estão integrados.
+áudio, dispositivos de entrada e ciclo original do jogo ainda não estão integrados.
 
 ## Primeiro clipe de animação
 
@@ -106,6 +106,73 @@ regressões. O vídeo privado tem 3,2 segundos, 640 × 480 e 30 fps. Os comandos
 são de diagnóstico; teclado e controle físico não são acessados. Evidências
 em [transition-validation.json](transition-validation.json).
 
+## Estado e deslocamento do personagem
+
+`CharacterController` acrescenta posição X/Z, orientação e estados nativos
+de repouso, movimento e postura baixa. A entrada contém dois eixos entre
+−1 e 1 e um booleano de postura baixa. O diagnóstico entrega esses comandos
+por arquivo, sem acessar teclado, controle físico ou área de trabalho.
+
+O clipe **1071**, índice 51, foi convertido para o repouso provisório: três
+quadros iguais, sem loop, stride e consumo de bits zero, com rotações
+constantes não nulas. A inspeção visual mostrou Juno em pé, com as mãos
+reunidas à frente. Isso é uma pose do jogo, diferente da pose neutra do
+esqueleto; seu significado original ainda não foi identificado.
+
+| Entrada | Estado do protótipo | Clipe | Deslocamento |
+| --- | --- | --- | --- |
+| Eixos dentro da zona morta | Repouso | 1071 | Parado |
+| Eixos ativos | Movimento | 1026 | Plano X/Z |
+| Postura baixa pressionada | Postura baixa | 1030 | Parado, com prioridade sobre os eixos |
+
+Esta política pertence ao protótipo do port. A leitura estática de
+`objAnimSetMove` e do seletor do overlay 16 em `0x4F78` confirmou seleção
+por índice local e remapeamentos dependentes do estado. Não estabeleceu
+que os três nomes acima ou seus parâmetros sejam os originais do jogo.
+
+Parâmetros controlados: 60 unidades de origem por segundo, zona morta
+radial de 0,15, mistura de 0,25 segundo e giro limitado a π radianos por
+segundo. Diagonais são normalizadas; entradas analógicas menores mantêm
+sua intensidade fora da zona morta. Os eixos são relativos ao mundo, com
+frente local −Z. Ao parar, posição e orientação são mantidas. O movimento
+muda de direção imediatamente, enquanto o corpo gira gradualmente.
+
+A translação raiz do clipe continua local ao esqueleto. O controlador não
+a acumula na posição do personagem. As matrizes dos ossos recebem a
+transformação do personagem uma única vez. A posição Y do personagem é
+zero, mas não há chão, gravidade ou contato físico dos pés implementados.
+Os tempos de animação ainda usam 15 quadros de origem por segundo, sem
+ajuste da passada à velocidade; deslizamento dos pés pode ocorrer.
+
+Comandos que mantêm o estado preservam o relógio do clipe, inclusive quando
+mudam a direção. Mudanças de estado reaproveitam a transição interrompível
+já validada. Entradas não finitas, eixos fora dos limites e passos de tempo
+fora de `[0; 0,25]` segundo são rejeitados antes de alterar o estado.
+
+Resultados da [sequência reproduzível](character_sequence.txt) na RTX:
+
+- 180 frames, seis segundos a 30 fps, com 149 imagens distintas.
+- 13 comandos e dez mudanças de estado, incluindo interrupção e retorno
+  à pose de repouso. Nenhum salto instantâneo da pose ou posição.
+- Trajeto de 186 unidades, com dez posições conferidas analiticamente.
+  Movimento diagonal mantém a velocidade; repouso e postura baixa param.
+- Personagem inteiro no enquadramento em todos os frames. Inspeção de
+  poses de frente, perfil e postura baixa confirmou a articulação da mão.
+- Pose neutra, ciclo anterior de 33 frames e transições de 96 frames
+  continuam idênticos byte a byte.
+- Dez casos do controlador e 20 rejeições passaram no Linux ASAN/UBSAN e
+  no Windows, além das verificações de animação anteriores. O teste compara
+  comandos nos mesmos instantes a 30 e 60 atualizações por segundo.
+
+O último trecho dura 0,4 segundo, suficiente para girar 72° a partir de
+90°. O personagem para a 18° e mantém essa direção, conforme a regra de
+giro limitado; não é um ajuste posterior da câmera. As evidências estão em
+[character-validation.json](character-validation.json).
+
+Ainda não é uma partida nem o controle original do JFG. A integração às
+rotinas de gameplay, cenário/colisão, gravidade, câmera jogável, áudio,
+eventos, IK e entrada física permanece pendente.
+
 ## Build e teste
 
 O conversor usa apenas a biblioteca padrão do Python. O build usa o
@@ -131,6 +198,14 @@ Para preparar a seleção e as transições:
 python3 port/native/prepare_assets.py --transitions --out build/port-native/transitions
 python3 port/native/build.py
 python3 port/native/package.py --out build/port-native/transitions
+```
+
+Para preparar o controlador do personagem com três clipes:
+
+```sh
+python3 port/native/prepare_assets.py --character --out build/port-native/character
+python3 port/native/build.py
+python3 port/native/package.py --out build/port-native/character
 ```
 
 O ZIP em `build/port-native` contém assets privados do jogo. **Não publicar
@@ -178,6 +253,23 @@ arquivos RGBA para `build/port-native/transitions`, depois execute
 `juno-transitions.mp4`. Os traços de estado ficam no resultado privado;
 o controlador não grava keyframes ou imagens no repositório público.
 
+O perfil `--character` continua usando `JFGNAT3`, agora com três clipes;
+cenas anteriores continuam aceitas. O runner executa os testes de
+`check_character.exe` e usa `--character character_sequence.txt`. Recuperar
+`frame.rgba`, `transitions.rgba`, `cycle.rgba`, `cycle-wide.rgba`,
+`neutral.rgba` e `result.json` (como `rtx-result.json`) para
+`build/port-native/character`. A validação local é:
+
+```sh
+python3 port/native/check_character_frames.py
+```
+
+Ela verifica comandos, distâncias, giro, poses estáveis, enquadramento e
+regressões, e produz `juno-character.mp4` privado. Frames começam em tempo
+zero: comandos do frame são aplicados antes do desenho; o avanço de 1/30
+segundo ocorre depois. O controlador rejeita passos acima de 0,25 segundo;
+uma integração futura precisa subdividir intervalos maiores explicitamente.
+
 A inspeção dos imports do executável mostrou somente bibliotecas Windows:
 D3D11, D3DCompiler, DXGI, Kernel32 e Universal CRT. O comando de compilação
 inclui apenas `render.cpp` e essas bibliotecas; nenhuma dependência de
@@ -186,9 +278,13 @@ emulador é compilada estaticamente. As evidências estão em
 
 ## Continuidade
 
+O próximo bloco deve mapear os estados e remapeamentos do controlador
+original do Juno e definir a ligação dessa lógica à API nativa. O estado
+e a movimentação deste diagnóstico ainda são uma política própria.
+
 O port completo ainda exige integrar o código de jogo recompilado/adaptado,
-seleção de animações ligada ao estado do personagem, materiais especiais, iluminação, áudio, controles, salvamento
-e a inicialização. A dependência do CIC será retirada no caminho do port
+materiais especiais, iluminação, áudio, controles, salvamento e a
+inicialização. A dependência do CIC será retirada no caminho do port
 após mapear os efeitos da chamada, sem implementar um chip virtual.
 O código matching da ROM foi preservado.
 

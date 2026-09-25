@@ -109,7 +109,8 @@ def skeleton(model):
     return positions
 
 
-def convert(assets, animated=False, transitions=False):
+def convert(assets, animated=False, transitions=False, character=False):
+    transitions = transitions or character
     animated = animated or transitions
     body, hand = assets.model(220), assets.model(309)
     require(body[:4] == b"Boy\0" and hand[:9] == b"JunoHand\0", "Wrong model names")
@@ -189,7 +190,7 @@ def convert(assets, animated=False, transitions=False):
         from animation_assets import clip_for_model
         for parent, local in skeleton_nodes(body):
             data.extend(struct.pack("<i3f", parent, *local))
-        indices = (0, 14) if transitions else (0,)
+        indices = (0, 14, 51) if character else (0, 14) if transitions else (0,)
         if transitions:
             data.extend(struct.pack("<I", len(indices)))
         for index in indices:
@@ -205,6 +206,7 @@ def convert(assets, animated=False, transitions=False):
                          "draws": len(draws), "texture_count": len(textures), "bones": len(bones),
                          "hand_bone": attachment, "textures": [{k: v for k, v in t.items() if k != "rgba"} for t in textures],
                          "scene_version": 3 if transitions else 2 if animated else 1, "animation": clip_report, "animations": clip_reports,
+                         "character_profile": character,
                          "limits": ["Selected original skeletal clips or neutral pose; ordinary PC materials, texture animation frame zero",
                                     "Offline file-format conversion; no MIPS, RSP, RDP, PIF or CIC execution",
                                     "No pixel-equivalence claim with Nintendo 64 hardware"]}
@@ -216,10 +218,11 @@ def main():
     parser.add_argument("--out", type=Path, default=ROOT / "build/port-native")
     parser.add_argument("--animation", action="store_true")
     parser.add_argument("--transitions", action="store_true")
+    parser.add_argument("--character", action="store_true")
     args = parser.parse_args()
     out = args.out.resolve()
     require(out.is_relative_to(ROOT / "build"), "Private assets must remain inside ignored build/")
-    data, report = convert(Assets(args.rom.read_bytes()), animated=args.animation, transitions=args.transitions)
+    data, report = convert(Assets(args.rom.read_bytes()), animated=args.animation, transitions=args.transitions, character=args.character)
     out.mkdir(parents=True, exist_ok=True)
     (out / "scene.bin").write_bytes(data)
     report["scene_sha256"] = hashlib.sha256(data).hexdigest()

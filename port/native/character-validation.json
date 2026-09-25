@@ -1,0 +1,165 @@
+{
+  "status": "passed",
+  "recorded_date": "2026-09-25",
+  "previous_checkpoint": "25c6ffe5b31226134c5e69a33c0394689a16fc76",
+  "architecture": "native_C++_character_commands_and_D3D11",
+  "scene_version": 3,
+  "clips": [
+    {
+      "id": 1026,
+      "model_clip_index": 0,
+      "model_clip_count": 52,
+      "keyframes": 16,
+      "loop": true,
+      "frame_stride": 25,
+      "bits_per_frame": 193,
+      "source_sha256": "0693bf4740d35faa69637a37dede4a81fc84e2d9aabc812da03fdb6164de1d78",
+      "bit_readers_compared": 2,
+      "source_fps_controlled": 15,
+      "semantic_name": null,
+      "scale_channels": 0
+    },
+    {
+      "id": 1030,
+      "model_clip_index": 14,
+      "model_clip_count": 52,
+      "keyframes": 10,
+      "loop": true,
+      "frame_stride": 10,
+      "bits_per_frame": 77,
+      "source_sha256": "34249a9c5934237043508075b33b274fb158230d079105763d053d81f4937dfb",
+      "bit_readers_compared": 2,
+      "source_fps_controlled": 15,
+      "semantic_name": null,
+      "scale_channels": 0
+    },
+    {
+      "id": 1071,
+      "model_clip_index": 51,
+      "model_clip_count": 52,
+      "keyframes": 3,
+      "loop": false,
+      "frame_stride": 0,
+      "bits_per_frame": 0,
+      "source_sha256": "4f60b6aa314e09ba3eb4c168dbed3d744e411be89f5ee2ca932f13f8005f3a51",
+      "bit_readers_compared": 2,
+      "source_fps_controlled": 15,
+      "semantic_name": null,
+      "scale_channels": 0
+    }
+  ],
+  "scene_sha256": "1c6de9eb513cc53bf353298d8459f76fb14390ea97e28ae3fc9f8631cbcc143b",
+  "build": {
+    "status": "built",
+    "source": "port/native/render.cpp",
+    "api": "D3D11",
+    "executable_sha256": "11d98b398d3dfbac01243143e43105f05b80d700fa9193a8aaaa6614b6d1e9e7",
+    "animation_math_executable_sha256": "c8051b7470b4e3e3b5d42f806dcb6df2d8aa907e2caa2f7438b04c7b3fea60e3",
+    "animation_player_executable_sha256": "7ac215c112dfb0916d899aca54f05a07a528918056a19f331e9bb15bc12ab87d",
+    "emulator_dependencies": [],
+    "graphics_libraries": [
+      "Windows D3D11",
+      "Windows D3DCompiler",
+      "Windows DXGI"
+    ],
+    "character_executable_sha256": "8af56a32e8bdecea2985f82efcb1a1a3d659660de72174b3cff64e5fee08f043"
+  },
+  "windows": "Windows-11-10.0.26200-SP0",
+  "gpu": {
+    "api": "D3D11",
+    "vendor": 4318,
+    "width": 640,
+    "height": 480,
+    "triangles": 534,
+    "draws": 21,
+    "textures": 17,
+    "frame_count": 180,
+    "camera": "character_path"
+  },
+  "tests": {
+    "linux": "Animation math, player and character checks passed with ASAN/UBSAN; synthetic data only",
+    "windows_math": {
+      "status": "passed",
+      "math_cases": 6,
+      "rejected_cases": 4
+    },
+    "windows_player": {
+      "status": "passed",
+      "controller_cases": 8,
+      "rejected_cases": 6
+    },
+    "windows_character": {
+      "status": "passed",
+      "character_cases": 10,
+      "rejected_cases": 20
+    },
+    "input_30_and_60_hz": "Same commands at equal simulated times preserve position, yaw, clip time and pose",
+    "prior_scene_formats": "JFGNAT1, JFGNAT2 and the two-clip JFGNAT3 reconvert to identical previous scene bytes"
+  },
+  "character": {
+    "status": "passed",
+    "frames": 180,
+    "unique_frames": 149,
+    "fps_controlled": 30,
+    "duration_seconds": 6,
+    "policy": {
+      "rest": 1071,
+      "moving": 1026,
+      "low": 1030,
+      "speed": 60,
+      "dead_zone": 0.15,
+      "turn_radians_per_second": 3.141592653589793,
+      "blend_seconds": 0.25,
+      "ground_plane_y": 0
+    },
+    "input_requests": 13,
+    "state_changes": 10,
+    "commands_preserving_selected_clip": 3,
+    "interrupted_transition": true,
+    "instantaneous_selection_matrix_delta": 0,
+    "diagonal_speed_normalized": true,
+    "low_posture_overrides_movement": true,
+    "dead_zone_stops_movement": true,
+    "path_length": 185.99999999998283,
+    "final_position_xz": [
+      46.6690475583,
+      -70.6690475583
+    ],
+    "maximum_turn_per_frame": 0.10471975512300002,
+    "analytic_endpoints_checked": 10,
+    "neutral_byte_equal_to_prior": true,
+    "prior_cycle_33_frames_byte_equal": true,
+    "prior_transitions_96_frames_byte_equal": true,
+    "constant_rest_frames_identical": 12,
+    "settled_rest_frames_identical": 10,
+    "coverage_range": [
+      10674,
+      14765
+    ],
+    "raw_sha256": "2ce3ec3b8e5651b77623836b6fd9158e1007af9d7fc5c7a8139c3154d9f49937",
+    "video_sha256": "49b9bfdb882f65e9a4d07bd1673bccb5d0db03c60eef2c39317cec57a9b30188",
+    "limits": [
+      "Scripted native world-space inputs, no physical controller or interactive window",
+      "State names and movement/turn/blend parameters are prototype policy, not reconstructed original gameplay",
+      "Original clip 1071 is used as a provisional constant stance; its original semantic name is unknown",
+      "No collision, gravity, root-motion locomotion, foot planting, audio or animation events",
+      "No emulator or original MIPS execution; matching ROM validation is separate"
+    ]
+  },
+  "video": {
+    "codec_name": "h264",
+    "width": 640,
+    "height": 480,
+    "avg_frame_rate": "30/1",
+    "duration": "6.000000",
+    "nb_frames": "180",
+    "private": true
+  },
+  "matching_rom_byte_equal": true,
+  "rom_sha1": "493ced9008dbe932d6e91179b68e8630cf23a023",
+  "emulation_used": false,
+  "visual_review": "Constant stance, movement in profile, lowered posture and final stop inspected. Full character and articulated hand remain within the fixed camera.",
+  "scope": "Provisional native character policy, not original JFG gameplay; no scene, collision, gravity, physical input or interactive window",
+  "next_step": "Map the original Juno controller states and local animation remapping, then define their bridge to the native API",
+  "ai_assistance": "OpenAI Codex, main agent only"
+}

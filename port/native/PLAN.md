@@ -119,3 +119,47 @@ de 96 frames concluída na RTX. Quatro seleções efetivas, uma repetição
 ignorada, interrupção sem salto instantâneo de matrizes e 72 imagens
 distintas. Pose neutra e ciclo anterior byte a byte preservados. A câmera
 ampla eliminou o corte no teste; vídeo e traços continuam privados.
+
+## Quarto pacote: estado e deslocamento do personagem
+
+Plano fechado a partir de `25c6ffe`, antes da implementação. A leitura
+estática de `objAnimSetMove` e do seletor do overlay 16 em `0x4F78`
+confirmou que o jogo usa índices locais e remapeamentos dependentes do
+estado. Ainda não identificamos todos os significados desses estados;
+este pacote cria uma política explícita do port, sem atribuí-la ao original.
+
+1. Inspecionar a pose constante do clipe 1071, índice 51 do Juno: três
+   quadros, stride zero e ângulos constantes, sem escala animada. Acrescentar
+   esse perfil ao conversor limitado e ao formato existente `JFGNAT3`.
+   Usá-lo como repouso provisório somente se a inspeção visual for adequada.
+2. Criar um controlador C++ que receba eixos X/Z e um comando de postura
+   baixa, selecione repouso/movimento/postura baixa e conduza o controlador
+   de animação. Movimento usa 1026; postura baixa usa 1030. Velocidade,
+   zona morta, prioridade e tempos de mistura são escolhas documentadas
+   deste protótipo. Não portar a física original por aproximação silenciosa.
+3. Separar posição/orientação do personagem da translação local dos ossos.
+   Normalizar diagonais, limitar a velocidade angular e preservar posição
+   ao parar ou baixar. Conferir comandos/tempo antes de alterar o estado.
+4. Alimentar entradas por um arquivo reproduzível, sem acesso a dispositivos
+   físicos ou janela. Testar partida, repetição, diagonal, interrupção,
+   postura baixa prioritária, parada e retomada. Registrar estado, pose,
+   posição e direção em cada frame; usar câmera fixa que comporte o trajeto.
+5. Validar matemática e estado com dados sintéticos no Linux e Windows,
+   renderizar na RTX por SSH e conferir regressões de pose, ciclo e mistura.
+   Inspecionar imagens e produzir vídeo privado. Publicar somente fontes,
+   documentação e métricas; conferir também o build matching da ROM.
+
+Colisão, gravidade, cenário, câmera jogável, teclado/controle físico, áudio,
+eventos de animação e integração à lógica original permanecem pendentes.
+O resultado será um personagem conduzido por comandos nativos de teste,
+não o jogo já jogável nem uma reprodução da movimentação original.
+
+Resultado: a pose 1071 foi inspecionada e adotada como repouso provisório.
+O controlador executou 13 comandos e dez mudanças de estado em 180 frames
+na RTX, com posição e giro nativos. Diagonais, prioridade da postura baixa,
+zona morta, interrupções e dez posições analíticas passaram. Foram obtidas
+149 imagens distintas; repouso estabiliza em frames idênticos. Os três
+diagnósticos gráficos anteriores continuam idênticos byte a byte. O teste
+de giro final foi corrigido para considerar a duração de 0,4 segundo:
+72° de giro deixam 18° de orientação, que a parada deve conservar.
+O relatório do renderer identifica o clipe inicial 1071 neste perfil.

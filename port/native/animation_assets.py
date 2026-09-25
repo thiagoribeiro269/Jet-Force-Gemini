@@ -14,11 +14,12 @@ def clip_for_model(assets, model_id, clip_index=0):
     raw = region(assets.section(0x2B), start, end - start)
     frame_offset = struct.unpack_from(">H", raw, 2)[0]
     channel_bones, frame_count, stride = raw[9], raw[11], raw[13]
-    supported = {0: (1026, 16, 25, 193), 14: (1030, 10, 10, 77)}
+    supported = {0: (1026, 16, 25, 193), 14: (1030, 10, 10, 77), 51: (1071, 3, 0, 0)}
     require(model_id == 220 and clip_index in supported, "Animation index outside the validated native subset")
     expected_id, expected_count, expected_stride, expected_bits = supported[clip_index]
     require((animation_id, channel_bones, frame_count, stride) == (expected_id, 21, expected_count, expected_stride),
             "Selected native animation header differs")
+    require(bool(raw[1] & 16) == (clip_index != 51), "Selected native animation loop flag differs")
     mapping_start, mapping_end = struct.unpack(">II", region(assets.section(0x2C), model_id * 4, 8))
     mappings = region(assets.section(0x2D), mapping_start, mapping_end - mapping_start)
     mapping = region(mappings, clip_index * 21, 21)
@@ -65,6 +66,9 @@ def clip_for_model(assets, model_id, clip_index=0):
                 k = channel * 3 + axis
                 angle = ((descriptors[k] & 0xFFF0) + values[3 + k] * 32) & 0xFFFF if k < 60 else 0
                 require(abs(frames[index][1][bone][axis] - angle * (2 * math.pi / 65536)) < 1e-10, "Angle bit-reader disagreement")
+    if clip_index == 51:
+        require(all(frame == frames[0] for frame in frames), "Constant stance unexpectedly varies")
+        require(any(angle != 0 for bone in frames[0][1] for angle in bone), "Stance is not a bind pose")
     return frames, {"id": animation_id, "model_clip_index": clip_index, "model_clip_count": len(ids),
                     "keyframes": frame_count, "loop": bool(raw[1] & 16), "frame_stride": stride,
                     "bits_per_frame": bits_per_frame, "source_sha256": hashlib.sha256(raw).hexdigest(),

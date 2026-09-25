@@ -43,17 +43,25 @@ def main():
     controller_test = owned("controller_test", [str(package / "check_player.exe")])
     if controller_test["exit_code"] or controller_test["timed_out"]:
         raise RuntimeError("Native animation controller failed: " + controller_test["stderr"])
+    character_test = owned("character_test", [str(package / "check_character.exe")])
+    if character_test["exit_code"] or character_test["timed_out"]:
+        raise RuntimeError("Native character controller failed: " + character_test["stderr"])
     magic = (package / "scene.bin").read_bytes()[:8]
     multiple = magic == b"JFGNAT3\0"
     rigged = multiple or magic == b"JFGNAT2\0"
+    character = (package / "character_sequence.txt").is_file()
     command = [str(package / "jfg_native_preview.exe"), str(package / "scene.bin")]
-    options = ["--sequence", str(package / "transition_sequence.txt")] if multiple else ["--animate"] if rigged else []
+    options = (["--character", str(package / "character_sequence.txt")] if character else
+               ["--sequence", str(package / "transition_sequence.txt")] if multiple else ["--animate"] if rigged else [])
     render = owned("render", [*command, str(out / "frame"), *options])
     neutral = None
     cycle = None
     wide_cycle = None
+    transitions = None
     if rigged and render["exit_code"] == 0 and not render["timed_out"]:
         if multiple:
+            if character:
+                transitions = owned("transitions", [*command, str(out / "transitions"), "--sequence", str(package / "transition_sequence.txt")])
             cycle = owned("cycle", [*command, str(out / "cycle"), "--animate"])
             wide_cycle = owned("cycle_wide", [*command, str(out / "cycle-wide"), "--animate-wide"])
         neutral = owned("neutral", [*command, str(out / "neutral")])
@@ -66,6 +74,9 @@ def main():
               "neutral": neutral, "cycle_regression": cycle, "wide_cycle": wide_cycle,
               "controller_trace": json.loads((out / "frame.controller.json").read_text()) if (out / "frame.controller.json").exists() else None,
               **render}
+    result["character_test"] = character_test
+    result["transition_regression"] = transitions
+    result["ok"] = bool(result["ok"] and (not character or (transitions and transitions["exit_code"] == 0 and not transitions["timed_out"])))
     (out / "result.json").write_text(json.dumps(result, indent=2) + "\n")
     print(json.dumps(result))
 

@@ -361,7 +361,7 @@ DrawStats draw_model(RT64::State &state, uint32_t listAddress,
 #endif
 
 StaticModel decode_static_character(const uint8_t *ram, uint32_t size,
-    uint32_t listAddress, uint32_t vertexBase, uint32_t floatMatrixBase) {
+    uint32_t listAddress, uint32_t vertexBase, uint32_t floatMatrixBase, bool rigidHand) {
     const auto need = [](bool ok, const char *why) {
         if (!ok) throw std::runtime_error(why);
     };
@@ -385,6 +385,27 @@ StaticModel decode_static_character(const uint8_t *ram, uint32_t size,
     std::array<bool, 4> matrixReady{};
     std::array<std::array<float, 3>, 4> matrixTranslation{};
     std::array<std::array<float, 3>, 32> vertexTranslation{};
+    const uint32_t vertexLimit = rigidHand ? 43 : 660;
+    const auto loadTranslation = [&](uint32_t address, uint32_t slot) {
+        source(address, 64);
+        for (uint32_t k = 0; k < 16; ++k) {
+            const uint32_t bits = be32(ram, address + k * 4, size);
+            if (k >= 12 && k < 15) {
+                float translation;
+                std::memcpy(&translation, &bits, 4);
+                need(std::isfinite(translation) && std::abs(translation) < 1024,
+                     "Character: invalid neutral-pose translation");
+                matrixTranslation[slot][k - 12] = translation;
+            } else {
+                need(bits == (k % 5 == 0 ? 0x3f800000U : 0U),
+                     "Character: rotated/scaled pose needs a different path");
+            }
+        }
+        matrixReady[slot] = true;
+    };
+    // JunoHand is rigid and uses the caller's attachment matrix. It has no
+    // bone-DMA commands of its own. Its limits are separate from the body.
+    if (rigidHand) loadTranslation(floatMatrixBase, 0);
     uint32_t selectedMatrix = 0, imageAddress = 0, imageCode = 0;
     bool geometry = false, combine = false, other = false, textureReady = false;
     for (uint32_t i = 0; i < 1024; ++i) {
@@ -393,31 +414,17 @@ StaticModel decode_static_character(const uint8_t *ram, uint32_t size,
         switch (cmd.w0 >> 24) {
         case 0x01: {
             const uint32_t slot = (cmd.w0 >> 16) & 15;
-            need(slot >= 1 && slot <= 3 && cmd.w0 == (0x01800040U | slot << 16) &&
+            need(!rigidHand && slot >= 1 && slot <= 3 && cmd.w0 == (0x01800040U | slot << 16) &&
                  !(cmd.w1 & 63) && cmd.w1 < 21 * 64, "Character: unsupported matrix DMA");
             const uint32_t address = floatMatrixBase + cmd.w1;
-            source(address, 64);
             // Float32 rest-pose matrices, prepared from the bone hierarchy
             // and checked separately against original MIPS gen_anim_data.
-            for (uint32_t k = 0; k < 16; ++k) {
-                const uint32_t bits = be32(ram, address + k * 4, size);
-                if (k >= 12 && k < 15) {
-                    float translation;
-                    std::memcpy(&translation, &bits, 4);
-                    need(std::isfinite(translation) && std::abs(translation) < 1024,
-                         "Character: invalid neutral-pose translation");
-                    matrixTranslation[slot][k - 12] = translation;
-                } else {
-                    need(bits == (k % 5 == 0 ? 0x3f800000U : 0U),
-                         "Character: rotated/scaled pose needs a different path");
-                }
-            }
-            matrixReady[slot] = true;
+            loadTranslation(address, slot);
             ++result.matrixLoads;
             break;
         }
         case 0xBC:
-            need(cmd.w0 == 0xBC00000AU && (cmd.w1 == 64 || cmd.w1 == 128 || cmd.w1 == 192),
+            need(!rigidHand && cmd.w0 == 0xBC00000AU && (cmd.w1 == 64 || cmd.w1 == 128 || cmd.w1 == 192),
                  "Character: unsupported MOVEWORD/billboard");
             selectedMatrix = cmd.w1 >> 6;
             need(matrixReady[selectedMatrix], "Character: matrix selected before loading");
@@ -430,8 +437,8 @@ StaticModel decode_static_character(const uint8_t *ram, uint32_t size,
             const uint32_t encoding = 0x04000000U | (count << 19) |
                 ((cmd.w1 & 6) << 16) | (first << 9) | (count * 10 + 8);
             need(count && first + count <= 32 && cmd.w0 == encoding && !(cmd.w1 & 1) &&
-                 cmd.w1 < 660 * 10 && cmd.w1 + count * 10 <= 660 * 10 &&
-                 selectedMatrix && matrixReady[selectedMatrix], "Character: invalid vertex DMA");
+                 cmd.w1 < vertexLimit * 10 && cmd.w1 + count * 10 <= vertexLimit * 10 &&
+                 matrixReady[selectedMatrix], "Character: invalid vertex DMA");
             if (first == 0) valid.fill(false);
             source(vertexBase + cmd.w1, count * 10);
             for (uint32_t v = 0; v < count; ++v) {
@@ -461,7 +468,7 @@ StaticModel decode_static_character(const uint8_t *ram, uint32_t size,
                                       int16_t(be16(ram, address + 6 + c * 4, size)), vertexTranslation[index]};
                 }
                 result.steps.push_back(step);
-                need(++result.stats.triangles <= 520, "Character: polygon budget exceeded");
+                need(++result.stats.triangles <= (rigidHand ? 33U : 520U), "Character: polygon budget exceeded");
             }
             valid.fill(false);
             break;
@@ -532,7 +539,7 @@ StaticModel decode_static_character(const uint8_t *ram, uint32_t size,
             break;
         case 0xB8:
             need(cmd.w0 == 0xB8000000U && cmd.w1 == 0 && result.stats.triangles &&
-                 result.matrixLoads && result.textureLoads, "Character: incomplete display list");
+                 (rigidHand || result.matrixLoads) && result.textureLoads, "Character: incomplete display list");
             source(listAddress, result.stats.commands * 8);
             return result;
         default: throw std::runtime_error("Character: unsupported opcode");

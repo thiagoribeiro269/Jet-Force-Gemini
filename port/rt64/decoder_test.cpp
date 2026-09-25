@@ -9,7 +9,7 @@
 
 int main(int argc, char **argv) {
     try {
-        if (argc != 4 && argc != 5) throw std::runtime_error("usage: decoder_test RAM LIST VERTEX_BASE [FLOAT_MATRIX_BASE]");
+        if (argc != 4 && argc != 5 && argc != 6) throw std::runtime_error("usage: decoder_test RAM LIST VERTEX_BASE [FLOAT_MATRIX_BASE [hand]]");
         const uint32_t list = uint32_t(std::stoul(argv[2], nullptr, 0)) & 0x1fffffffU;
         const uint32_t vertices = uint32_t(std::stoul(argv[3], nullptr, 0)) & 0x1fffffffU;
         std::ifstream stream(argv[1], std::ios::binary | std::ios::ate);
@@ -22,14 +22,16 @@ int main(int argc, char **argv) {
             std::swap(ram[i], ram[i + 3]);
             std::swap(ram[i + 1], ram[i + 2]);
         }
-        if (argc == 5) {
+        if (argc >= 5) {
+            const bool hand = argc == 6 && std::string(argv[5]) == "hand";
+            if (argc == 6 && !hand) throw std::runtime_error("Unknown rigid asset");
             const uint32_t matrices = uint32_t(std::stoul(argv[4], nullptr, 0)) & 0x1fffffffU;
             const auto decode = [&](const std::vector<uint8_t> &data) {
-                return jfg::decode_static_character(data.data(), uint32_t(data.size()), list, vertices, matrices);
+                return jfg::decode_static_character(data.data(), uint32_t(data.size()), list, vertices, matrices, hand);
             };
             const auto original = decode(ram);
-            if (original.stats.commands != 353 || original.stats.triangles != 502 ||
-                original.matrixLoads != 37 || original.textureLoads != 17) {
+            if (original.stats.commands != (hand ? 15U : 353U) || original.stats.triangles != (hand ? 32U : 502U) ||
+                original.matrixLoads != (hand ? 0U : 37U) || original.textureLoads != (hand ? 1U : 17U)) {
                 throw std::runtime_error("character command counts differ");
             }
             uint32_t rejected = 0;
@@ -42,6 +44,15 @@ int main(int argc, char **argv) {
                 ++rejected;
             };
             reject(list, 0xAA000000U);
+            if (hand) {
+                reject(list + 7 * 8, 0x01810040U); // A rigid hand cannot load bones.
+                reject(list + 7 * 8 + 4, 43 * 10); // Vertex outside its own model.
+                reject(matrices, 0x40000000U); // Unsupported scale.
+                reject(matrices + 0x30, 0x7fc00000U); // NaN translation.
+                reject(list + 3 * 8 + 4, 0x7ffff8U); // Nested list crosses RAM.
+                std::cout << "{\"status\":\"passed\",\"model\":309,\"triangles\":32,\"rejected_cases\":" << rejected << "}\n";
+                return 0;
+            }
             reject(list + 7 * 8, 0x01840040U); // Unsupported matrix cache slot.
             reject(list + 7 * 8 + 4, 21 * 64); // Matrix beyond the loader pose.
             reject(matrices + 0x100, 0x40000000U); // Nonidentity pose.

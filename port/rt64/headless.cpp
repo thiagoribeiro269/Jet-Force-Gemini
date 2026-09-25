@@ -46,6 +46,7 @@ struct Options {
     uint32_t list = 0;
     uint32_t vertexBase = 0;
     uint32_t matrixBase = 0; // Nonzero selects the explicit static character path.
+    uint32_t handList = 0, handVertices = 0, handMatrix = 0;
     uint64_t texturePool = DefaultTexturePool;
 };
 
@@ -79,6 +80,9 @@ Options parseOptions(int argc, char **argv) {
         else if (key == "--list") { options.list = parseAddress(value); hasList = true; }
         else if (key == "--vertex-base") { options.vertexBase = parseAddress(value); hasVertexBase = true; }
         else if (key == "--matrix-base") { options.matrixBase = parseAddress(value); }
+        else if (key == "--hand-list") { options.handList = parseAddress(value); }
+        else if (key == "--hand-vertices") { options.handVertices = parseAddress(value); }
+        else if (key == "--hand-matrix") { options.handMatrix = parseAddress(value); }
         else if (key == "--texture-pool-mib") {
             const unsigned long amount = std::stoul(value);
             if ((amount == 0) || (amount > 64)) throw std::runtime_error("Texture pool must be 1..64 MiB");
@@ -91,6 +95,10 @@ Options parseOptions(int argc, char **argv) {
     }
     if ((options.list + 8 > RdramSize) || (options.vertexBase + 64 > RdramSize)) {
         throw std::runtime_error("Display list or vertex base crosses RDRAM boundary");
+    }
+    if ((options.handList || options.handVertices || options.handMatrix) &&
+        !(options.matrixBase && options.handList && options.handVertices && options.handMatrix)) {
+        throw std::runtime_error("Hand attachment requires body and all three hand addresses");
     }
     return options;
 }
@@ -129,8 +137,12 @@ void setupControlledCamera(RT64::State &state, bool character) {
         projection[0][0] = cosine / 180.0f;
         projection[2][0] = sine / 180.0f;
         projection[1][1] = 1.0f / 135.0f;
-        projection[0][2] = -sine / 1024.0f;
-        projection[2][2] = cosine / 1024.0f;
+        // Camera Z is reversed relative to screen X/Y. The previous positive
+        // determinant projection disagreed with face winding: a no-cull
+        // diagnostic exposed the back while culling showed the front through
+        // it. Keep depth ordering consistent with the chosen front faces.
+        projection[0][2] = sine / 1024.0f;
+        projection[2][2] = -cosine / 1024.0f;
         projection[3][0] = 0.0f;
         projection[3][1] = -113.0f / 135.0f;
     }
@@ -280,11 +292,16 @@ void run(const Options &options) {
         std::cerr << "jfg-rt64-headless phase=" << name << '\n' << std::flush;
     };
     auto ram = readWordSwappedRam(options.ram);
-    jfg::StaticModel character;
+    jfg::StaticModel character, hand;
     std::vector<std::pair<uint32_t, uint32_t>> sources;
     if (options.matrixBase) {
         character = jfg::decode_static_character(ram.data(), RdramSize, options.list, options.vertexBase, options.matrixBase);
         sources = character.sources;
+        if (options.handList) {
+            hand = jfg::decode_static_character(ram.data(), RdramSize, options.handList,
+                                                options.handVertices, options.handMatrix, true);
+            sources.insert(sources.end(), hand.sources.begin(), hand.sources.end());
+        }
     } else {
         const auto decoded = jfg::decode_model(ram.data(), RdramSize, options.list, options.vertexBase);
         sources = {{options.list, decoded.commandCount * 8U},
@@ -444,8 +461,15 @@ void run(const Options &options) {
     // so its existing FC/EF state selects the combiner result.
     state.rsp->setFog(0, 0);
 
-    const auto stats = options.matrixBase ? jfg::draw_static_character(state, character, ScratchAddress) :
+    auto stats = options.matrixBase ? jfg::draw_static_character(state, character, ScratchAddress) :
         jfg::draw_model(state, options.list, options.vertexBase, ScratchAddress);
+    if (options.handList) {
+        const auto extra = jfg::draw_static_character(state, hand, ScratchAddress);
+        stats.commands += extra.commands;
+        stats.vertices += extra.vertices;
+        stats.triangles += extra.triangles;
+        stats.rdpCommands += extra.rdpCommands;
+    }
     phase("clears_draw");
     auto &submittedWorkload = workloadQueue.workloads[workloadQueue.writeCursor];
     const auto &primitive = state.rdp->primColorStack[state.rdp->primColorStackSize - 1];
@@ -529,7 +553,10 @@ void run(const Options &options) {
         {"camera", options.matrixBase ? "controlled_orthographic_character_yaw20" : "controlled_orthographic_model35"},
         {"pose", options.matrixBase ? "neutral_bone_hierarchy_float_matrices" : "static_quad"},
         {"matrix_loads", character.matrixLoads},
-        {"texture_loads", character.textureLoads},
+        {"texture_loads", character.textureLoads + hand.textureLoads},
+        {"body_triangles", character.stats.triangles},
+        {"attachment_triangles", hand.stats.triangles},
+        {"camera_depth", options.matrixBase ? "negative_Z_consistent_with_face_winding" : "quad_reference"},
         {"viewport_z", "scale_and_translate_511_over_1024"},
         {"background", "controlled_RDP_fill_RGBA16_00010001"},
         {"depth_clear", "controlled_RDP_fill_FFFCFFFC_far"},

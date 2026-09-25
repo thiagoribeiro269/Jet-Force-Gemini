@@ -48,8 +48,7 @@ def prepare_rest_pose(ram, rom, manifest, symbols, model, matrices):
     oracle.put(arena + 0x240, arena + 0x300)
     oracle.write(arena + 0x300, b"\x00\x15" + bytes(254))
     oracle.put(stack + 0x10, 21)
-    oracle.put(stack + 0x14, arena + 0x500)
-    oracle.write(arena + 0x500, b"\xff")
+    oracle.put(stack + 0x14, 0)  # No optional tilt adjustments.
     registers = [0] * 32
     registers[4:8] = map(sx32, (arena, arena + 0x100, arena + 0x200, bone_base))
     registers[29], registers[31] = sx32(stack), sx32(RETURN)
@@ -67,9 +66,57 @@ def prepare_rest_pose(ram, rom, manifest, symbols, model, matrices):
                           "changed_range": [matrices, len(host_matrices)], "animated": False}
 
 
+def verify_hand_load(session, rom, manifest, symbols):
+    initial = session.native.snapshot()
+    oracle = InitOracle(initial, rom, manifest, symbols)
+    oracle.command_queue = session.symbols["gPIMesgQueue"]
+    index, stack = session.count, 0x80780000 - session.count * 0x2000
+    regs = [0] * 32
+    regs[4], regs[29], regs[31] = 309, sx32(stack - 0x10), sx32(RETURN)
+    expected_regs = oracle.call(symbols["modLoadModel"], regs, budget=10000000)
+    before = len([e for e in session.native.events() if e[0] == 1])
+    actual_regs = session.run_function("modLoadModel", 309, 0)
+    compared = (0, 2, *range(16, 24), 28, 29, 30, 31)
+    require(oracle.boundary is None and all(expected_regs[i] == actual_regs[i] for i in compared), "Hand load GPRs/dependencies differ")
+    transfers = [[e[1], e[2], e[3]] for e in session.native.events() if e[0] == 1][before:]
+    require(transfers == oracle.transfers, "Hand transfer trace differs")
+    regions = [(HOST, 0x100), (SLOTS + index * 0x200, 0x200),
+               (stack - 0x2000, 0x2040), (session.symbols["gDmaMesgQueue"], 8)]
+    require(masked(oracle.memory(), regions) == masked(session.native.snapshot(), regions), "Hand load RAM differs")
+    return actual_regs[2] & 0xFFFFFFFF, {"status": "passed", "rom_transfers": len(transfers),
+                                       "compared_gprs": list(compared), "masked_regions": regions}
+
+
+def verify_attachment_matrix(ram, rom, manifest, symbols, body_instance, body_model, hand_instance, matrix):
+    """Exercise original objMakeGunMtx for a controlled Juno + empty-hand object."""
+    oracle = InitOracle(ram, rom, manifest, symbols)
+    arena, stack = 0x80600000, 0x80630000
+    oracle.write(arena, bytes(0x2000))
+    oracle.write(arena + 0x48, b"\x00\x01")  # Original Juno object type.
+    oracle.put(arena + 0x68, arena + 0x1000)
+    oracle.put(arena + 0x60, arena + 0x400)
+    oracle.put(arena + 0x404, arena + 0x500)
+    oracle.put(arena + 0x56C, arena + 0x600)
+    oracle.put(arena + 0x600, hand_instance)
+    for field, value in ((0x10, arena + 0x700), (0x14, arena + 0x800),
+                         (0x18, arena + 0x804), (0x1C, arena + 0x808)):
+        oracle.put(stack + field, value)
+    regs = [0] * 32
+    regs[4:8] = map(sx32, (arena, body_instance, body_model, 0))
+    regs[29], regs[31] = sx32(stack), sx32(RETURN)
+    result = oracle.call(symbols["objMakeGunMtx"], regs, budget=1000000)
+    expected = ram[matrix & 0x1FFFFFFF:(matrix & 0x1FFFFFFF) + 64]
+    actual = oracle.memory()[0x600700:0x600740]
+    require(oracle.boundary is None and actual == expected and not oracle.transfers,
+            "Original attachment transform differs from selected bone")
+    return {"status": "passed", "matrix_sha256": digest(actual), "reference": "MIPS_objMakeGunMtx",
+            "return_value": result[2], "limits": "Controlled object fixture and neutral body pose; no full player/weapon update"}
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--out", type=Path, default=ROOT / "build/port-character")
+    parser.add_argument("--with-hand", action="store_true")
     args = parser.parse_args()
     out = args.out.resolve()
     require(out.is_relative_to(ROOT / "build"), "Private export must remain under ignored build/")
@@ -81,7 +128,7 @@ def main():
     with (ROOT / "build/jfg.us.elf").open("rb") as stream:
         table = ELFFile(stream).get_section_by_name(".symtab")
         symbols = {name: unique_symbol(table, name)["st_value"] for name in
-                   ("__osDisableInt", "__osRestoreInt", "TrapDanglingJump", "osCreateMesgQueue", "modLoadModel", "gen_anim_data")}
+                   ("__osDisableInt", "__osRestoreInt", "TrapDanglingJump", "osCreateMesgQueue", "modLoadModel", "gen_anim_data", "objMakeGunMtx")}
     session = GraphicsSession(load_native_library(library), rom, manifest, 1, dirty_heap=True)
     try:
         session.bootstrap()
@@ -110,6 +157,10 @@ def main():
         require(expected == actual, "Character game RAM differs from MIPS reference")
         instance = actual_regs[2] & 0xFFFFFFFF
         model = session.word(instance)
+        hand_instance, hand_report = None, None
+        if args.with_hand:
+            hand_instance, hand_report = verify_hand_load(session, rom, manifest, symbols)
+            ram = session.native.snapshot()
         lut_end = session.symbols["__ASSETS_LUT_END"]
         lut = rom[session.symbols["__ASSETS_LUT_START"]:lut_end]
         packed, source = _asset(rom, lut, lut_end, 0x26, 0x27, 220)
@@ -148,6 +199,37 @@ def main():
         require(len(commands) == 353 and sum(((a >> 20) & 15) + 1 for a, b in commands if a >> 24 == 5) == 502,
                 "Original character display list counts differ")
         posed_ram, pose = prepare_rest_pose(ram, rom, manifest, symbols, model, matrices)
+        hand_frame = None
+        if hand_instance is not None:
+            hand_model = session.word(hand_instance)
+            packed_hand, hand_rom = _asset(rom, lut, lut_end, 0x26, 0x27, 309)
+            raw_hand = _deflate(packed_hand, 0)
+            require(raw_hand[:9] == b"JunoHand\0" and
+                    struct.unpack_from(">HH", raw_hand, 0x12) == (43, 33), "Wrong hand model")
+            for field, length in ((0x1C, 43 * 10), (0x20, 33 * 16)):
+                offset = struct.unpack_from(">I", raw_hand, field)[0]
+                require(session.read(session.word(hand_model + field), length) == raw_hand[offset:offset + length],
+                        "Hand immutable geometry differs from ROM")
+            hand_texture = session.word(session.word(hand_model + 0x18))
+            require(hand_texture in [t["address"] for t in textures], "Hand did not reuse an already validated body texture")
+            hand_list = session.word(hand_model + 0x74)
+            hand_commands = _dlist(session, hand_list)
+            require(len(hand_commands) == 15 and sum(((a >> 20) & 15) + 1 for a, b in hand_commands if a >> 24 == 5) == 32,
+                    "Unexpected hand display list")
+            # objMakeGunMtx loads this bone selector from the first original
+            # model attachment record, rather than guessing a wrist index.
+            attachment = session.word(model + 0x30)
+            bone = int.from_bytes(session.read(attachment + 2, 2), "big")
+            require(bone == 6, "Juno attachment bone changed")
+            hand_matrix = matrices + bone * 64
+            hand_report.update({"model": 309, "name": "JunoHand", "rom_offset": hand_rom,
+                                "vertices": 43, "triangles_stored": 33, "triangles_submitted": 32,
+                                "bone": bone, "shared_texture": hand_texture,
+                                "attachment": verify_attachment_matrix(posed_ram, rom, manifest, symbols,
+                                                                         instance, model, hand_instance, hand_matrix)})
+            hand_frame = {"model": 309, "instance": hand_instance, "cache_address": hand_model,
+                          "list_address": hand_list, "vertex_base": session.word(hand_instance + 4),
+                          "matrix_base": hand_matrix, "bone": bone, "triangles": 32}
         (out / "load-ram.bin").write_bytes(ram)
         (out / "ram.bin").write_bytes(posed_ram)
         frame = {"status": "prepared", "ram": str(out / "ram.bin"), "ram_sha256": digest(posed_ram),
@@ -156,6 +238,9 @@ def main():
                  "width": 320, "height": 240, "camera": "controlled_orthographic_character",
                  "original_game_camera": False, "pose": "neutral_bone_hierarchy_MIPS_checked", "animated": False,
                  "display_list_field": "0x74", "triangles_stored": 520, "triangles_submitted": 502}
+        if hand_frame:
+            frame["hand"] = hand_frame
+            frame["scene_triangles"] = 534
         (out / "frame-input.json").write_text(json.dumps(frame, indent=2) + "\n")
         report = {"status": "passed", "model": 220, "name": "Boy", "rom_offset": source,
                   "geometry": geometry, "textures": textures, "display_commands": len(commands),
@@ -163,13 +248,14 @@ def main():
                   "initial_ram_sha256": digest(initial), "compared_ram_sha256": digest(actual),
                   "load_ram_sha256": digest(ram), "frame_ram_sha256": digest(posed_ram), "masked_regions": regions,
                   "pose": pose,
+                  "hand": hand_report,
                   "limits": ["NTSC character load only; starts from previously validated native bootstrap RAM",
                              "Original MIPS CPU routines with declared host contracts; no RSP/RDP reference",
                              "Only the declared four kernel/stack/wait regions masked; game allocations compared",
                              "Neutral pose from original skeleton, separately MIPS-checked; controlled camera, no animation or original lighting"]}
     finally:
         joined = session.close()
-    require(joined == 4, "Character diagnostic leaked a worker")
+    require(joined == (5 if args.with_hand else 4), "Character diagnostic leaked a worker")
     report["threads_joined"] = joined
     (out / "source-validation.json").write_text(json.dumps(report, indent=2) + "\n")
     print(json.dumps({k: report[k] for k in ("status", "model", "display_commands", "rom_transfers", "threads_joined")}))

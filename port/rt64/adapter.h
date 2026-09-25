@@ -77,7 +77,8 @@ struct StaticModel {
     uint32_t matrixLoads = 0, textureLoads = 0;
 };
 StaticModel decode_static_character(const uint8_t *rdram, uint32_t rdramBytes,
-    uint32_t listAddress, uint32_t vertexBase, uint32_t floatMatrixBase);
+    uint32_t listAddress, uint32_t vertexBase, uint32_t floatMatrixBase,
+    bool rigidHand = false);
 DrawStats draw_static_character(RT64::State &state, const StaticModel &model,
     uint32_t scratchBase);
 

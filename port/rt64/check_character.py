@@ -20,12 +20,12 @@ def sha(data):
     return hashlib.sha256(data).hexdigest()
 
 
-def project_source(ram, frame):
+def project_source(ram, frame, rigid=False):
     """CPU reference for positions only, from the original display-list bytes."""
     word = lambda at: struct.unpack_from(">I", ram, at & 0x1FFFFFFF)[0]
     matrix_slot, vertices, positions = {}, {}, []
-    selected = None
-    for i in range(353):
+    selected = struct.unpack_from(">16f", ram, frame["matrix_base"] & 0x1FFFFFFF) if rigid else None
+    for i in range(15 if rigid else 353):
         at = frame["list_address"] + i * 8
         a, b = word(at), word(at + 4)
         opcode = a >> 24
@@ -45,7 +45,7 @@ def project_source(ram, frame):
                     cosine, sine = -0.939692621, -0.342020143
                     positions.append((160 + 160 * (cosine * x + sine * z) / 180,
                                       120 - 120 * (y - 113) / 135,
-                                      (511 / 1024) * (1 + (-sine * x + cosine * z) / 1024)))
+                                      (511 / 1024) * (1 + (sine * x - cosine * z) / 1024)))
     return positions
 
 
@@ -68,15 +68,24 @@ def main():
             sha(ram[start:start + length]) == source["pose"]["matrix_sha256"], "Unexpected changes outside the prepared pose")
     require(result["ok"] and result["render"]["exit_code"] == 0 and not result["render"]["timed_out"], "GPU run failed")
     meta = result["frame"]
+    hand = frame.get("hand")
+    triangles, textures = (534, 18) if hand else (502, 17)
     require((meta["api"], meta["vendor"], meta["width"], meta["height"], meta["triangles"], meta["texture_loads"]) ==
-            ("D3D12", 0x10DE, 320, 240, 502, 17), "Unexpected device/draw configuration")
+            ("D3D12", 0x10DE, 320, 240, triangles, textures), "Unexpected device/draw configuration")
+    require(meta["camera_depth"] == "negative_Z_consistent_with_face_winding", "Wrong depth convention")
     require(meta["pose"] == "neutral_bone_hierarchy_float_matrices", "Wrong pose path")
     require(meta["list_address"] == frame["list_address"] & 0x1FFFFFFF and
             meta["matrix_base"] == frame["matrix_base"] & 0x1FFFFFFF and
             meta["vertex_base"] == frame["vertex_base"] & 0x1FFFFFFF, "Render input addresses differ")
     expected = project_source(ram, frame)
+    if hand:
+        require(source["hand"]["status"] == "passed" and source["hand"]["attachment"]["status"] == "passed" and
+                hand["bone"] == 6 and hand["matrix_base"] == frame["matrix_base"] + 6 * 64,
+                "Hand load/attachment proof differs")
+        require(result["hand_decoder"]["exit_code"] == 0 and not result["hand_decoder"]["timed_out"], "Hand decoder failed")
+        expected.extend(project_source(ram, hand, rigid=True))
     actual = result["cpu_diagnostic"]["after"]
-    require(len(expected) == actual["face_indices_count"] == 1506, "Geometry submission count differs")
+    require(len(expected) == actual["face_indices_count"] == triangles * 3, "Geometry submission count differs")
     samples = actual["pos_screen_sample"]
     require(len(samples) == 8, "Missing RT64 screen-position diagnostics")
     max_error = max(abs(a - b) for wanted, got in zip(expected, samples) for a, b in zip(wanted, got))
@@ -95,7 +104,9 @@ def main():
     (out / "frame.png").write_bytes(png)
     report = {"status": "passed", "frame_validated": True, "model": 220, "model_name": "Boy",
               "width": 320, "height": 240, "api": meta["api"], "device": meta["device"],
-              "triangles": 502, "texture_loads": 17, "bones": 21,
+              "triangles": triangles, "texture_loads": textures, "bones": 21,
+              "hand_model": 309 if hand else None, "hand_triangles": 32 if hand else 0,
+              "camera_depth": meta["camera_depth"],
               "colored_pixels": len(lit), "unique_rgba_colors": len(colors), "colored_bounds": bounds,
               "projected_geometry_bounds": projected, "sampled_RT64_positions": 8,
               "position_max_absolute_error": max_error, "rgba_sha256": sha(pixels), "png_sha256": sha(png),

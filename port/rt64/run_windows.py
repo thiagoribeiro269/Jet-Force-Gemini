@@ -51,19 +51,27 @@ def main():
     matrix = [str(data["matrix_base"])] if data.get("matrix_base") else []
     decoder = run_owned("decoder", "jfg_rt64_decoder_test.exe",
                         [ram, str(data["list_address"]), str(data["vertex_base"]), *matrix], 30)
+    hand_decoder = None
+    hand = data.get("hand")
+    if hand and decoder["exit_code"] == 0:
+        hand_decoder = run_owned("hand_decoder", "jfg_rt64_decoder_test.exe",
+                                 [ram, str(hand["list_address"]), str(hand["vertex_base"]), str(hand["matrix_base"]), "hand"], 30)
+    hand_ok = not hand or (hand_decoder and hand_decoder["exit_code"] == 0 and not hand_decoder["timed_out"])
     render, frame = None, None
-    if decoder["exit_code"] == 0 and not decoder["timed_out"]:
+    if decoder["exit_code"] == 0 and not decoder["timed_out"] and hand_ok:
         render = run_owned("render", "jfg_rt64_headless.exe",
                            ["--ram", ram, "--out", str(out / "frame"), "--list", str(data["list_address"]),
                             "--vertex-base", str(data["vertex_base"]),
-                            *(["--matrix-base", *matrix] if matrix else [])], 180)
+                            *(["--matrix-base", *matrix] if matrix else []),
+                            *(["--hand-list", str(hand["list_address"]), "--hand-vertices", str(hand["vertex_base"]),
+                               "--hand-matrix", str(hand["matrix_base"])] if hand else [])], 180)
         if (out / "frame.json").exists():
             frame = json.loads((out / "frame.json").read_text())
     cpu = json.loads((out / "frame.cpu.json").read_text()) if (out / "frame.cpu.json").exists() else None
     result = {"recorded_at": datetime.now(timezone.utc).isoformat(),
               "ok": bool(frame is not None and render and render["exit_code"] == 0 and not render["timed_out"]),
               "windows": platform.platform(),
-              "decoder": decoder, "render": render, "frame": frame, "cpu_diagnostic": cpu}
+              "decoder": decoder, "hand_decoder": hand_decoder, "render": render, "frame": frame, "cpu_diagnostic": cpu}
     (out / "result.json").write_text(json.dumps(result, indent=2) + "\n")
     print(json.dumps(result))
 

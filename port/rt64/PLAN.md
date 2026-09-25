@@ -105,3 +105,32 @@ contra o MIPS; ainda não representa a integração nativa da animação do jogo
 O snapshot original da carga fica separado do snapshot usado pelo renderer,
 que recebe somente a substituição documentada das 21 matrizes. A câmera
 também corrige o eixo vertical para a convenção de viewport do RT64.
+
+## Continuação: mão e capacete (relato de Thiago)
+
+Após a correção do PNG, Thiago observou a falta de uma mão e de parte do
+capacete. A prova anterior comprova pixels, carga e pose no escopo declarado;
+não comprova que o personagem já contém todas as peças exibidas pelo jogo.
+
+Antes de ampliar a implementação:
+
+1. Conferir os lotes omitidos pelo próprio `makeModelGfx`. A inspeção inicial
+   encontrou 18 triângulos em lotes com flag `0x400`, que a rotina ignora.
+   Não forçar esses lotes para preencher a imagem.
+2. Conferir o modelo separado US 309 `JunoHand`: a carga nativa já produziu
+   uma lista com 32 triângulos visíveis, sem esqueleto próprio. Examinar o
+   vínculo do chamador com o osso do corpo antes de desenhá-lo junto.
+3. Isolar o relato do capacete com comparação diagnóstica de culling, mantendo
+   claramente separados os dados originais e os dados alterados somente
+   para o diagnóstico. Não promover uma imagem com faces forçadas como
+   correção de fidelidade sem identificar o estado correspondente do jogo.
+4. Integrar somente o caso comprovado, repetir o teste na RTX e registrar
+   limites remanescentes. Animação continua como etapa posterior.
+
+Resultado: mão integrada pelo osso 6 indicado no registro original de
+attachment, com carga e `objMakeGunMtx` conferidos em MIPS. A projeção do
+diagnóstico recebeu Z negativo para compatibilizar profundidade e faces;
+a comparação com culling desligado passou de 8.937 para nove pixels RGB
+diferentes. Cena composta aprovada com 534 triângulos e 18 cargas de textura.
+Os lotes originais omitidos continuam omitidos. Mais detalhes e evidências
+em `README.md` e `validation.json`.

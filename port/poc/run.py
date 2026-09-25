@@ -14,6 +14,8 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 def command(label, args, logs):
+    if any(Path(str(arg)).name.startswith("verify") for arg in args) or label == "reference":
+        raise RuntimeError("Emulated reference workflow retired; use port/native (decision 2026-09-25)")
     log = logs / f"{label}.log"
     print(f"{label}: {log}", flush=True)
     with log.open("w", encoding="utf-8") as file:

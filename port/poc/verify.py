@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-"""Differentially execute original MIPS64 and recompiled host functions.
+"""Historical differential-test helpers; MIPS execution was retired on 2026-09-25.
 
-Unicorn is a test oracle, not a runtime dependency of the proposed port. The
-original JFG linker applies overlay relocations in the oracle; this deliberately
-does not reuse the exporter's address calculations as the expected result.
+Only static helpers remain reusable. Oracle construction explicitly fails;
+the previous emulator implementation is available in Git history, not here.
 """
 from __future__ import annotations
 
@@ -18,8 +17,6 @@ import struct
 import sys
 from pathlib import Path
 
-from unicorn import Uc, UcError, UC_ARCH_MIPS, UC_MODE_BIG_ENDIAN, UC_MODE_MIPS64, UC_HOOK_CODE
-from unicorn import mips_const
 
 ROOT = Path(__file__).resolve().parents[2]
 RAM_SIZE = 0x800000
@@ -31,7 +28,6 @@ RELOC_SCRATCH = 0x80680000
 OBJECT = 0x80700000
 GAME = 0x80710000
 OVERLAY_BASES = (0x80200000, 0x803FF000, 0x80508000)
-REGISTERS = [getattr(mips_const, f"UC_MIPS_REG_{i}") for i in range(32)]
 MASK64 = (1 << 64) - 1
 
 
@@ -46,32 +42,7 @@ def physical(address):
 
 class Oracle:
     def __init__(self, image):
-        self.cpu = Uc(UC_ARCH_MIPS, UC_MODE_MIPS64 | UC_MODE_BIG_ENDIAN)
-        self.cpu.ctl_set_cpu_model(mips_const.UC_CPU_MIPS64_R4000)
-        self.cpu.mem_map(0, RAM_SIZE)
-        self.cpu.mem_write(0, bytes(image))
-
-    def write(self, address, data):
-        self.cpu.mem_write(physical(address), data)
-
-    def word(self, address, value):
-        self.write(address, struct.pack(">I", value & 0xFFFFFFFF))
-
-    def call(self, address, registers, budget=20000):
-        for reg, value in zip(REGISTERS, registers):
-            self.cpu.reg_write(reg, value)
-        try:
-            self.cpu.emu_start(sx32(address), sx32(RETURN), count=budget)
-        except UcError as error:
-            pc = self.cpu.reg_read(mips_const.UC_MIPS_REG_PC)
-            raise RuntimeError(f"MIPS oracle failed at 0x{pc:016X}: {error}") from error
-        pc = self.cpu.reg_read(mips_const.UC_MIPS_REG_PC)
-        if pc != sx32(RETURN):
-            raise RuntimeError(f"MIPS instruction budget exhausted at 0x{pc:016X}")
-        return [self.cpu.reg_read(reg) & MASK64 for reg in REGISTERS]
-
-    def memory(self):
-        return self.cpu.mem_read(0, RAM_SIZE)
+        raise RuntimeError("MIPS emulation disabled by Thiago's native-only project decision on 2026-09-25")
 
 
 def original_overlay_link(oracle, manifest, section, base, rom):

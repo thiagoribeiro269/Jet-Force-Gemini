@@ -1,5 +1,13 @@
 # Plano do port Windows x64
 
+**Revisão de arquitetura em 25/09/2026:** Thiago escolheu eliminar RT64 e
+toda emulação, inclusive a proposta CIC. O caminho ativo passa a ser
+[port nativo com Direct3D e conversão de assets](native/PLAN.md). A prova
+RT64 descrita abaixo é histórica, preservada no commit `b1753bb`; ela não
+é mais uma dependência nem comprovação da nova camada gráfica. As referências
+MIPS deixaram de ser executadas. O restante do roteiro exige replanejamento
+à medida que as adaptações nativas substituírem os contratos de hardware.
+
 Planejamento registrado antes da implementação do próximo bloco, a partir
 do checkpoint `68cfa4d`. O objetivo é chegar a uma partida de JFG no Windows
 x64 com NVIDIA. A base do jogo permanece em

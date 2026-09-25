@@ -1,0 +1,87 @@
+{
+  "recorded_date": "2026-09-25",
+  "status": "passed",
+  "architecture": "native_meshes_and_D3D11_project_shaders",
+  "supersedes": "b1753bb graphics route",
+  "base_rom_sha1": "493ced9008dbe932d6e91179b68e8630cf23a023",
+  "matching_rom_byte_equal": true,
+  "build": {
+    "status": "built",
+    "source": "port/native/render.cpp",
+    "api": "D3D11",
+    "executable_sha256": "248400618790dbf799f54ff52e046e2f4d3ad066d7efaad68aae0e79f586005f",
+    "emulator_dependencies": [],
+    "graphics_libraries": [
+      "Windows D3D11",
+      "Windows D3DCompiler",
+      "Windows DXGI"
+    ]
+  },
+  "imports": [
+    "d3d11.dll",
+    "D3DCOMPILER_47.dll",
+    "dxgi.dll",
+    "api-ms-win-crt-stdio-l1-1-0.dll",
+    "api-ms-win-crt-runtime-l1-1-0.dll",
+    "api-ms-win-crt-locale-l1-1-0.dll",
+    "api-ms-win-crt-heap-l1-1-0.dll",
+    "api-ms-win-crt-private-l1-1-0.dll",
+    "api-ms-win-crt-string-l1-1-0.dll",
+    "KERNEL32.dll",
+    "api-ms-win-crt-time-l1-1-0.dll",
+    "api-ms-win-crt-multibyte-l1-1-0.dll",
+    "api-ms-win-crt-convert-l1-1-0.dll",
+    "api-ms-win-crt-math-l1-1-0.dll",
+    "api-ms-win-crt-environment-l1-1-0.dll",
+    "api-ms-win-crt-filesystem-l1-1-0.dll"
+  ],
+  "assets": {
+    "triangles": 534,
+    "draws": 21,
+    "texture_count": 17,
+    "bones": 21,
+    "hand_bone": 6,
+    "scene_sha256": "4b4adfa34ec2cbd04f156678be67bc150c6fe9b0c1926ea61a2588a4e511a6aa"
+  },
+  "frame": {
+    "status": "passed",
+    "api": "D3D11",
+    "width": 640,
+    "height": 480,
+    "triangles": 534,
+    "draws": 21,
+    "textures": 17,
+    "colored_pixels": 36802,
+    "unique_rgb_colors": 23080,
+    "colored_bounds": [
+      166,
+      39,
+      480,
+      439
+    ],
+    "rgba_sha256": "ac70cc84b273b79b814209eae1d0451d706ac19fdf914b7345013d8e4c4bacc6",
+    "png_sha256": "b3afe3d4960625685e40555091bca816c3e4e7e5207c06ffbfb321086cc3d1eb",
+    "png": "RGB8 opaque, exact GPU RGB values",
+    "runtime": "Native C++ and Windows D3D11 with project HLSL shaders",
+    "limits": [
+      "Static neutral pose and controlled camera",
+      "Ordinary PC materials; no N64 pixel equivalence",
+      "No game loop, audio, controls or animation playback",
+      "No MIPS/RT64/RSP/RDP/CIC/PIF execution"
+    ]
+  },
+  "windows": "Windows-11-10.0.26200-SP0",
+  "execution_exit_code": 0,
+  "visual_review": "Juno face, neutral body, hand and visor visible; ordinary native PC materials",
+  "policy": {
+    "RT64_removed_from_active_integration": true,
+    "MIPS_oracle_execution_removed": true,
+    "new_emulator_source_used": false,
+    "CIC_backend_implemented": false
+  },
+  "limits": [
+    "Isolated static asset preview, not a playable port",
+    "Native material approximation; no N64 framebuffer equivalence claim",
+    "Original game loop, input, audio and animation remain to be integrated"
+  ]
+}

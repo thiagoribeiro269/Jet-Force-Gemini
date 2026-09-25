@@ -1,5 +1,10 @@
 # Prova gráfica com assets reais: carregamento e comandos
 
+**Pacote histórico:** a decisão de 25/09/2026 retirou RT64 e toda emulação.
+A rota ativa é [native](../native/README.md). Os comandos, probes e
+comparações descritos abaixo registram a etapa anterior e não devem ser
+usados como fluxo de desenvolvimento atual.
+
 Este pacote é a primeira parte do marco 2 do [roteiro](../ROADMAP.md). Na ROM
 US verificada, as rotinas originais de CPU carregaram o modelo 35 (`swdoor`) e
 sua textura `0x9097`, descompactaram os dados e produziram duas listas gráficas

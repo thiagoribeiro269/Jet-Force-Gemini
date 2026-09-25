@@ -10,8 +10,6 @@ import sys
 from pathlib import Path
 
 from elftools.elf.elffile import ELFFile
-from unicorn import Uc, UC_ARCH_MIPS, UC_MODE_BIG_ENDIAN, UC_MODE_MIPS64, UC_HOOK_MEM_WRITE
-from unicorn import mips_const
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "port/threads"))
@@ -31,25 +29,7 @@ def signed64(value: int) -> int:
 
 
 def reference(image: bytes, clock: int, frequency: int) -> tuple[int, list[tuple[int, int]]]:
-    cpu = Uc(UC_ARCH_MIPS, UC_MODE_MIPS64 | UC_MODE_BIG_ENDIAN)
-    cpu.ctl_set_cpu_model(mips_const.UC_CPU_MIPS64_R4000)
-    cpu.mem_map(0, 0x1000000)
-    cpu.mem_map(0x04500000, 0x1000)
-    cpu.mem_write(0x400, image)
-    cpu.mem_write(CLOCK_SYMBOL & 0x1FFFFFFF, struct.pack(">I", clock))
-    cpu.reg_write(mips_const.UC_MIPS_REG_4, signed64(frequency))
-    cpu.reg_write(mips_const.UC_MIPS_REG_SP, signed64(0x800FF000))
-    cpu.reg_write(mips_const.UC_MIPS_REG_RA, signed64(RETURN))
-    writes: list[tuple[int, int]] = []
-
-    def observe(_cpu, _access, address, size, value, _user):
-        require(size == 4 and address in AI_WRITES, f"Unexpected original MMIO write {address:08X}/{size}")
-        writes.append((address, value & 0xFFFFFFFF))
-
-    cpu.hook_add(UC_HOOK_MEM_WRITE, observe)
-    cpu.emu_start(signed64(FUNCTION), signed64(RETURN), count=1000)
-    require(cpu.reg_read(mips_const.UC_MIPS_REG_PC) == signed64(RETURN), "Original MIPS did not return")
-    return cpu.reg_read(mips_const.UC_MIPS_REG_2) & 0xFFFFFFFF, writes
+    raise RuntimeError("MIPS emulation disabled by Thiago's native-only project decision on 2026-09-25")
 
 
 def run(elf_path: Path, library_path: Path, manifest_path: Path, rom_path: Path, report_path: Path) -> dict:

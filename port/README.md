@@ -1,5 +1,11 @@
 # Protótipo de recompilação para PC
 
+**Arquitetura vigente desde 25/09/2026:** Thiago determinou retirar RT64 e
+toda emulação. O novo caminho está em [native/PLAN.md](native/PLAN.md), com
+conversão direta de assets, meshes/texturas de PC e renderizador D3D11
+próprio. Os registros abaixo são históricos da rota anterior; seus runners
+de referência MIPS estão desabilitados e não devem ser retomados.
+
 O alvo escolhido por Thiago é **Windows x64 com GPU NVIDIA**. A primeira opção
 gráfica é Direct3D 12, cuja integração ainda depende do suporte específico a
 F3DJFG. Esta etapa é uma prova de CPU, sem janela, renderizador, áudio ou jogo

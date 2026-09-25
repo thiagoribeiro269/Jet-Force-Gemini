@@ -4,6 +4,13 @@ Esta é a rota ativa desde a decisão de Thiago em 25/09/2026: **sem RT64,
 sem emulação e sem código copiado de emuladores**. O [plano](PLAN.md)
 substitui a arquitetura dos checkpoints anteriores.
 
+A prioridade agora é a [estrutura geral do port](ARCHITECTURE.md), com mapa
+do programa, sessão de aplicação, cenas, entidades e backend gráfico
+separados. As provas abaixo passaram a servir como regressões desse backend.
+O [roteiro vigente](../ROADMAP.md) prioriza carregar uma região original no
+host já integrado; a cadência isolada de animações deixou de ser o próximo
+marco principal.
+
 O executável C++ recebe meshes e texturas convertidos diretamente da ROM
 local e desenha por Direct3D 11 com shaders HLSL próprios. Não contém
 interpretador de instruções MIPS, display lists, microcódigo RSP ou comandos
@@ -196,6 +203,42 @@ gráficas passaram. Detalhes em [juno-selection-validation.json](juno-selection-
 
 ## Build e teste
 
+Para preparar e testar a sessão de integração:
+
+```sh
+python3 port/native/prepare_assets.py --integration --out build/port-native/integration
+python3 port/native/build.py
+python3 port/native/package.py --out build/port-native/integration
+```
+
+O pacote inclui `jfg_native_session.exe` e os diagnósticos anteriores.
+`run_windows.py` executa os testes de sessão e as cinco regressões gráficas,
+sempre por console, sem janela ou acesso a dispositivos de entrada.
+Recuperar `result.json` como `rtx-result.json` e os arquivos `frame.rgba`,
+`neutral.rgba`, `cycle.rgba`, `cycle-wide.rgba`, `transitions.rgba`,
+`character.rgba` e `juno.rgba` para `build/port-native/integration`, e rodar:
+
+```sh
+python3 port/native/check_integration_frames.py
+```
+
+O vídeo privado é `native-session.mp4`. A prova inclui duas cenas de teste,
+entidades independentes, pausa, troca de cena, criação e remoção. Os testes
+CPU usam 12 instantes comuns para comparar apresentação a 30/60/144 Hz;
+isso não mede desempenho nem estabelece a cadência original do JFG.
+
+O inventário estático do programa usa somente leitura do ELF e da ROM:
+
+```sh
+# Em um ambiente Python com analysis-requirements.txt instalado:
+python port/native/program_map.py
+```
+
+Nesta máquina, o Python existente em `build/port-recomp/.venv/bin/python`
+já fornece `pyelftools==0.32`. A ferramenta nova não importa runners antigos
+nem executa MIPS. A síntese pública e os contratos estão em
+[ARCHITECTURE.md](ARCHITECTURE.md); o grafo completo é gerado em `build/`.
+
 O conversor usa apenas a biblioteca padrão do Python. O build usa o
 LLVM-MinGW já instalado localmente e as bibliotecas Direct3D do Windows.
 
@@ -323,10 +366,12 @@ emulador é compilada estaticamente. As evidências estão em
 
 ## Continuidade
 
-Os seletores de movimento e remapeamento já alimentam a API nativa. O
-próximo bloco deve mapear o avanço/término dos clipes em `overlay 16+0x5120`
-e os consumidores de `controlSetTransition`. A cadência, os parâmetros de
-mistura e a movimentação X/Z dos diagnósticos ainda são políticas próprias.
+Os seletores de movimento e remapeamento já alimentam entidades da sessão
+nativa. O próximo bloco é integrar uma região original, seguindo
+`levelInit → trackInit → objetos`. O avanço/término dos clipes em
+`overlay 16+0x5120` e os consumidores de `controlSetTransition` continuam
+pendências dentro dessa integração. Cadência, mistura e movimento dos
+diagnósticos ainda são políticas próprias.
 
 O port completo ainda exige integrar o código de jogo recompilado/adaptado,
 materiais especiais, iluminação, áudio, controles, salvamento e a

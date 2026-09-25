@@ -1,0 +1,209 @@
+{
+  "status": "passed",
+  "recorded_date": "2026-09-25",
+  "previous_checkpoint": "42f9ab638a42bf61cfd606f40d7fd7c1bc90a603",
+  "architecture": "native_application_session_and_shared_D3D11_backend",
+  "program_inventory": {
+    "function_entries": 2941,
+    "sized_functions": 2916,
+    "zero_size_entries": 25,
+    "bytes_compared_to_rom": 1500760,
+    "modules": 156,
+    "direct_edges": 14010,
+    "indirect_sites": 206,
+    "indirect_kinds": {
+      "indirect_jump": 170,
+      "indirect_call": 36
+    },
+    "unresolved_direct_targets": 130
+  },
+  "build": {
+    "status": "built",
+    "source": "port/native/render.cpp",
+    "api": "D3D11",
+    "executable_sha256": "dd1b2660fd931c6c71db9daba37af1330c3308bbb8e7dd54cf116eb8f75531cf",
+    "animation_math_executable_sha256": "900bc7112453477f5b46d63f45e1934519c9c9f0ada62a97ce68fb14cea06076",
+    "animation_player_executable_sha256": "57fb394afc8a728c1a9823cadeb568092a8f17391e6a342c03b9676ed540aec1",
+    "emulator_dependencies": [],
+    "graphics_libraries": [
+      "Windows D3D11",
+      "Windows D3DCompiler",
+      "Windows DXGI"
+    ],
+    "character_executable_sha256": "7e6deae24dc3da0f26dbf7edc99ef737cff5c2af8646893202888e0f3f154124",
+    "juno_selection_executable_sha256": "b13da65738a9d6bd9de481ff1e3f645327d2239dd0d5e157d01c43580a7d588f",
+    "renderer_sources": [
+      "port/native/render.cpp",
+      "port/native/renderer_d3d11.cpp"
+    ],
+    "native_session_executable_sha256": "0c1807777c2743bef1c8078e03fe8eb62372a656e9db12d668a6ef44d4669672",
+    "native_session_check_sha256": "990b1d2f9da687210b6ac1c5c3d99d0506efff3e06a66a4c9824241bd79a695d"
+  },
+  "imports": {
+    "jfg_native_preview.exe": {
+      "architecture": "x64",
+      "imports": [
+        "d3d11.dll",
+        "D3DCOMPILER_47.dll",
+        "dxgi.dll",
+        "api-ms-win-crt-stdio-l1-1-0.dll",
+        "api-ms-win-crt-runtime-l1-1-0.dll",
+        "api-ms-win-crt-locale-l1-1-0.dll",
+        "api-ms-win-crt-math-l1-1-0.dll",
+        "api-ms-win-crt-heap-l1-1-0.dll",
+        "api-ms-win-crt-private-l1-1-0.dll",
+        "api-ms-win-crt-string-l1-1-0.dll",
+        "KERNEL32.dll",
+        "api-ms-win-crt-time-l1-1-0.dll",
+        "api-ms-win-crt-multibyte-l1-1-0.dll",
+        "api-ms-win-crt-convert-l1-1-0.dll",
+        "api-ms-win-crt-environment-l1-1-0.dll",
+        "api-ms-win-crt-filesystem-l1-1-0.dll"
+      ]
+    },
+    "jfg_native_session.exe": {
+      "architecture": "x64",
+      "imports": [
+        "d3d11.dll",
+        "D3DCOMPILER_47.dll",
+        "dxgi.dll",
+        "api-ms-win-crt-stdio-l1-1-0.dll",
+        "api-ms-win-crt-runtime-l1-1-0.dll",
+        "api-ms-win-crt-locale-l1-1-0.dll",
+        "api-ms-win-crt-math-l1-1-0.dll",
+        "api-ms-win-crt-heap-l1-1-0.dll",
+        "api-ms-win-crt-private-l1-1-0.dll",
+        "api-ms-win-crt-string-l1-1-0.dll",
+        "KERNEL32.dll",
+        "api-ms-win-crt-time-l1-1-0.dll",
+        "api-ms-win-crt-multibyte-l1-1-0.dll",
+        "api-ms-win-crt-convert-l1-1-0.dll",
+        "api-ms-win-crt-environment-l1-1-0.dll",
+        "api-ms-win-crt-filesystem-l1-1-0.dll"
+      ]
+    }
+  },
+  "windows": "Windows-11-10.0.26200-SP0",
+  "tests": {
+    "linux_asan_ubsan": {
+      "check_animation": {
+        "status": "passed",
+        "math_cases": 6,
+        "rejected_cases": 4
+      },
+      "check_player": {
+        "status": "passed",
+        "controller_cases": 8,
+        "rejected_cases": 6
+      },
+      "check_character": {
+        "status": "passed",
+        "character_cases": 10,
+        "rejected_cases": 20
+      },
+      "check_juno_selection": {
+        "status": "passed",
+        "choice_cases": 18,
+        "priority_cases": 8,
+        "bridge_cases": 8,
+        "rejected_cases": 19,
+        "original_table_cases": 20
+      },
+      "check_session": {
+        "status": "passed",
+        "session_cases": 9,
+        "rejected_cases": 18,
+        "presentation_rates": [
+          30,
+          60,
+          144
+        ],
+        "cadence_checkpoints": 12,
+        "original_assets": true
+      }
+    },
+    "windows": {
+      "math_test": {
+        "status": "passed",
+        "math_cases": 6,
+        "rejected_cases": 4
+      },
+      "controller_test": {
+        "status": "passed",
+        "controller_cases": 8,
+        "rejected_cases": 6
+      },
+      "character_test": {
+        "status": "passed",
+        "character_cases": 10,
+        "rejected_cases": 20
+      },
+      "juno_selection_test": {
+        "status": "passed",
+        "choice_cases": 18,
+        "priority_cases": 8,
+        "bridge_cases": 8,
+        "rejected_cases": 19,
+        "original_table_cases": 20
+      },
+      "session_test": {
+        "status": "passed",
+        "session_cases": 9,
+        "rejected_cases": 18,
+        "presentation_rates": [
+          30,
+          60,
+          144
+        ],
+        "cadence_checkpoints": 12,
+        "original_assets": true
+      }
+    }
+  },
+  "integration": {
+    "status": "passed",
+    "frames": 180,
+    "fps_output": 30,
+    "simulation_tick_rate": 60,
+    "duration_seconds": 6,
+    "unique_frames": 150,
+    "scenes_loaded": 2,
+    "entities_created": 4,
+    "maximum_simultaneous_entities": 2,
+    "paused_frames_byte_equal": 31,
+    "pause_preserved_state_despite_new_input": true,
+    "removed_entity_not_rendered": true,
+    "scene_replacement_atomic": true,
+    "stopped_ownership_released": true,
+    "all_five_previous_gpu_proofs_byte_equal": true,
+    "coverage_range": [
+      7311,
+      18597
+    ],
+    "raw_sha256": "055d79a8935c411da98c0eb114275359d420f9f74fcb49240a08ed4ed6f4bce8",
+    "video_sha256": "dd1139bf6ce8edbabbdf78dd79ef09abfd5632048351239f9a9d38ed6b5450ff",
+    "limits": [
+      "Native application host and diagnostic scenes; not original level loading or whole gameplay",
+      "Original animation selection is integrated; motion, 60 Hz host policy and source clip rate remain controlled",
+      "No world collision, original physics, audio, saves, weapons, AI or physical input",
+      "One shared composite model resource, several independent entities; further mesh catalogs remain to integrate",
+      "No window, console hardware simulation or emulator code"
+    ]
+  },
+  "video": {
+    "codec_name": "h264",
+    "width": 640,
+    "height": 480,
+    "avg_frame_rate": "30/1",
+    "duration": "6.000000",
+    "nb_frames": "180",
+    "private": true
+  },
+  "matching_rom_byte_equal": true,
+  "rom_sha1": "493ced9008dbe932d6e91179b68e8630cf23a023",
+  "emulation_used": false,
+  "visual_review": "Two independent characters, lowered posture, scene replacement and later spawn inspected. All entities fit the fixed integration camera; previous five native GPU streams stay identical.",
+  "scope": "Native host structure and diagnostic scenes, not original level geometry, original gameplay physics or a complete playable game",
+  "next_milestone": "Integrate geometry, materials and player spawn of an original region through levelInit/trackInit/object loading, then collision and gameplay on the same host",
+  "ai_assistance": "OpenAI Codex, main agent only"
+}

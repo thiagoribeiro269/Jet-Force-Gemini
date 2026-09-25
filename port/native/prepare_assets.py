@@ -221,7 +221,10 @@ def main():
     parser.add_argument("--transitions", action="store_true")
     parser.add_argument("--character", action="store_true")
     parser.add_argument("--juno-selection", action="store_true")
+    parser.add_argument("--integration", action="store_true")
     args = parser.parse_args()
+    if args.integration:
+        args.juno_selection = True
     out = args.out.resolve()
     require(out.is_relative_to(ROOT / "build"), "Private assets must remain inside ignored build/")
     assets = Assets(args.rom.read_bytes())
@@ -234,6 +237,7 @@ def main():
         (out / "selection-assets-report.json").write_text(json.dumps(audit, indent=2) + "\n")
     (out / "scene.bin").write_bytes(data)
     report["scene_sha256"] = hashlib.sha256(data).hexdigest()
+    report["integration_profile"] = args.integration
     (out / "assets-report.json").write_text(json.dumps(report, indent=2) + "\n")
     print(json.dumps({k: report[k] for k in ("status", "triangles", "draws", "texture_count", "bones", "scene_sha256")}))
 

@@ -1,0 +1,7224 @@
+{
+  "status": "audited_static",
+  "rom_sha1": "493ced9008dbe932d6e91179b68e8630cf23a023",
+  "function_entries": 2941,
+  "sized_functions": 2916,
+  "zero_size_entries": 25,
+  "bytes_compared_to_rom": 1500760,
+  "modules": 156,
+  "direct_edges": 14010,
+  "main_relocation_records": 520,
+  "edge_routes": {
+    "direct": 5030,
+    "main_relocation": 513,
+    "overlay_relocation": 8467
+  },
+  "offset_origin": "ELF section start; main relocation/ORT code base is 0x50 bytes after .main start",
+  "indirect_sites": 206,
+  "unresolved_direct_targets": 130,
+  "indirect_kinds": {
+    "indirect_jump": 170,
+    "indirect_call": 36
+  },
+  "rom_module_slots_without_elf_section": [
+    21,
+    56
+  ],
+  "recovered_native_decisions": {
+    "func_overlay_16_01004E08_1F22E20": "port/native/juno_selection.h:choose",
+    "func_overlay_16_01004F78_1F22F90": "port/native/juno_selection.h:resolve"
+  },
+  "roots": {
+    "mainThread": {
+      "function": "0:00044750",
+      "static_reachable_functions": 2451,
+      "reachable_modules": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        55,
+        57,
+        58,
+        59,
+        60,
+        61,
+        62,
+        63,
+        64,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71,
+        72,
+        73,
+        74,
+        75,
+        76,
+        77,
+        78,
+        79,
+        80,
+        81,
+        82,
+        83,
+        84,
+        85,
+        86,
+        87,
+        88,
+        89,
+        90,
+        91,
+        92,
+        93,
+        94,
+        95,
+        96,
+        97,
+        98,
+        99,
+        100,
+        101,
+        102,
+        103,
+        104,
+        105,
+        106,
+        107,
+        108,
+        109,
+        110,
+        111,
+        112,
+        113,
+        114,
+        115,
+        116,
+        117,
+        118,
+        119,
+        120,
+        121,
+        122,
+        123,
+        124,
+        125,
+        126,
+        127,
+        128,
+        129,
+        130,
+        131,
+        132,
+        133,
+        134,
+        135,
+        136,
+        137,
+        138,
+        139,
+        140,
+        141,
+        143,
+        145,
+        146,
+        149,
+        150,
+        151,
+        152,
+        153,
+        154,
+        155,
+        156,
+        157
+      ],
+      "unresolved_indirect_sites": 154,
+      "direct_callees": [
+        {
+          "offset": "0x28",
+          "name": "osBootRamTest1_6105",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x34",
+          "name": "osBootRamTest2_6105",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x40",
+          "name": "mainInitGame",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x50",
+          "name": "joyRead",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x90",
+          "name": "mainChangeLevel",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x98",
+          "name": "mainPreNMI",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xa0",
+          "name": "func_80044938",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xa8",
+          "name": "bootCheckStack",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        }
+      ]
+    },
+    "mainInitGame": {
+      "function": "0:000449fc",
+      "static_reachable_functions": 278,
+      "reachable_modules": [
+        0,
+        25,
+        26,
+        33,
+        34,
+        35,
+        36,
+        44,
+        45,
+        47
+      ],
+      "unresolved_indirect_sites": 15,
+      "direct_callees": [
+        {
+          "offset": "0x60",
+          "name": "osCreateScheduler",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x68",
+          "name": "RevealReturnAddresses",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x70",
+          "name": "mmInit",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x78",
+          "name": "rzipInit",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x88",
+          "name": "mmAlloc",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xb0",
+          "name": "viInit",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xb8",
+          "name": "mainPreNMI",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xc0",
+          "name": "piInit",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xc8",
+          "name": "mainPreNMI",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xd4",
+          "name": "rcpInit",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xdc",
+          "name": "mainPreNMI",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xe4",
+          "name": "runlinkInitialise",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xec",
+          "name": "mainPreNMI",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xfc",
+          "name": "mainInitRlo",
+          "module": 36,
+          "route": "main_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x104",
+          "name": "mainPreNMI",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x10c",
+          "name": "runlinkFreeCode",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        }
+      ]
+    },
+    "mainInitRlo": {
+      "function": "36:00000000",
+      "static_reachable_functions": 253,
+      "reachable_modules": [
+        0,
+        25,
+        26,
+        33,
+        34,
+        35,
+        36,
+        44,
+        45,
+        47
+      ],
+      "unresolved_indirect_sites": 15,
+      "direct_callees": [
+        {
+          "offset": "0x8",
+          "name": "mainPreNMI",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x14",
+          "name": "amInit",
+          "module": 25,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x1c",
+          "name": "runlinkFreeCode",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x24",
+          "name": "mainPreNMI",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x2c",
+          "name": "amInitAudioMap",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x34",
+          "name": "joyInit",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x40",
+          "name": "texInitTextures",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x48",
+          "name": "mainPreNMI",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x50",
+          "name": "modInitModels",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x58",
+          "name": "mainPreNMI",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x60",
+          "name": "objInitObjects",
+          "module": 34,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x68",
+          "name": "runlinkFreeCode",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x70",
+          "name": "mainPreNMI",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x78",
+          "name": "explosionFlushBlasts",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x8c",
+          "name": "arithmeticFunction",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x94",
+          "name": "runlinkFreeCode",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x9c",
+          "name": "mainPreNMI",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xa4",
+          "name": "diPrintfInit",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xac",
+          "name": "mainPreNMI",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xb4",
+          "name": "partInitLib",
+          "module": 26,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xbc",
+          "name": "runlinkFreeCode",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xc4",
+          "name": "mainPreNMI",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xcc",
+          "name": "initWeather",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xd4",
+          "name": "mainPreNMI",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xdc",
+          "name": "func_overlay_36_02400250_1F55768",
+          "module": 36,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xe4",
+          "name": "mainPreNMI",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xec",
+          "name": "fxInitLines",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xf4",
+          "name": "fxInitLevelEffects",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xfc",
+          "name": "mainPreNMI",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x104",
+          "name": "camlightInit",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x10c",
+          "name": "mainPreNMI",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x114",
+          "name": "fontInit",
+          "module": 35,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x11c",
+          "name": "runlinkFreeCode",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x124",
+          "name": "mainPreNMI",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x12c",
+          "name": "packInit",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x134",
+          "name": "mainPreNMI",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x13c",
+          "name": "initFront",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x144",
+          "name": "mainPreNMI",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x14c",
+          "name": "animseqInit",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x154",
+          "name": "fxInit",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x15c",
+          "name": "mainPreNMI",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x164",
+          "name": "squadsInit",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x16c",
+          "name": "diRcpTraceInit",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x174",
+          "name": "fmvInit",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x17c",
+          "name": "func_overlay_36_02400564_1F55A7C",
+          "module": 36,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x194",
+          "name": "osCreateMesgQueue",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x1b4",
+          "name": "osScAddClient",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x1c0",
+          "name": "mainPreNMI",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x1c8",
+          "name": "objGetTable",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x230",
+          "name": "osSetTime",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x238",
+          "name": "mathSeed",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        }
+      ]
+    },
+    "func_80044938": {
+      "function": "0:00044bac",
+      "static_reachable_functions": 2332,
+      "reachable_modules": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        22,
+        23,
+        24,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        46,
+        47,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        55,
+        57,
+        58,
+        59,
+        60,
+        61,
+        62,
+        63,
+        64,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71,
+        72,
+        73,
+        74,
+        75,
+        76,
+        77,
+        78,
+        79,
+        80,
+        81,
+        82,
+        83,
+        84,
+        85,
+        86,
+        87,
+        88,
+        89,
+        90,
+        91,
+        92,
+        93,
+        94,
+        95,
+        96,
+        97,
+        98,
+        99,
+        100,
+        101,
+        102,
+        103,
+        104,
+        105,
+        106,
+        107,
+        108,
+        109,
+        110,
+        111,
+        112,
+        113,
+        114,
+        115,
+        116,
+        117,
+        118,
+        119,
+        120,
+        121,
+        122,
+        123,
+        124,
+        125,
+        126,
+        127,
+        128,
+        129,
+        130,
+        131,
+        132,
+        133,
+        134,
+        135,
+        136,
+        137,
+        138,
+        139,
+        140,
+        141,
+        143,
+        145,
+        146,
+        149,
+        150,
+        151,
+        152,
+        153,
+        154,
+        155,
+        156,
+        157
+      ],
+      "unresolved_indirect_sites": 152,
+      "direct_callees": [
+        {
+          "offset": "0x14",
+          "name": "blurUpdate",
+          "module": 48,
+          "route": "main_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x20",
+          "name": "osSetTime",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x60",
+          "name": "segSetBase",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x78",
+          "name": "segSetBase",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x90",
+          "name": "segSetBase",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xac",
+          "name": "segSetBase",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xdc",
+          "name": "rcpFast3d",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xf8",
+          "name": "blurTask",
+          "module": 48,
+          "route": "main_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x114",
+          "name": "diRcpTraceReset",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x188",
+          "name": "diRcpTrace",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x19c",
+          "name": "segSetBase",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x1b4",
+          "name": "segSetBase",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x1cc",
+          "name": "segSetBase",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x1e8",
+          "name": "segSetBase",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x1f4",
+          "name": "rcpInitSp",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x200",
+          "name": "rcpInitDp",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x208",
+          "name": "frontMenuFrameTrackDrawingOn",
+          "module": 12,
+          "route": "main_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x244",
+          "name": "camSetUserView",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x250",
+          "name": "camEnableUserView",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x260",
+          "name": "rcpSetBorderColour",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x278",
+          "name": "rcpClearScreen",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x284",
+          "name": "camDisableUserView",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x29c",
+          "name": "joyRead",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x2a8",
+          "name": "diCpuTraceGetFault",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x2c8",
+          "name": "diCpuTraceTick",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x2e0",
+          "name": "func_800457F4",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x300",
+          "name": "func_800456F8",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x30c",
+          "name": "fxUnQueueScreenEffect",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x338",
+          "name": "robotPauseUpdate",
+          "module": 22,
+          "route": "main_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x348",
+          "name": "runlinkIsModuleLoaded",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x370",
+          "name": "pauseUpdate",
+          "module": 19,
+          "route": "main_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x388",
+          "name": "func_800448B0",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x3b8",
+          "name": "frontUpdate",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x3c0",
+          "name": "runlinkIsModuleLoaded",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x3e0",
+          "name": "robotDisplay",
+          "module": 22,
+          "route": "main_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x3f0",
+          "name": "amAudioTick",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x3fc",
+          "name": "diPrintfAll",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x418",
+          "name": "debug_print_memory",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x434",
+          "name": "fontWindowsDraw",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x43c",
+          "name": "fontWindowDisable",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x444",
+          "name": "fontWindowFlushStrings",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x454",
+          "name": "updateClearScreen",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x474",
+          "name": "drawClearScreen",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x494",
+          "name": "mainDemoOnly",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x4ac",
+          "name": "frontDemoMessage",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x4c4",
+          "name": "diRcpTrace",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x508",
+          "name": "runlinkIsModuleLoaded",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x518",
+          "name": "fxFadeOn",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x528",
+          "name": "refractTick",
+          "module": 2,
+          "route": "main_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x538",
+          "name": "camTick",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x540",
+          "name": "camUserViewTick",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x550",
+          "name": "func_8004552C",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x570",
+          "name": "animseqUpdateNoisyFade",
+          "module": 46,
+          "route": "main_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x578",
+          "name": "runlinkIsModuleLoaded",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x588",
+          "name": "mainGetPauseMode",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x5b4",
+          "name": "dayUpdate",
+          "module": 23,
+          "route": "main_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x5bc",
+          "name": "runlinkIsModuleLoaded",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x5d0",
+          "name": "mantisLightingUpdate",
+          "module": 39,
+          "route": "main_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x5d8",
+          "name": "rcpWaitDP",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x5e4",
+          "name": "mainUpdateZBCheck",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x5fc",
+          "name": "mainCPUeffects",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x604",
+          "name": "trackUpdateTextureScroll",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x614",
+          "name": "trackUpdateLighting",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x61c",
+          "name": "runlinkTick",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x624",
+          "name": "mmFreeTick",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x644",
+          "name": "viGetCurrentSize",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x808",
+          "name": "viFrameSync",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x824",
+          "name": "viFrameRateReset",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x858",
+          "name": "func_80046070",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        }
+      ]
+    },
+    "func_800457F4": {
+      "function": "0:00045b00",
+      "static_reachable_functions": 1828,
+      "reachable_modules": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        10,
+        11,
+        12,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        22,
+        23,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        39,
+        40,
+        42,
+        43,
+        44,
+        46,
+        47,
+        49,
+        50,
+        51,
+        52,
+        53,
+        64,
+        66,
+        67,
+        68,
+        69,
+        70,
+        72,
+        73,
+        74,
+        75,
+        76,
+        77,
+        78,
+        79,
+        80,
+        81,
+        82,
+        83,
+        84,
+        85,
+        86,
+        87,
+        88,
+        89,
+        90,
+        91,
+        92,
+        93,
+        94,
+        95,
+        96,
+        97,
+        99,
+        100,
+        101,
+        102,
+        103,
+        104,
+        105,
+        106,
+        107,
+        108,
+        109,
+        110,
+        111,
+        112,
+        113,
+        114,
+        115,
+        116,
+        117,
+        118,
+        119,
+        120,
+        121,
+        122,
+        123,
+        124,
+        125,
+        126,
+        127,
+        128,
+        129,
+        130,
+        131,
+        132,
+        134,
+        135,
+        136,
+        137,
+        138,
+        139,
+        140,
+        141,
+        143,
+        145,
+        146,
+        149,
+        150,
+        151,
+        152,
+        153,
+        154,
+        155,
+        156,
+        157
+      ],
+      "unresolved_indirect_sites": 123,
+      "direct_callees": [
+        {
+          "offset": "0x10",
+          "name": "levelGetLevel",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x28",
+          "name": "runlinkIsModuleLoaded",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x38",
+          "name": "starfieldActive",
+          "module": 5,
+          "route": "main_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x5c",
+          "name": "starfieldMove",
+          "module": 5,
+          "route": "main_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xd4",
+          "name": "joyGetButtons",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xe8",
+          "name": "joyGetPressed",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x12c",
+          "name": "diRcpTrace",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x138",
+          "name": "objResetAnimModels",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x140",
+          "name": "objCutCameraActive",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x194",
+          "name": "animseqUpdate",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x19c",
+          "name": "runlinkIsModuleLoaded",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x1b0",
+          "name": "squadsModuleTick",
+          "module": 3,
+          "route": "main_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x1bc",
+          "name": "objObjectsTick",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x1c8",
+          "name": "partUpdateParticles",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x1d0",
+          "name": "camGetPtr",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x1dc",
+          "name": "animseqCamera",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x1e8",
+          "name": "trackUpdateFX",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x24c",
+          "name": "rumbleKill",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x288",
+          "name": "robotPauseInit",
+          "module": 22,
+          "route": "main_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x298",
+          "name": "pauseInit",
+          "module": 19,
+          "route": "main_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x2a8",
+          "name": "multiPlayerPauseInit",
+          "module": 19,
+          "route": "main_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x2f0",
+          "name": "objObjectsCutCameraTick",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x314",
+          "name": "objObjectsPauseTick",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x360",
+          "name": "objDoFrees",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x374",
+          "name": "diRcpTrace",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x3a0",
+          "name": "trackDraw",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x3b4",
+          "name": "diRcpTrace",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x3c0",
+          "name": "subtitlesTick",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x3c8",
+          "name": "runlinkIsModuleLoaded",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x3dc",
+          "name": "hinttextUpdate",
+          "module": 7,
+          "route": "main_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x3fc",
+          "name": "arcadeDrawScreen",
+          "module": 75,
+          "route": "main_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x404",
+          "name": "prnBorder",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x418",
+          "name": "diRcpTrace",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        }
+      ]
+    },
+    "mainChangeLevel": {
+      "function": "0:0004625c",
+      "static_reachable_functions": 123,
+      "reachable_modules": [
+        0,
+        14
+      ],
+      "unresolved_indirect_sites": 3,
+      "direct_callees": [
+        {
+          "offset": "0x70",
+          "name": "mainGetGameFlag",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x98",
+          "name": "mainGetGameFlag",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xc0",
+          "name": "controlClearPlayerSetup",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xfc",
+          "name": "levelGetRegionNo",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x15c",
+          "name": "frontShowRegionStats",
+          "module": 14,
+          "route": "main_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x164",
+          "name": "mainSetPauseMode",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x180",
+          "name": "fxFadeOn",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x1b8",
+          "name": "setupClearScreen",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x1d0",
+          "name": "setupClearScreen",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x1e4",
+          "name": "amTuneGetSeqNo",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x1f4",
+          "name": "levelGetTune",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x20c",
+          "name": "mainGetPauseMode",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x220",
+          "name": "amTuneSetFade",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x228",
+          "name": "rumbleKill",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x230",
+          "name": "rumbleRumbles",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        }
+      ]
+    },
+    "func_80046070": {
+      "function": "0:000464ec",
+      "static_reachable_functions": 1040,
+      "reachable_modules": [
+        0,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        18,
+        20,
+        22,
+        23,
+        24,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        36,
+        37,
+        39,
+        40,
+        42,
+        43,
+        44,
+        47,
+        48,
+        49,
+        53,
+        55,
+        57,
+        58,
+        59,
+        60,
+        61,
+        62,
+        63,
+        64,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71,
+        72,
+        73,
+        74,
+        75,
+        76,
+        77,
+        78,
+        79,
+        80,
+        81,
+        82,
+        83,
+        84,
+        85,
+        86,
+        87,
+        88,
+        89,
+        90,
+        91,
+        92,
+        93,
+        94,
+        96,
+        97,
+        98,
+        99,
+        100,
+        101,
+        102,
+        103,
+        104,
+        105,
+        106,
+        107,
+        108,
+        109,
+        110,
+        112,
+        113,
+        114,
+        115,
+        116,
+        117,
+        118,
+        120,
+        121,
+        122,
+        123,
+        124,
+        125,
+        126,
+        127,
+        128,
+        129,
+        130,
+        131,
+        132,
+        133,
+        134,
+        135,
+        136,
+        137,
+        140,
+        141,
+        143,
+        146,
+        149,
+        150,
+        151,
+        153,
+        154,
+        155
+      ],
+      "unresolved_indirect_sites": 40,
+      "direct_callees": [
+        {
+          "offset": "0x8",
+          "name": "mainPreNMI",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x24",
+          "name": "joyGetPressed",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x38",
+          "name": "joyGetPressed",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x4c",
+          "name": "fxFadeOn",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x68",
+          "name": "setupClearScreen",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x78",
+          "name": "amTuneSetFade",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x108",
+          "name": "mainGetGameFlag",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x120",
+          "name": "mainSetGameFlag",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x138",
+          "name": "levelNGetType",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x164",
+          "name": "levelGetWorld",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x178",
+          "name": "mainSetLevelWorld",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x190",
+          "name": "levelGetWorld",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x1a8",
+          "name": "mainSetLevelWorld",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x1d4",
+          "name": "func_80045D44",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x340",
+          "name": "mainGetGameFlag",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x418",
+          "name": "mainSetGameFlag",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x420",
+          "name": "mainGetGameFlag",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x458",
+          "name": "mainSetGameFlag",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x460",
+          "name": "mainGetGameFlag",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x498",
+          "name": "mainSetGameFlag",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x4a0",
+          "name": "mainGetGameFlag",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x544",
+          "name": "viDisplayingScreen0",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x568",
+          "name": "mmFlushFreeStack",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x570",
+          "name": "mmSetDelay",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x578",
+          "name": "mainPreNMI",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x580",
+          "name": "frontFreeMode",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x588",
+          "name": "mainPreNMI",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x590",
+          "name": "runlinkIsModuleLoaded",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x5a0",
+          "name": "sparkFreeAll",
+          "module": 10,
+          "route": "main_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x5a8",
+          "name": "runlinkIsModuleLoaded",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x5b8",
+          "name": "bloodSpurtFreeLib",
+          "module": 8,
+          "route": "main_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x5c0",
+          "name": "runlinkIsModuleLoaded",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x5d0",
+          "name": "hinttextFree",
+          "module": 7,
+          "route": "main_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x5ec",
+          "name": "robotMissionFree",
+          "module": 22,
+          "route": "main_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x608",
+          "name": "mainPreNMI",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x624",
+          "name": "racingInGameEnd",
+          "module": 31,
+          "route": "main_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x62c",
+          "name": "levelFreeAll",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x634",
+          "name": "runlinkIsModuleLoaded",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x644",
+          "name": "splinecamFree",
+          "module": 11,
+          "route": "main_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x64c",
+          "name": "mainPreNMI",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x654",
+          "name": "partFreeLib",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x65c",
+          "name": "mainPreNMI",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x664",
+          "name": "subtitlesFree",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x6c4",
+          "name": "amTuneGetSeqNo",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x6d4",
+          "name": "levelGetTune",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x6ec",
+          "name": "amTuneStop",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x764",
+          "name": "racingInGameStart",
+          "module": 31,
+          "route": "main_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x798",
+          "name": "racingInGameStart",
+          "module": 31,
+          "route": "main_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x7cc",
+          "name": "racingInGameStart",
+          "module": 31,
+          "route": "main_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x860",
+          "name": "mainGetGameFlag",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x8f8",
+          "name": "mainResetRegion",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x9ac",
+          "name": "mainPreNMI",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x9bc",
+          "name": "frontGetLevelScreenMode",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x9cc",
+          "name": "levelGetBlurEffect",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x9d4",
+          "name": "viSetTrippleBuffer",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x9dc",
+          "name": "viGetVideoMode",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x9f4",
+          "name": "viChangeBuffers",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xa08",
+          "name": "viChangeMode",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xa18",
+          "name": "viGetCurrentSize",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xa68",
+          "name": "mainPreNMI",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xa70",
+          "name": "mmFlushFreeStack",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xa78",
+          "name": "mmSetDelay",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xa80",
+          "name": "mainPreNMI",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xa90",
+          "name": "levelGetGfxIndex",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xa98",
+          "name": "listReallocate",
+          "module": 36,
+          "route": "main_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xaa0",
+          "name": "runlinkFreeCode",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xaa8",
+          "name": "mainPreNMI",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xab0",
+          "name": "mmFlushFreeStack",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xab8",
+          "name": "mmSetDelay",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xac0",
+          "name": "camInit",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xac8",
+          "name": "runlinkIsModuleLoaded",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xad8",
+          "name": "splinecamSetup",
+          "module": 11,
+          "route": "main_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xae0",
+          "name": "mainPreNMI",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xae8",
+          "name": "subtitlesInit",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xaf0",
+          "name": "mainPreNMI",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xb1c",
+          "name": "partSetupLib",
+          "module": 26,
+          "route": "main_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xb24",
+          "name": "mainPreNMI",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xb2c",
+          "name": "runlinkFreeCode",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xb34",
+          "name": "mainPreNMI",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xb5c",
+          "name": "levelInit",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xb64",
+          "name": "mainPreNMI",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xb80",
+          "name": "setupClearScreen",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xb94",
+          "name": "setupClearScreen",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xba0",
+          "name": "osSetTime",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xba8",
+          "name": "explosionFlushBlasts",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xbb0",
+          "name": "mainPreNMI",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xbc0",
+          "name": "frontSetMode",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xbc8",
+          "name": "mmSetDelay",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xbd0",
+          "name": "rumbleUpdate",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xbe0",
+          "name": "joyRead",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xc14",
+          "name": "mainGetGameFlag",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xc4c",
+          "name": "amWaitForMidiSync",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xc64",
+          "name": "rumbleRumbles",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        }
+      ]
+    },
+    "levelInit": {
+      "function": "0:00043a3c",
+      "static_reachable_functions": 861,
+      "reachable_modules": [
+        0,
+        2,
+        3,
+        4,
+        5,
+        11,
+        18,
+        20,
+        22,
+        23,
+        24,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        39,
+        40,
+        42,
+        43,
+        44,
+        47,
+        48,
+        49,
+        53,
+        60,
+        64,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71,
+        72,
+        73,
+        74,
+        75,
+        76,
+        77,
+        78,
+        79,
+        80,
+        81,
+        82,
+        83,
+        84,
+        85,
+        86,
+        87,
+        88,
+        89,
+        90,
+        91,
+        92,
+        93,
+        94,
+        96,
+        97,
+        98,
+        99,
+        100,
+        101,
+        102,
+        103,
+        104,
+        105,
+        106,
+        107,
+        108,
+        109,
+        110,
+        112,
+        113,
+        114,
+        115,
+        116,
+        117,
+        118,
+        120,
+        121,
+        122,
+        123,
+        124,
+        125,
+        126,
+        127,
+        128,
+        129,
+        130,
+        131,
+        132,
+        134,
+        135,
+        136,
+        137,
+        140,
+        141,
+        143,
+        146,
+        149,
+        150,
+        151,
+        153,
+        154,
+        155
+      ],
+      "unresolved_indirect_sites": 37,
+      "direct_callees": [
+        {
+          "offset": "0x2c",
+          "name": "rumbleKill",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x34",
+          "name": "piRomLoad",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x50",
+          "name": "mainGetNumberOfPlayers",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x74",
+          "name": "gsSndpLimitVoices",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x84",
+          "name": "gsSndpLimitVoices",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x94",
+          "name": "gsSndpLimitVoices",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xa4",
+          "name": "gsSndpLimitVoices",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x110",
+          "name": "mmAlloc",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x130",
+          "name": "piRomLoadSection",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x138",
+          "name": "mainPreNMI",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x148",
+          "name": "mmFree",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x158",
+          "name": "levelGetRegionFlags",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x188",
+          "name": "initColourCycle",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x1b0",
+          "name": "amTuneVoiceLimit",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x1b8",
+          "name": "amTuneResetFade",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x1c0",
+          "name": "mainPreNMI",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x1d4",
+          "name": "setupLights",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x1dc",
+          "name": "mainPreNMI",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x1e4",
+          "name": "squadsInitialiseBeforeObjects",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x1ec",
+          "name": "mainPreNMI",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x1f4",
+          "name": "hitReset",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x200",
+          "name": "objSetAnimGroup",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x208",
+          "name": "mainPreNMI",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x230",
+          "name": "trackInit",
+          "module": 24,
+          "route": "main_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x238",
+          "name": "mainPreNMI",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x244",
+          "name": "animseqSetupGroup",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x24c",
+          "name": "mainPreNMI",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x254",
+          "name": "squadsInitialiseAfterObjects",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x2b4",
+          "name": "trackSetFogOff",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x310",
+          "name": "trackSetFog",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x390",
+          "name": "setupWeather",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x3a4",
+          "name": "setWeatherLimits",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x3c8",
+          "name": "texLoadTexture",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x40c",
+          "name": "objGetTable",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x42c",
+          "name": "resetMixCycle",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x448",
+          "name": "rcpSetScreenColour",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x450",
+          "name": "viFrameRateReset",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x460",
+          "name": "levelTunePlay",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x46c",
+          "name": "camSetNo",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x488",
+          "name": "camSetFOV",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x4a0",
+          "name": "camSetNo",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x4c8",
+          "name": "objGetTable",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x4dc",
+          "name": "mainPreNMI",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x4fc",
+          "name": "fxInitNightVision",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x51c",
+          "name": "refractInit",
+          "module": 2,
+          "route": "main_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x53c",
+          "name": "blurInit",
+          "module": 48,
+          "route": "main_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x55c",
+          "name": "underWaterLightsInit",
+          "module": 27,
+          "route": "main_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x584",
+          "name": "dayInit",
+          "module": 23,
+          "route": "main_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x58c",
+          "name": "mainPreNMI",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x594",
+          "name": "runlinkFreeCode",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x59c",
+          "name": "runlinkFreeCode",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x604",
+          "name": "amSndStop",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x624",
+          "name": "osCartDmaTest4_6105",
+          "module": 98,
+          "route": "main_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x6c8",
+          "name": "amSndPlay",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        }
+      ]
+    },
+    "objObjectsTick": {
+      "function": "0:00008bf0",
+      "static_reachable_functions": 1501,
+      "reachable_modules": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        10,
+        11,
+        14,
+        15,
+        16,
+        17,
+        18,
+        20,
+        22,
+        23,
+        28,
+        29,
+        30,
+        31,
+        32,
+        39,
+        40,
+        42,
+        43,
+        44,
+        46,
+        47,
+        49,
+        50,
+        51,
+        52,
+        53,
+        64,
+        66,
+        67,
+        68,
+        69,
+        70,
+        72,
+        73,
+        74,
+        75,
+        76,
+        77,
+        78,
+        79,
+        80,
+        81,
+        82,
+        83,
+        84,
+        85,
+        86,
+        87,
+        88,
+        89,
+        90,
+        91,
+        92,
+        93,
+        94,
+        95,
+        96,
+        97,
+        99,
+        100,
+        101,
+        102,
+        103,
+        104,
+        105,
+        106,
+        107,
+        108,
+        109,
+        110,
+        112,
+        113,
+        114,
+        115,
+        116,
+        117,
+        118,
+        119,
+        120,
+        121,
+        122,
+        123,
+        124,
+        125,
+        126,
+        127,
+        128,
+        129,
+        130,
+        131,
+        132,
+        134,
+        135,
+        136,
+        138,
+        139,
+        140,
+        141,
+        143,
+        145,
+        146,
+        149,
+        150,
+        151,
+        153,
+        154,
+        155,
+        156
+      ],
+      "unresolved_indirect_sites": 108,
+      "direct_callees": [
+        {
+          "offset": "0x154",
+          "name": "hitUpdate",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x15c",
+          "name": "explosionHitTick",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x164",
+          "name": "hitGetHitModels",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x180",
+          "name": "func_8000FB60",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x19c",
+          "name": "hitModelsTick",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x230",
+          "name": "func_8000FB60",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x260",
+          "name": "objScrollTexture",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x288",
+          "name": "wakeUpdateRipple",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x330",
+          "name": "texAnimateSprite",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x38c",
+          "name": "duckshootUpdate",
+          "module": 69,
+          "route": "main_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x3c0",
+          "name": "controlPlayer",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x414",
+          "name": "sprintUpdate",
+          "module": 31,
+          "route": "main_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x46c",
+          "name": "func_8000FB60",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x48c",
+          "name": "lightUpdateLights",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x494",
+          "name": "lightUpdateObjects",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x49c",
+          "name": "runlinkIsModuleLoaded",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x4ac",
+          "name": "shrinkbeamSoundUpdate",
+          "module": 28,
+          "route": "main_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x4b4",
+          "name": "func_80011E74_12A74",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x4c4",
+          "name": "amPlayAudioMap",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x4e4",
+          "name": "objDoFrees",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        }
+      ]
+    },
+    "controlPlayer": {
+      "function": "0:00032648",
+      "static_reachable_functions": 933,
+      "reachable_modules": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        11,
+        14,
+        15,
+        16,
+        17,
+        18,
+        20,
+        22,
+        28,
+        29,
+        30,
+        31,
+        32,
+        39,
+        40,
+        42,
+        43,
+        44,
+        49,
+        50,
+        51,
+        52,
+        53,
+        64,
+        66,
+        67,
+        68,
+        70,
+        72,
+        73,
+        74,
+        75,
+        76,
+        77,
+        78,
+        79,
+        80,
+        81,
+        82,
+        83,
+        84,
+        85,
+        86,
+        87,
+        88,
+        89,
+        90,
+        91,
+        92,
+        93,
+        94,
+        95,
+        96,
+        97,
+        99,
+        100,
+        101,
+        102,
+        103,
+        104,
+        105,
+        106,
+        107,
+        108,
+        109,
+        110,
+        112,
+        113,
+        114,
+        115,
+        116,
+        117,
+        118,
+        120,
+        121,
+        122,
+        123,
+        124,
+        125,
+        126,
+        127,
+        128,
+        129,
+        130,
+        131,
+        132,
+        134,
+        135,
+        136,
+        140,
+        141,
+        143,
+        146,
+        149,
+        150,
+        151,
+        153,
+        154,
+        155,
+        156
+      ],
+      "unresolved_indirect_sites": 49,
+      "direct_callees": [
+        {
+          "offset": "0x10",
+          "name": "mainGetGame",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x74",
+          "name": "camGetListPtr",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x80",
+          "name": "mainGetNumberOfCameras",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xc8",
+          "name": "frontGetTargetControl",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x108",
+          "name": "osRamTest4_6105",
+          "module": 156,
+          "route": "main_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x118",
+          "name": "mathRnd",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x1fc",
+          "name": "levelGetWorld",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x238",
+          "name": "mainChangeLevel",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x25c",
+          "name": "levelGetWorld",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x294",
+          "name": "mainGetNextCharacter",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x29c",
+          "name": "frontGetMode",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x2c4",
+          "name": "mainChangeLevel",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x2e4",
+          "name": "mainSetAnimGroup",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x2f8",
+          "name": "mainGetNextCharacter",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x300",
+          "name": "frontGetMode",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x328",
+          "name": "mainChangeLevel",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x350",
+          "name": "mainSetAnimGroup",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x35c",
+          "name": "objFreeObject",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x3a4",
+          "name": "runlinkIsModuleLoaded",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x3b4",
+          "name": "splinecamSplineHead",
+          "module": 11,
+          "route": "main_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x3e0",
+          "name": "splinecamGetNearestNode",
+          "module": 11,
+          "route": "main_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x444",
+          "name": "flamethrowerUpdate",
+          "module": 95,
+          "route": "main_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x50c",
+          "name": "hitPlayerKilledPlayer",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x51c",
+          "name": "hitPlayerKilledPlayer",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x578",
+          "name": "sprintCountdown",
+          "module": 31,
+          "route": "main_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x588",
+          "name": "controlDisableJoypad",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x5d4",
+          "name": "girlBossControl",
+          "module": 52,
+          "route": "main_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x5ec",
+          "name": "boyBossControl",
+          "module": 50,
+          "route": "main_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x604",
+          "name": "dogBossControl",
+          "module": 51,
+          "route": "main_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x648",
+          "name": "girlControl",
+          "module": 15,
+          "route": "main_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x660",
+          "name": "boyControl",
+          "module": 16,
+          "route": "main_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x678",
+          "name": "dogControl",
+          "module": 17,
+          "route": "main_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x690",
+          "name": "hovershipControl",
+          "module": 53,
+          "route": "main_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x6c0",
+          "name": "controlGetGunBarrelPos",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x6f4",
+          "name": "Powerf",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x728",
+          "name": "flamethrowerConstrain",
+          "module": 95,
+          "route": "main_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x734",
+          "name": "flamethrowerHits",
+          "module": 95,
+          "route": "main_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x800",
+          "name": "squadsAddInterestingEvent",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x83c",
+          "name": "func_800370D8",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x8f4",
+          "name": "camSetNo",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x908",
+          "name": "func_8002B378",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x910",
+          "name": "controlDisableJoypad",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x924",
+          "name": "mainGetGameCharacter",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xa08",
+          "name": "mathRnd",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xb00",
+          "name": "amSndStopXYZ",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xb1c",
+          "name": "chargeEffectSetPower",
+          "module": 81,
+          "route": "main_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xb2c",
+          "name": "chargeEffectUpdate",
+          "module": 81,
+          "route": "main_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xbec",
+          "name": "changeLightIntensity",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xbf8",
+          "name": "turnLightOn",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xc10",
+          "name": "changeLightIntensity",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xc1c",
+          "name": "turnLightOff",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xe04",
+          "name": "Powerf",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        }
+      ]
+    },
+    "boyControl": {
+      "function": "16:00000000",
+      "static_reachable_functions": 791,
+      "reachable_modules": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        11,
+        15,
+        16,
+        17,
+        18,
+        20,
+        22,
+        28,
+        29,
+        30,
+        31,
+        32,
+        39,
+        40,
+        42,
+        43,
+        44,
+        49,
+        53,
+        64,
+        66,
+        67,
+        68,
+        70,
+        72,
+        73,
+        74,
+        75,
+        76,
+        77,
+        78,
+        79,
+        80,
+        81,
+        82,
+        83,
+        84,
+        85,
+        86,
+        87,
+        88,
+        89,
+        90,
+        91,
+        92,
+        93,
+        94,
+        95,
+        96,
+        97,
+        99,
+        100,
+        101,
+        102,
+        103,
+        104,
+        105,
+        106,
+        107,
+        108,
+        109,
+        110,
+        112,
+        113,
+        114,
+        115,
+        116,
+        117,
+        118,
+        120,
+        121,
+        122,
+        123,
+        124,
+        125,
+        126,
+        127,
+        128,
+        129,
+        130,
+        131,
+        132,
+        134,
+        135,
+        136,
+        140,
+        141,
+        143,
+        146,
+        149,
+        150,
+        151,
+        153,
+        154,
+        155
+      ],
+      "unresolved_indirect_sites": 37,
+      "direct_callees": [
+        {
+          "offset": "0x4c",
+          "name": "mainGetGameCharacter",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xd8",
+          "name": "controlPlatform",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xe8",
+          "name": "controlAttitude",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xf8",
+          "name": "controlSquashCheckPrior",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x19c",
+          "name": "controlDisableJoypad",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x1dc",
+          "name": "controlDisableJoypad",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x27c",
+          "name": "controlDisableJoypad",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x2a4",
+          "name": "controlDisableJoypad",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x2c4",
+          "name": "func_overlay_16_01004F78_1F22F90",
+          "module": 16,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x31c",
+          "name": "controlReadJoypad",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x324",
+          "name": "controlMakeGravity",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x44c",
+          "name": "controlFSUvels",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x494",
+          "name": "mathOneFloatYPR",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x4e8",
+          "name": "sqrtf",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x54c",
+          "name": "Arctanf",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x608",
+          "name": "func_overlay_16_01004F78_1F22F90",
+          "module": 16,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x6ac",
+          "name": "func_overlay_16_01004F78_1F22F90",
+          "module": 16,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x778",
+          "name": "controlUpdatePlayerAim",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x7d8",
+          "name": "controlFadePlayer",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x7f4",
+          "name": "trackPolyHeight",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x884",
+          "name": "func_overlay_16_01001B48_1F1FB60",
+          "module": 16,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xa14",
+          "name": "func_overlay_16_01004F78_1F22F90",
+          "module": 16,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xa2c",
+          "name": "func_overlay_16_01004F78_1F22F90",
+          "module": 16,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xa94",
+          "name": "amTunePlay",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xaa4",
+          "name": "objEnsureNotTargetted",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xac8",
+          "name": "controlEmptyPlayersHand",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xad0",
+          "name": "controlClearAimlocks",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xadc",
+          "name": "controlMakeGravity",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xaf0",
+          "name": "func_overlay_16_01004F78_1F22F90",
+          "module": 16,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xb58",
+          "name": "func_overlay_16_01002708_1F20720",
+          "module": 16,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xb80",
+          "name": "func_overlay_16_01002EB4_1F20ECC",
+          "module": 16,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xba8",
+          "name": "func_overlay_16_0100321C_1F21234",
+          "module": 16,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xbd0",
+          "name": "func_overlay_16_01003464_1F2147C",
+          "module": 16,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xbf8",
+          "name": "func_overlay_16_01003F30_1F21F48",
+          "module": 16,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xc14",
+          "name": "func_overlay_16_01006E24_1F24E3C",
+          "module": 16,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xc3c",
+          "name": "func_overlay_16_010070A4_1F250BC",
+          "module": 16,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xc58",
+          "name": "func_overlay_16_01007344_1F2535C",
+          "module": 16,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xc80",
+          "name": "func_overlay_16_0100650C_1F24524",
+          "module": 16,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xcb4",
+          "name": "func_overlay_16_01006AEC_1F24B04",
+          "module": 16,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xcdc",
+          "name": "func_overlay_16_01004440_1F22458",
+          "module": 16,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xd04",
+          "name": "func_overlay_16_010073A8_1F253C0",
+          "module": 16,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xdf4",
+          "name": "mainPlayerHas",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xe0c",
+          "name": "mainPlayerCollected",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xe64",
+          "name": "controlSelectWeapon",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xe94",
+          "name": "controlSelectNextWeapon",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xeb8",
+          "name": "controlSelectPreviousWeapon",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xec8",
+          "name": "mainGetGame",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xf14",
+          "name": "controlSelectWeapon",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xf78",
+          "name": "func_overlay_16_01005120_1F23138",
+          "module": 16,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xf88",
+          "name": "func_overlay_16_01005BB8_1F23BD0",
+          "module": 16,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xf98",
+          "name": "controlSquashCheckPost",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xffc",
+          "name": "controlHangOK",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x1034",
+          "name": "controlGrabOK",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x1068",
+          "name": "func_overlay_16_01006290_1F242A8",
+          "module": 16,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x10b4",
+          "name": "invincibilityShieldTransform",
+          "module": 107,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x10c8",
+          "name": "invincibilityShieldTransform",
+          "module": 107,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x10dc",
+          "name": "invincibilityShieldTransform",
+          "module": 107,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x10fc",
+          "name": "invincibilityShieldTransform",
+          "module": 107,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x110c",
+          "name": "func_overlay_16_01002220_1F20238",
+          "module": 16,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x11ac",
+          "name": "func_overlay_16_01004840_1F22858",
+          "module": 16,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x1584",
+          "name": "levelGetLevel",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x15c0",
+          "name": "amSndPlay",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x15f0",
+          "name": "amSndStop",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x167c",
+          "name": "modGenAnimMatrices",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x16b4",
+          "name": "objMakeGunMtx",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x16ec",
+          "name": "lightObject",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x1708",
+          "name": "objAnimTextures",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x1798",
+          "name": "controlUpdateWeapon",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x17a4",
+          "name": "controlThrowWeapon",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x17e0",
+          "name": "objAnimSetMove",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x17f8",
+          "name": "func_overlay_16_01004F78_1F22F90",
+          "module": 16,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x1824",
+          "name": "objAnimSetMove",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x183c",
+          "name": "func_overlay_16_01004F78_1F22F90",
+          "module": 16,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x1860",
+          "name": "controlFireDummyShot",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x187c",
+          "name": "controlUpdateJetFlames",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x1990",
+          "name": "wakeUpdateRipple",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x199c",
+          "name": "partUpdateTriggers",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x19c4",
+          "name": "amSndPlay",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x19e4",
+          "name": "amSndStop",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x1a3c",
+          "name": "controlSetRumble",
+          "module": 0,
+          "route": "overlay_relocation",
+          "interior_offset": 0
+        }
+      ]
+    },
+    "objPrintObject": {
+      "function": "0:0000d794",
+      "static_reachable_functions": 732,
+      "reachable_modules": [
+        0,
+        2,
+        3,
+        4,
+        5,
+        11,
+        18,
+        20,
+        22,
+        23,
+        28,
+        29,
+        30,
+        31,
+        32,
+        39,
+        40,
+        42,
+        43,
+        44,
+        47,
+        49,
+        53,
+        64,
+        66,
+        67,
+        68,
+        70,
+        72,
+        73,
+        74,
+        75,
+        76,
+        77,
+        78,
+        79,
+        80,
+        81,
+        82,
+        83,
+        84,
+        85,
+        86,
+        87,
+        88,
+        89,
+        90,
+        91,
+        92,
+        93,
+        94,
+        96,
+        97,
+        99,
+        100,
+        101,
+        102,
+        103,
+        104,
+        105,
+        106,
+        107,
+        108,
+        109,
+        110,
+        112,
+        113,
+        114,
+        115,
+        116,
+        117,
+        118,
+        120,
+        121,
+        122,
+        123,
+        124,
+        125,
+        126,
+        127,
+        128,
+        129,
+        130,
+        131,
+        132,
+        134,
+        135,
+        136,
+        140,
+        141,
+        143,
+        146,
+        149,
+        150,
+        151,
+        152,
+        153,
+        154,
+        155
+      ],
+      "unresolved_indirect_sites": 34,
+      "direct_callees": [
+        {
+          "offset": "0x48",
+          "name": "func_8000DD1C",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        }
+      ]
+    },
+    "trackPolyHeight": {
+      "function": "0:000191e8",
+      "static_reachable_functions": 4,
+      "reachable_modules": [
+        0
+      ],
+      "unresolved_indirect_sites": 0,
+      "direct_callees": [
+        {
+          "offset": "0x74",
+          "name": "trackGetBlockList",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0xd8",
+          "name": "getXZCompareMask",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        },
+        {
+          "offset": "0x1e8",
+          "name": "mathXZInTri",
+          "module": 0,
+          "route": "direct",
+          "interior_offset": 0
+        }
+      ]
+    },
+    "mainSaveGame": {
+      "function": "0:0004802c",
+      "static_reachable_functions": 1,
+      "reachable_modules": [
+        0
+      ],
+      "unresolved_indirect_sites": 0,
+      "direct_callees": []
+    }
+  },
+  "module_inventory": [
+    {
+      "module": 0,
+      "functions": 1667,
+      "sized_functions": 1642,
+      "function_bytes": 649016,
+      "cross_module_edges": {
+        "1": 3,
+        "2": 3,
+        "3": 24,
+        "4": 5,
+        "5": 7,
+        "6": 7,
+        "7": 2,
+        "8": 5,
+        "9": 3,
+        "10": 3,
+        "11": 7,
+        "12": 8,
+        "14": 5,
+        "15": 2,
+        "16": 2,
+        "17": 2,
+        "18": 1,
+        "19": 3,
+        "20": 4,
+        "22": 8,
+        "23": 3,
+        "24": 1,
+        "26": 1,
+        "27": 2,
+        "28": 5,
+        "29": 2,
+        "30": 1,
+        "31": 13,
+        "32": 5,
+        "36": 2,
+        "37": 3,
+        "39": 2,
+        "40": 4,
+        "42": 4,
+        "43": 2,
+        "44": 2,
+        "45": 3,
+        "46": 8,
+        "47": 17,
+        "48": 3,
+        "49": 4,
+        "50": 1,
+        "51": 1,
+        "52": 1,
+        "53": 2,
+        "57": 3,
+        "58": 6,
+        "59": 2,
+        "60": 1,
+        "61": 3,
+        "62": 3,
+        "63": 3,
+        "64": 3,
+        "66": 3,
+        "67": 12,
+        "68": 36,
+        "69": 3,
+        "70": 1,
+        "72": 3,
+        "73": 4,
+        "74": 2,
+        "75": 4,
+        "76": 4,
+        "77": 4,
+        "78": 2,
+        "79": 2,
+        "80": 2,
+        "81": 5,
+        "82": 3,
+        "83": 4,
+        "84": 2,
+        "85": 5,
+        "86": 2,
+        "87": 4,
+        "88": 2,
+        "89": 4,
+        "90": 2,
+        "91": 2,
+        "92": 2,
+        "93": 2,
+        "94": 2,
+        "95": 6,
+        "96": 3,
+        "97": 2,
+        "98": 1,
+        "99": 2,
+        "100": 2,
+        "101": 3,
+        "102": 2,
+        "103": 2,
+        "104": 2,
+        "105": 5,
+        "106": 6,
+        "107": 5,
+        "108": 2,
+        "109": 2,
+        "110": 1,
+        "111": 1,
+        "112": 5,
+        "113": 2,
+        "114": 4,
+        "115": 3,
+        "116": 4,
+        "117": 3,
+        "118": 6,
+        "119": 1,
+        "120": 6,
+        "121": 3,
+        "122": 5,
+        "123": 2,
+        "124": 2,
+        "125": 2,
+        "126": 3,
+        "127": 3,
+        "128": 2,
+        "129": 3,
+        "130": 2,
+        "131": 3,
+        "132": 2,
+        "133": 1,
+        "134": 2,
+        "135": 11,
+        "136": 21,
+        "137": 2,
+        "143": 3,
+        "146": 1,
+        "149": 4,
+        "150": 2,
+        "151": 2,
+        "152": 2,
+        "153": 2,
+        "154": 2,
+        "156": 1,
+        "3430": 1
+      },
+      "entry_names": [
+        "amSetMuteMode",
+        "amTunePlay",
+        "amTuneVoiceLimit",
+        "amTuneSetFade"
+      ]
+    },
+    {
+      "module": 1,
+      "functions": 8,
+      "sized_functions": 8,
+      "function_bytes": 3120,
+      "cross_module_edges": {
+        "0": 14
+      },
+      "entry_names": [
+        "func_overlay_1_00100000_1ED3B20",
+        "dropletFreeLib",
+        "dropletAdd",
+        "dropletUpdate"
+      ]
+    },
+    {
+      "module": 2,
+      "functions": 6,
+      "sized_functions": 6,
+      "function_bytes": 2128,
+      "cross_module_edges": {
+        "0": 21
+      },
+      "entry_names": [
+        "refractInit",
+        "refractFreeAll",
+        "_AutoExit00002",
+        "CreateRefractTask"
+      ]
+    },
+    {
+      "module": 3,
+      "functions": 174,
+      "sized_functions": 174,
+      "function_bytes": 96784,
+      "cross_module_edges": {
+        "0": 417,
+        "2": 1,
+        "8": 2,
+        "14": 2,
+        "138": 1,
+        "139": 3,
+        "140": 1,
+        "141": 2,
+        "142": 1,
+        "143": 3,
+        "145": 1,
+        "146": 5,
+        "149": 2,
+        "151": 1,
+        "154": 13,
+        "155": 4
+      },
+      "entry_names": [
+        "RecceNodeMover",
+        "func_overlay_3_003000D0_1ED55B0",
+        "func_overlay_3_00300258_1ED5738",
+        "func_overlay_3_0030027C_1ED575C"
+      ]
+    },
+    {
+      "module": 4,
+      "functions": 9,
+      "sized_functions": 9,
+      "function_bytes": 5728,
+      "cross_module_edges": {
+        "0": 46
+      },
+      "entry_names": [
+        "cloneSetupShadow",
+        "cloneTasksQueueAndWait",
+        "cloneDelete",
+        "cloneShadowCreate"
+      ]
+    },
+    {
+      "module": 5,
+      "functions": 12,
+      "sized_functions": 12,
+      "function_bytes": 3344,
+      "cross_module_edges": {
+        "0": 18
+      },
+      "entry_names": [
+        "starfieldActive",
+        "starfieldFree",
+        "starfieldInit",
+        "starfieldMove"
+      ]
+    },
+    {
+      "module": 6,
+      "functions": 16,
+      "sized_functions": 16,
+      "function_bytes": 6560,
+      "cross_module_edges": {
+        "0": 40
+      },
+      "entry_names": [
+        "instDrawHealth",
+        "instInitHealthMeter",
+        "instFreeHealthMeter",
+        "instGetPos"
+      ]
+    },
+    {
+      "module": 7,
+      "functions": 31,
+      "sized_functions": 31,
+      "function_bytes": 10592,
+      "cross_module_edges": {
+        "0": 127,
+        "32": 4
+      },
+      "entry_names": [
+        "hinttextFree",
+        "hinttextStart",
+        "func_overlay_7_0070032C_1EFB454",
+        "func_overlay_7_00700390_1EFB4B8"
+      ]
+    },
+    {
+      "module": 8,
+      "functions": 6,
+      "sized_functions": 6,
+      "function_bytes": 5728,
+      "cross_module_edges": {
+        "0": 42
+      },
+      "entry_names": [
+        "func_overlay_8_00800000_1EFF168",
+        "bloodSpurtFreeLib",
+        "bloodSpurtAdd",
+        "bloodHitSpriteAdd"
+      ]
+    },
+    {
+      "module": 9,
+      "functions": 15,
+      "sized_functions": 15,
+      "function_bytes": 17312,
+      "cross_module_edges": {
+        "0": 94,
+        "5": 4,
+        "18": 2,
+        "19": 2,
+        "38": 1
+      },
+      "entry_names": [
+        "frontInitMap",
+        "frontCleanupMap",
+        "frontMapInitWorldIcons",
+        "frontMapDrawWorldIcon"
+      ]
+    },
+    {
+      "module": 10,
+      "functions": 6,
+      "sized_functions": 6,
+      "function_bytes": 1680,
+      "cross_module_edges": {
+        "0": 8
+      },
+      "entry_names": [
+        "sparkSetGravity",
+        "sparkAdd",
+        "sparkFree",
+        "sparkFreeAll"
+      ]
+    },
+    {
+      "module": 11,
+      "functions": 19,
+      "sized_functions": 19,
+      "function_bytes": 7264,
+      "cross_module_edges": {
+        "0": 19
+      },
+      "entry_names": [
+        "splinecamSetup",
+        "splinecamFree",
+        "splinecamSplineHead",
+        "splinecamMakeSpline"
+      ]
+    },
+    {
+      "module": 12,
+      "functions": 17,
+      "sized_functions": 17,
+      "function_bytes": 6432,
+      "cross_module_edges": {
+        "0": 61,
+        "5": 3,
+        "6": 2
+      },
+      "entry_names": [
+        "frontInitMenuFrame",
+        "frontFreeMenuFrame",
+        "frontSetMenuFrame",
+        "frontClearMenuFrame"
+      ]
+    },
+    {
+      "module": 13,
+      "functions": 3,
+      "sized_functions": 3,
+      "function_bytes": 4544,
+      "cross_module_edges": {
+        "0": 45
+      },
+      "entry_names": [
+        "frontInitTarget",
+        "frontPlayerTarget",
+        "frontDrawTarget"
+      ]
+    },
+    {
+      "module": 14,
+      "functions": 18,
+      "sized_functions": 18,
+      "function_bytes": 15984,
+      "cross_module_edges": {
+        "0": 199,
+        "6": 10,
+        "13": 2,
+        "157": 1
+      },
+      "entry_names": [
+        "frontInitInstruments",
+        "func_overlay_14_00E00074_1F0D9CC",
+        "func_overlay_14_00E00220_1F0DB78",
+        "frontSingleInstruments"
+      ]
+    },
+    {
+      "module": 15,
+      "functions": 29,
+      "sized_functions": 29,
+      "function_bytes": 32272,
+      "cross_module_edges": {
+        "0": 213,
+        "1": 3,
+        "22": 1,
+        "107": 4,
+        "129": 1
+      },
+      "entry_names": [
+        "girlControl",
+        "girlCanFire",
+        "func_overlay_15_00F01C80_1F15600",
+        "func_overlay_15_00F01E14_1F15794"
+      ]
+    },
+    {
+      "module": 16,
+      "functions": 26,
+      "sized_functions": 26,
+      "function_bytes": 30192,
+      "cross_module_edges": {
+        "0": 187,
+        "1": 1,
+        "22": 1,
+        "107": 4,
+        "129": 1
+      },
+      "entry_names": [
+        "boyControl",
+        "boyCanFire",
+        "func_overlay_16_01001B48_1F1FB60",
+        "func_overlay_16_01001D58_1F1FD70"
+      ]
+    },
+    {
+      "module": 17,
+      "functions": 22,
+      "sized_functions": 22,
+      "function_bytes": 25152,
+      "cross_module_edges": {
+        "0": 171,
+        "1": 1,
+        "22": 1,
+        "107": 4,
+        "129": 1
+      },
+      "entry_names": [
+        "dogControl",
+        "dogCanFire",
+        "func_overlay_17_01101A30_1F29578",
+        "func_overlay_17_01101C44_1F2978C"
+      ]
+    },
+    {
+      "module": 18,
+      "functions": 35,
+      "sized_functions": 35,
+      "function_bytes": 26224,
+      "cross_module_edges": {
+        "0": 384,
+        "6": 3,
+        "9": 4,
+        "19": 10,
+        "41": 1
+      },
+      "entry_names": [
+        "func_overlay_18_01200000_1F2F9D8",
+        "tribalScreenInit",
+        "tribalScreenCleanup",
+        "tribalScreen"
+      ]
+    },
+    {
+      "module": 19,
+      "functions": 13,
+      "sized_functions": 13,
+      "function_bytes": 4320,
+      "cross_module_edges": {
+        "0": 80,
+        "5": 1,
+        "9": 3,
+        "12": 15,
+        "18": 19,
+        "37": 3,
+        "38": 9
+      },
+      "entry_names": [
+        "pauseInit",
+        "pauseSetScreen",
+        "pauseGetScreen",
+        "func_overlay_19_013001D8_1F3A108"
+      ]
+    },
+    {
+      "module": 20,
+      "functions": 4,
+      "sized_functions": 4,
+      "function_bytes": 1072,
+      "cross_module_edges": {
+        "0": 8
+      },
+      "entry_names": [
+        "treeInit",
+        "treeControl",
+        "fireflyInit",
+        "fireflyControl"
+      ]
+    },
+    {
+      "module": 22,
+      "functions": 20,
+      "sized_functions": 20,
+      "function_bytes": 12768,
+      "cross_module_edges": {
+        "0": 178,
+        "46": 3,
+        "74": 1,
+        "101": 1,
+        "118": 2
+      },
+      "entry_names": [
+        "func_overlay_22_01600000_1F3C688",
+        "sidekickpadInit",
+        "sidekickpadControl",
+        "sidekickpadFree"
+      ]
+    },
+    {
+      "module": 23,
+      "functions": 6,
+      "sized_functions": 6,
+      "function_bytes": 1760,
+      "cross_module_edges": {
+        "0": 8
+      },
+      "entry_names": [
+        "dayInit",
+        "_AutoExit00023",
+        "dayUpdate",
+        "dayStopAtNoon"
+      ]
+    },
+    {
+      "module": 24,
+      "functions": 6,
+      "sized_functions": 6,
+      "function_bytes": 6496,
+      "cross_module_edges": {
+        "0": 52,
+        "71": 1,
+        "137": 1
+      },
+      "entry_names": [
+        "trackInit",
+        "func_overlay_24_018001F8_1F41D28",
+        "func_overlay_24_01800908_1F42438",
+        "func_overlay_24_01800CE4_1F42814"
+      ]
+    },
+    {
+      "module": 25,
+      "functions": 9,
+      "sized_functions": 9,
+      "function_bytes": 2000,
+      "cross_module_edges": {
+        "0": 31
+      },
+      "entry_names": [
+        "func_overlay_25_01900000_1F438D8",
+        "func_overlay_25_0190003C_1F43914",
+        "func_overlay_25_019000C4_1F4399C",
+        "func_overlay_25_01900174_1F43A4C"
+      ]
+    },
+    {
+      "module": 26,
+      "functions": 7,
+      "sized_functions": 7,
+      "function_bytes": 4080,
+      "cross_module_edges": {
+        "0": 24
+      },
+      "entry_names": [
+        "func_overlay_26_01A00000_1F443A8",
+        "partInitLib",
+        "partBuildCCTables",
+        "partSetupLib"
+      ]
+    },
+    {
+      "module": 27,
+      "functions": 4,
+      "sized_functions": 4,
+      "function_bytes": 1088,
+      "cross_module_edges": {
+        "0": 2
+      },
+      "entry_names": [
+        "func_overlay_27_01B00000_1F45710",
+        "underWaterLightsInit",
+        "_AutoExit00027",
+        "underWaterLightsUpdate"
+      ]
+    },
+    {
+      "module": 28,
+      "functions": 6,
+      "sized_functions": 6,
+      "function_bytes": 7088,
+      "cross_module_edges": {
+        "0": 28
+      },
+      "entry_names": [
+        "shrinkbeamInit",
+        "shrinkbeamControl",
+        "trackbeamInit",
+        "trackbeamControl"
+      ]
+    },
+    {
+      "module": 29,
+      "functions": 8,
+      "sized_functions": 8,
+      "function_bytes": 3984,
+      "cross_module_edges": {
+        "0": 33
+      },
+      "entry_names": [
+        "girlUpdateMagic",
+        "girlMagicCameraInit",
+        "girlMagicCamera",
+        "girlMagicCutCamera"
+      ]
+    },
+    {
+      "module": 30,
+      "functions": 8,
+      "sized_functions": 8,
+      "function_bytes": 6864,
+      "cross_module_edges": {
+        "0": 12
+      },
+      "entry_names": [
+        "modPhitInit",
+        "func_overlay_30_01E000F4_1F491C4",
+        "func_overlay_30_01E00288_1F49358",
+        "func_overlay_30_01E00C14_1F49CE4"
+      ]
+    },
+    {
+      "module": 31,
+      "functions": 32,
+      "sized_functions": 32,
+      "function_bytes": 15744,
+      "cross_module_edges": {
+        "0": 162
+      },
+      "entry_names": [
+        "sprintAIPlayer",
+        "drawGlowingText",
+        "racecheckRefresh",
+        "racecheckInit"
+      ]
+    },
+    {
+      "module": 32,
+      "functions": 12,
+      "sized_functions": 12,
+      "function_bytes": 9840,
+      "cross_module_edges": {
+        "0": 139,
+        "7": 13
+      },
+      "entry_names": [
+        "mrhintsInit",
+        "mrhintsControl",
+        "func_overlay_32_02001D2C_1F526FC",
+        "func_overlay_32_02001D84_1F52754"
+      ]
+    },
+    {
+      "module": 33,
+      "functions": 1,
+      "sized_functions": 1,
+      "function_bytes": 1104,
+      "cross_module_edges": {
+        "0": 4
+      },
+      "entry_names": [
+        "objInitExplosions"
+      ]
+    },
+    {
+      "module": 34,
+      "functions": 2,
+      "sized_functions": 2,
+      "function_bytes": 1104,
+      "cross_module_edges": {
+        "0": 18,
+        "33": 1
+      },
+      "entry_names": [
+        "objInitObjects",
+        "func_overlay_34_022002C8_1F54D90"
+      ]
+    },
+    {
+      "module": 35,
+      "functions": 1,
+      "sized_functions": 1,
+      "function_bytes": 704,
+      "cross_module_edges": {
+        "0": 10
+      },
+      "entry_names": [
+        "fontInit"
+      ]
+    },
+    {
+      "module": 36,
+      "functions": 4,
+      "sized_functions": 4,
+      "function_bytes": 1744,
+      "cross_module_edges": {
+        "0": 60,
+        "25": 1,
+        "26": 1,
+        "34": 1,
+        "35": 1
+      },
+      "entry_names": [
+        "mainInitRlo",
+        "func_overlay_36_02400250_1F55768",
+        "listReallocate",
+        "func_overlay_36_02400564_1F55A7C"
+      ]
+    },
+    {
+      "module": 37,
+      "functions": 4,
+      "sized_functions": 4,
+      "function_bytes": 7856,
+      "cross_module_edges": {
+        "0": 126,
+        "6": 2,
+        "19": 2,
+        "38": 1
+      },
+      "entry_names": [
+        "frontInitOptionsPage",
+        "frontCleanupOptionsPage",
+        "frontOptionsPage",
+        "func_overlay_37_02501ACC_1F57D9C"
+      ]
+    },
+    {
+      "module": 38,
+      "functions": 1,
+      "sized_functions": 1,
+      "function_bytes": 240,
+      "cross_module_edges": {
+        "0": 3
+      },
+      "entry_names": [
+        "pauseClearScreen"
+      ]
+    },
+    {
+      "module": 39,
+      "functions": 5,
+      "sized_functions": 5,
+      "function_bytes": 1392,
+      "cross_module_edges": {
+        "0": 4
+      },
+      "entry_names": [
+        "mantisLightingInit",
+        "mantisLightingFree",
+        "mantisLightingUpdate",
+        "mantisLightingGetFog"
+      ]
+    },
+    {
+      "module": 40,
+      "functions": 9,
+      "sized_functions": 9,
+      "function_bytes": 9424,
+      "cross_module_edges": {
+        "0": 86,
+        "6": 16,
+        "38": 1,
+        "61": 9
+      },
+      "entry_names": [
+        "frontInitMultiStats",
+        "frontMultiStats",
+        "frontCleanupMultiStats",
+        "func_overlay_40_028007F0_1F5A3B0"
+      ]
+    },
+    {
+      "module": 41,
+      "functions": 2,
+      "sized_functions": 2,
+      "function_bytes": 5488,
+      "cross_module_edges": {
+        "0": 29,
+        "58": 1,
+        "135": 1
+      },
+      "entry_names": [
+        "frontDrawCharBadge",
+        "frontCharBadge"
+      ]
+    },
+    {
+      "module": 42,
+      "functions": 5,
+      "sized_functions": 5,
+      "function_bytes": 11424,
+      "cross_module_edges": {
+        "0": 102,
+        "38": 1
+      },
+      "entry_names": [
+        "frontKeyboardInit",
+        "frontKeyboardCleanup",
+        "frontKeyboard",
+        "frontKeyboardGetTiltList"
+      ]
+    },
+    {
+      "module": 43,
+      "functions": 2,
+      "sized_functions": 2,
+      "function_bytes": 1024,
+      "cross_module_edges": {
+        "0": 17,
+        "6": 1
+      },
+      "entry_names": [
+        "collectableInit",
+        "collectableControl"
+      ]
+    },
+    {
+      "module": 44,
+      "functions": 6,
+      "sized_functions": 6,
+      "function_bytes": 2880,
+      "cross_module_edges": {
+        "0": 12
+      },
+      "entry_names": [
+        "_AutoInit00044",
+        "amAudioLinesReset",
+        "amPlayAudioLines",
+        "amAudioLineAddVertex"
+      ]
+    },
+    {
+      "module": 45,
+      "functions": 3,
+      "sized_functions": 3,
+      "function_bytes": 368,
+      "cross_module_edges": {
+        "0": 8
+      },
+      "entry_names": [
+        "osCic6105SendData",
+        "osCic6105StartGetData",
+        "osCic6105GetReadData"
+      ]
+    },
+    {
+      "module": 46,
+      "functions": 9,
+      "sized_functions": 9,
+      "function_bytes": 2384,
+      "cross_module_edges": {
+        "0": 7,
+        "23": 1,
+        "29": 1,
+        "39": 1,
+        "110": 1
+      },
+      "entry_names": [
+        "animseqLockOnInit",
+        "animseqLockOnDelete",
+        "animseqLockOnUpdate",
+        "func_overlay_46_02E001C4_1F64D3C"
+      ]
+    },
+    {
+      "module": 47,
+      "functions": 15,
+      "sized_functions": 15,
+      "function_bytes": 9632,
+      "cross_module_edges": {
+        "0": 44,
+        "8": 1,
+        "106": 1,
+        "157": 1
+      },
+      "entry_names": [
+        "animseqUpdateTextureScrollers",
+        "animseqUpdateLightChangers",
+        "animseqSampleCurve",
+        "func_overlay_47_02F007DC_1F65F44"
+      ]
+    },
+    {
+      "module": 48,
+      "functions": 5,
+      "sized_functions": 5,
+      "function_bytes": 1872,
+      "cross_module_edges": {
+        "0": 14
+      },
+      "entry_names": [
+        "blurInit",
+        "blurFree",
+        "_AutoExit00048",
+        "blurUpdate"
+      ]
+    },
+    {
+      "module": 49,
+      "functions": 9,
+      "sized_functions": 9,
+      "function_bytes": 3024,
+      "cross_module_edges": {
+        "0": 4
+      },
+      "entry_names": [
+        "cloneBlobSetup",
+        "cloneBlobDelete",
+        "cloneBlobCreate",
+        "func_overlay_49_03100668_1F694E0"
+      ]
+    },
+    {
+      "module": 50,
+      "functions": 9,
+      "sized_functions": 9,
+      "function_bytes": 6944,
+      "cross_module_edges": {
+        "0": 51,
+        "6": 1,
+        "107": 2
+      },
+      "entry_names": [
+        "boyBossControl",
+        "func_overlay_50_03200C40_1F6A8E8",
+        "func_overlay_50_03201108_1F6ADB0",
+        "func_overlay_50_032011E0_1F6AE88"
+      ]
+    },
+    {
+      "module": 51,
+      "functions": 10,
+      "sized_functions": 10,
+      "function_bytes": 6112,
+      "cross_module_edges": {
+        "0": 49,
+        "6": 1,
+        "107": 2
+      },
+      "entry_names": [
+        "dogBossControl",
+        "func_overlay_51_033008F0_1F6D070",
+        "func_overlay_51_03300DC0_1F6D540",
+        "func_overlay_51_03300E98_1F6D618"
+      ]
+    },
+    {
+      "module": 52,
+      "functions": 9,
+      "sized_functions": 9,
+      "function_bytes": 6944,
+      "cross_module_edges": {
+        "0": 51,
+        "6": 1,
+        "107": 2
+      },
+      "entry_names": [
+        "girlBossControl",
+        "func_overlay_52_03400C40_1F6F688",
+        "func_overlay_52_03401108_1F6FB50",
+        "func_overlay_52_034011E0_1F6FC28"
+      ]
+    },
+    {
+      "module": 53,
+      "functions": 15,
+      "sized_functions": 15,
+      "function_bytes": 13280,
+      "cross_module_edges": {
+        "0": 99,
+        "31": 6,
+        "107": 1
+      },
+      "entry_names": [
+        "hovershipInit",
+        "hovershipControl",
+        "func_overlay_53_03500EA0_1F724D0",
+        "func_overlay_53_035014F4_1F72B24"
+      ]
+    },
+    {
+      "module": 54,
+      "functions": 3,
+      "sized_functions": 3,
+      "function_bytes": 1952,
+      "cross_module_edges": {
+        "0": 16
+      },
+      "entry_names": [
+        "func_overlay_54_03600000_1F75A48",
+        "func_overlay_54_03600140_1F75B88",
+        "shipControl"
+      ]
+    },
+    {
+      "module": 55,
+      "functions": 4,
+      "sized_functions": 4,
+      "function_bytes": 2944,
+      "cross_module_edges": {
+        "0": 8
+      },
+      "entry_names": [
+        "fmvStart",
+        "fmvStop",
+        "fmvUpdate",
+        "fmvDraw"
+      ]
+    },
+    {
+      "module": 57,
+      "functions": 3,
+      "sized_functions": 3,
+      "function_bytes": 2464,
+      "cross_module_edges": {
+        "0": 27,
+        "55": 4
+      },
+      "entry_names": [
+        "frontInitRarepage",
+        "frontRarepage",
+        "frontCleanupRarepage"
+      ]
+    },
+    {
+      "module": 58,
+      "functions": 8,
+      "sized_functions": 8,
+      "function_bytes": 4176,
+      "cross_module_edges": {
+        "0": 48,
+        "41": 1,
+        "135": 3
+      },
+      "entry_names": [
+        "frontInitCharSelect",
+        "frontCharSelect",
+        "frontTeleporterTick",
+        "frontCleanupCharSelect"
+      ]
+    },
+    {
+      "module": 59,
+      "functions": 2,
+      "sized_functions": 2,
+      "function_bytes": 1392,
+      "cross_module_edges": {
+        "0": 8
+      },
+      "entry_names": [
+        "frontCreditsInit",
+        "frontCredits"
+      ]
+    },
+    {
+      "module": 60,
+      "functions": 1,
+      "sized_functions": 1,
+      "function_bytes": 16,
+      "cross_module_edges": {},
+      "entry_names": [
+        "getDeathMatchObjectTable"
+      ]
+    },
+    {
+      "module": 61,
+      "functions": 10,
+      "sized_functions": 10,
+      "function_bytes": 12192,
+      "cross_module_edges": {
+        "0": 127,
+        "6": 14,
+        "13": 1
+      },
+      "entry_names": [
+        "frontInitMultiInstruments",
+        "frontCleanupMultiInstruments",
+        "frontDeathMatchScores",
+        "sortByKills"
+      ]
+    },
+    {
+      "module": 62,
+      "functions": 6,
+      "sized_functions": 6,
+      "function_bytes": 10176,
+      "cross_module_edges": {
+        "0": 115,
+        "38": 1
+      },
+      "entry_names": [
+        "frontInitMultiModeSelect",
+        "frontMultiModeSelect",
+        "func_overlay_62_03E01158_1F80E38",
+        "func_overlay_62_03E01A48_1F81728"
+      ]
+    },
+    {
+      "module": 63,
+      "functions": 3,
+      "sized_functions": 3,
+      "function_bytes": 3168,
+      "cross_module_edges": {
+        "0": 39
+      },
+      "entry_names": [
+        "frontInitStartScreen",
+        "frontStartScreen",
+        "frontCleanupStartScreen"
+      ]
+    },
+    {
+      "module": 64,
+      "functions": 9,
+      "sized_functions": 9,
+      "function_bytes": 3168,
+      "cross_module_edges": {
+        "0": 11
+      },
+      "entry_names": [
+        "func_overlay_64_04000000_1F85A18",
+        "func_overlay_64_04000244_1F85C5C",
+        "func_overlay_64_04000340_1F85D58",
+        "func_overlay_64_040005E8_1F86000"
+      ]
+    },
+    {
+      "module": 65,
+      "functions": 1,
+      "sized_functions": 1,
+      "function_bytes": 1696,
+      "cross_module_edges": {
+        "0": 2
+      },
+      "entry_names": [
+        "GenerateTorchFireTex"
+      ]
+    },
+    {
+      "module": 66,
+      "functions": 4,
+      "sized_functions": 4,
+      "function_bytes": 2544,
+      "cross_module_edges": {
+        "0": 13
+      },
+      "entry_names": [
+        "windowfxInit",
+        "windowfxControl",
+        "windowMakeBeams",
+        "windowDrawBeams"
+      ]
+    },
+    {
+      "module": 67,
+      "functions": 20,
+      "sized_functions": 20,
+      "function_bytes": 17456,
+      "cross_module_edges": {
+        "0": 171,
+        "8": 1,
+        "10": 1,
+        "39": 1
+      },
+      "entry_names": [
+        "mantisEditMenu",
+        "func_overlay_67_04300008_1F87A00",
+        "mantisJump",
+        "func_overlay_67_0430025C_1F87C54"
+      ]
+    },
+    {
+      "module": 68,
+      "functions": 96,
+      "sized_functions": 96,
+      "function_bytes": 70560,
+      "cross_module_edges": {
+        "0": 452,
+        "6": 10,
+        "8": 10,
+        "10": 4
+      },
+      "entry_names": [
+        "mizarSetup",
+        "mizarAISetup",
+        "mizarTiltList",
+        "mizarLightUp"
+      ]
+    },
+    {
+      "module": 69,
+      "functions": 6,
+      "sized_functions": 6,
+      "function_bytes": 7072,
+      "cross_module_edges": {
+        "0": 63
+      },
+      "entry_names": [
+        "duckshootInit",
+        "duckshootUpdate",
+        "func_overlay_69_04500A84_1FA3F6C",
+        "func_overlay_69_0450135C_1FA4844"
+      ]
+    },
+    {
+      "module": 70,
+      "functions": 1,
+      "sized_functions": 1,
+      "function_bytes": 208,
+      "cross_module_edges": {
+        "0": 1
+      },
+      "entry_names": [
+        "genericplayerInit"
+      ]
+    },
+    {
+      "module": 71,
+      "functions": 1,
+      "sized_functions": 1,
+      "function_bytes": 112,
+      "cross_module_edges": {
+        "0": 1
+      },
+      "entry_names": [
+        "osCartDmaTest3_6105"
+      ]
+    },
+    {
+      "module": 72,
+      "functions": 3,
+      "sized_functions": 3,
+      "function_bytes": 1152,
+      "cross_module_edges": {
+        "0": 16,
+        "6": 1
+      },
+      "entry_names": [
+        "ammoPickupInit",
+        "ammoPickupControl",
+        "ammoPickupGetFade"
+      ]
+    },
+    {
+      "module": 73,
+      "functions": 4,
+      "sized_functions": 4,
+      "function_bytes": 1888,
+      "cross_module_edges": {
+        "0": 14
+      },
+      "entry_names": [
+        "animshipInit",
+        "animshipControl",
+        "animshipFree",
+        "animshipDrawThrusters"
+      ]
+    },
+    {
+      "module": 74,
+      "functions": 2,
+      "sized_functions": 2,
+      "function_bytes": 576,
+      "cross_module_edges": {
+        "0": 3
+      },
+      "entry_names": [
+        "animswitchInit",
+        "animswitchControl"
+      ]
+    },
+    {
+      "module": 75,
+      "functions": 9,
+      "sized_functions": 9,
+      "function_bytes": 5088,
+      "cross_module_edges": {
+        "0": 69
+      },
+      "entry_names": [
+        "arcadecameraInit",
+        "arcadecameraUpdate",
+        "arcadeInit",
+        "arcadeControl"
+      ]
+    },
+    {
+      "module": 76,
+      "functions": 4,
+      "sized_functions": 4,
+      "function_bytes": 3344,
+      "cross_module_edges": {
+        "0": 7
+      },
+      "entry_names": [
+        "beamInit",
+        "beamControl",
+        "beamScroll",
+        "beamDraw"
+      ]
+    },
+    {
+      "module": 77,
+      "functions": 5,
+      "sized_functions": 5,
+      "function_bytes": 2112,
+      "cross_module_edges": {
+        "0": 13
+      },
+      "entry_names": [
+        "blastdoorStatus",
+        "blastdoorOpen",
+        "blastdoorInit",
+        "blastdoorControl"
+      ]
+    },
+    {
+      "module": 78,
+      "functions": 2,
+      "sized_functions": 2,
+      "function_bytes": 192,
+      "cross_module_edges": {
+        "0": 3
+      },
+      "entry_names": [
+        "bubblerInit",
+        "bubblerControl"
+      ]
+    },
+    {
+      "module": 79,
+      "functions": 2,
+      "sized_functions": 2,
+      "function_bytes": 144,
+      "cross_module_edges": {
+        "0": 1
+      },
+      "entry_names": [
+        "buoyInit",
+        "buoyControl"
+      ]
+    },
+    {
+      "module": 80,
+      "functions": 3,
+      "sized_functions": 3,
+      "function_bytes": 5264,
+      "cross_module_edges": {
+        "0": 21
+      },
+      "entry_names": [
+        "butterflyInit",
+        "butterflyControl",
+        "func_overlay_80_05001324_1FABABC"
+      ]
+    },
+    {
+      "module": 81,
+      "functions": 6,
+      "sized_functions": 6,
+      "function_bytes": 3040,
+      "cross_module_edges": {
+        "0": 21
+      },
+      "entry_names": [
+        "func_overlay_81_05100000_1FABF58",
+        "chargeEffectCreate",
+        "chargeEffectFree",
+        "chargeEffectSetPower"
+      ]
+    },
+    {
+      "module": 82,
+      "functions": 10,
+      "sized_functions": 10,
+      "function_bytes": 6048,
+      "cross_module_edges": {
+        "0": 60,
+        "7": 5
+      },
+      "entry_names": [
+        "chestcameraInit",
+        "chestcameraUpdate",
+        "func_overlay_82_05200340_1FAD0B8",
+        "chestInit"
+      ]
+    },
+    {
+      "module": 83,
+      "functions": 4,
+      "sized_functions": 4,
+      "function_bytes": 4608,
+      "cross_module_edges": {
+        "0": 57
+      },
+      "entry_names": [
+        "mainclusterInit",
+        "mainclusterControl",
+        "smallclusterInit",
+        "smallclusterControl"
+      ]
+    },
+    {
+      "module": 84,
+      "functions": 2,
+      "sized_functions": 2,
+      "function_bytes": 208,
+      "cross_module_edges": {
+        "0": 1
+      },
+      "entry_names": [
+        "craterInit",
+        "craterControl"
+      ]
+    },
+    {
+      "module": 85,
+      "functions": 4,
+      "sized_functions": 4,
+      "function_bytes": 816,
+      "cross_module_edges": {
+        "0": 12,
+        "5": 2,
+        "6": 2
+      },
+      "entry_names": [
+        "cutcameraInit",
+        "cutcameraActivate",
+        "cutcameraControl",
+        "cutcameraUpdate"
+      ]
+    },
+    {
+      "module": 86,
+      "functions": 2,
+      "sized_functions": 2,
+      "function_bytes": 1472,
+      "cross_module_edges": {
+        "0": 20
+      },
+      "entry_names": [
+        "CyborgMissileInit",
+        "CyborgMissileControl"
+      ]
+    },
+    {
+      "module": 87,
+      "functions": 8,
+      "sized_functions": 8,
+      "function_bytes": 4640,
+      "cross_module_edges": {
+        "0": 31,
+        "8": 1
+      },
+      "entry_names": [
+        "func_overlay_87_05700000_1FB0DC0",
+        "func_overlay_87_057000D4_1FB0E94",
+        "damagecrateInit",
+        "damagecrateControl"
+      ]
+    },
+    {
+      "module": 88,
+      "functions": 2,
+      "sized_functions": 2,
+      "function_bytes": 752,
+      "cross_module_edges": {
+        "0": 6
+      },
+      "entry_names": [
+        "dopplerPointInit",
+        "dopplerPointControl"
+      ]
+    },
+    {
+      "module": 89,
+      "functions": 3,
+      "sized_functions": 3,
+      "function_bytes": 1120,
+      "cross_module_edges": {
+        "0": 11
+      },
+      "entry_names": [
+        "GetVtxPosition",
+        "electrocutionInit",
+        "electrocutionControl"
+      ]
+    },
+    {
+      "module": 90,
+      "functions": 3,
+      "sized_functions": 3,
+      "function_bytes": 1648,
+      "cross_module_edges": {
+        "0": 14,
+        "10": 2
+      },
+      "entry_names": [
+        "func_overlay_90_05A00000_1FB2D20",
+        "fireworkInit",
+        "fireworkControl"
+      ]
+    },
+    {
+      "module": 91,
+      "functions": 3,
+      "sized_functions": 3,
+      "function_bytes": 3872,
+      "cross_module_edges": {
+        "0": 27
+      },
+      "entry_names": [
+        "func_overlay_91_05B00000_1FB3558",
+        "fishInit",
+        "fishControl"
+      ]
+    },
+    {
+      "module": 92,
+      "functions": 2,
+      "sized_functions": 2,
+      "function_bytes": 816,
+      "cross_module_edges": {
+        "0": 5
+      },
+      "entry_names": [
+        "fishfoodInit",
+        "fishfoodControl"
+      ]
+    },
+    {
+      "module": 93,
+      "functions": 2,
+      "sized_functions": 2,
+      "function_bytes": 688,
+      "cross_module_edges": {
+        "0": 10,
+        "6": 1,
+        "10": 1
+      },
+      "entry_names": [
+        "flagtargetInit",
+        "flagtargetControl"
+      ]
+    },
+    {
+      "module": 94,
+      "functions": 2,
+      "sized_functions": 2,
+      "function_bytes": 320,
+      "cross_module_edges": {
+        "0": 8
+      },
+      "entry_names": [
+        "flagtriggerInit",
+        "flagtriggerControl"
+      ]
+    },
+    {
+      "module": 95,
+      "functions": 7,
+      "sized_functions": 7,
+      "function_bytes": 6192,
+      "cross_module_edges": {
+        "0": 26,
+        "3": 2
+      },
+      "entry_names": [
+        "flamethrowerInit",
+        "flamethrowerFire",
+        "flamethrowerUpdate",
+        "flamethrowerConstrain"
+      ]
+    },
+    {
+      "module": 96,
+      "functions": 3,
+      "sized_functions": 3,
+      "function_bytes": 1568,
+      "cross_module_edges": {
+        "0": 18,
+        "105": 1
+      },
+      "entry_names": [
+        "flareInit",
+        "flareControl",
+        "flareThrow"
+      ]
+    },
+    {
+      "module": 97,
+      "functions": 2,
+      "sized_functions": 2,
+      "function_bytes": 960,
+      "cross_module_edges": {
+        "0": 12
+      },
+      "entry_names": [
+        "hitfragmentInit",
+        "hitfragmentControl"
+      ]
+    },
+    {
+      "module": 98,
+      "functions": 1,
+      "sized_functions": 1,
+      "function_bytes": 112,
+      "cross_module_edges": {
+        "0": 1
+      },
+      "entry_names": [
+        "osCartDmaTest4_6105"
+      ]
+    },
+    {
+      "module": 99,
+      "functions": 2,
+      "sized_functions": 2,
+      "function_bytes": 1744,
+      "cross_module_edges": {
+        "0": 21
+      },
+      "entry_names": [
+        "frogInit",
+        "frogControl"
+      ]
+    },
+    {
+      "module": 100,
+      "functions": 2,
+      "sized_functions": 2,
+      "function_bytes": 752,
+      "cross_module_edges": {
+        "0": 4
+      },
+      "entry_names": [
+        "refuelInit",
+        "refuelControl"
+      ]
+    },
+    {
+      "module": 101,
+      "functions": 5,
+      "sized_functions": 5,
+      "function_bytes": 4160,
+      "cross_module_edges": {
+        "0": 30
+      },
+      "entry_names": [
+        "func_overlay_101_06500000_1FB81B8",
+        "func_overlay_101_0650056C_1FB8724",
+        "glassInit",
+        "glassControl"
+      ]
+    },
+    {
+      "module": 102,
+      "functions": 3,
+      "sized_functions": 3,
+      "function_bytes": 2096,
+      "cross_module_edges": {
+        "0": 16,
+        "3": 1
+      },
+      "entry_names": [
+        "grenadeInit",
+        "grenadeDestroy",
+        "grenadeControl"
+      ]
+    },
+    {
+      "module": 103,
+      "functions": 2,
+      "sized_functions": 2,
+      "function_bytes": 576,
+      "cross_module_edges": {
+        "0": 7
+      },
+      "entry_names": [
+        "grubInit",
+        "grubControl"
+      ]
+    },
+    {
+      "module": 104,
+      "functions": 2,
+      "sized_functions": 2,
+      "function_bytes": 1696,
+      "cross_module_edges": {
+        "0": 18,
+        "6": 3
+      },
+      "entry_names": [
+        "healthPickupInit",
+        "healthPickupControl"
+      ]
+    },
+    {
+      "module": 105,
+      "functions": 5,
+      "sized_functions": 5,
+      "function_bytes": 7936,
+      "cross_module_edges": {
+        "0": 20
+      },
+      "entry_names": [
+        "hitBridgeInit",
+        "hitBridgeControl",
+        "hitBridgeMoveY",
+        "hitBridgeMoveWith"
+      ]
+    },
+    {
+      "module": 106,
+      "functions": 7,
+      "sized_functions": 7,
+      "function_bytes": 7472,
+      "cross_module_edges": {
+        "0": 81,
+        "23": 1,
+        "81": 5
+      },
+      "entry_names": [
+        "hoovertankInit",
+        "hoovertankControl",
+        "hoovertankDrawEffects",
+        "hoovertankFree"
+      ]
+    },
+    {
+      "module": 107,
+      "functions": 6,
+      "sized_functions": 6,
+      "function_bytes": 4224,
+      "cross_module_edges": {
+        "0": 28,
+        "6": 1
+      },
+      "entry_names": [
+        "invincibilityInit",
+        "invincibilityControl",
+        "invincibilityShieldInit",
+        "invincibilityShieldControl"
+      ]
+    },
+    {
+      "module": 108,
+      "functions": 2,
+      "sized_functions": 2,
+      "function_bytes": 544,
+      "cross_module_edges": {
+        "0": 7,
+        "6": 1
+      },
+      "entry_names": [
+        "keyInit",
+        "keyControl"
+      ]
+    },
+    {
+      "module": 109,
+      "functions": 3,
+      "sized_functions": 3,
+      "function_bytes": 2960,
+      "cross_module_edges": {
+        "0": 30
+      },
+      "entry_names": [
+        "laserboltInit",
+        "laserboltControl",
+        "_AutoExit00109"
+      ]
+    },
+    {
+      "module": 110,
+      "functions": 3,
+      "sized_functions": 3,
+      "function_bytes": 896,
+      "cross_module_edges": {
+        "0": 3
+      },
+      "entry_names": [
+        "markerboxInit",
+        "func_overlay_110_06E00054_1FC0E04",
+        "trackFadeExceptions"
+      ]
+    },
+    {
+      "module": 111,
+      "functions": 1,
+      "sized_functions": 1,
+      "function_bytes": 144,
+      "cross_module_edges": {
+        "0": 2
+      },
+      "entry_names": [
+        "osCartTest3_6105"
+      ]
+    },
+    {
+      "module": 112,
+      "functions": 5,
+      "sized_functions": 5,
+      "function_bytes": 5088,
+      "cross_module_edges": {
+        "0": 56,
+        "105": 1
+      },
+      "entry_names": [
+        "mineRemove",
+        "mineInit",
+        "mineControl",
+        "mineDraw"
+      ]
+    },
+    {
+      "module": 113,
+      "functions": 2,
+      "sized_functions": 2,
+      "function_bytes": 3264,
+      "cross_module_edges": {
+        "0": 37
+      },
+      "entry_names": [
+        "missileInit",
+        "missileControl"
+      ]
+    },
+    {
+      "module": 114,
+      "functions": 4,
+      "sized_functions": 4,
+      "function_bytes": 1520,
+      "cross_module_edges": {
+        "0": 2
+      },
+      "entry_names": [
+        "multitargetInit",
+        "multitargetControl",
+        "multiptargetInit",
+        "multiptargetControl"
+      ]
+    },
+    {
+      "module": 115,
+      "functions": 2,
+      "sized_functions": 2,
+      "function_bytes": 960,
+      "cross_module_edges": {
+        "0": 11,
+        "77": 4,
+        "85": 6
+      },
+      "entry_names": [
+        "nightvisionpadInit",
+        "nightvisionpadControl"
+      ]
+    },
+    {
+      "module": 116,
+      "functions": 4,
+      "sized_functions": 4,
+      "function_bytes": 1280,
+      "cross_module_edges": {
+        "0": 16,
+        "31": 5
+      },
+      "entry_names": [
+        "racepickupInit",
+        "racepickupControl",
+        "raceobstacleInit",
+        "raceobstacleControl"
+      ]
+    },
+    {
+      "module": 117,
+      "functions": 4,
+      "sized_functions": 4,
+      "function_bytes": 2944,
+      "cross_module_edges": {
+        "0": 27
+      },
+      "entry_names": [
+        "func_overlay_117_07500000_1FC4868",
+        "regionidInit",
+        "regionidControl",
+        "regionidDraw"
+      ]
+    },
+    {
+      "module": 118,
+      "functions": 7,
+      "sized_functions": 7,
+      "function_bytes": 2304,
+      "cross_module_edges": {
+        "0": 26,
+        "10": 1,
+        "22": 4
+      },
+      "entry_names": [
+        "func_overlay_118_07600000_1FC5538",
+        "robottargetInit",
+        "robottargetControl",
+        "robotcollectableInit"
+      ]
+    },
+    {
+      "module": 119,
+      "functions": 1,
+      "sized_functions": 1,
+      "function_bytes": 256,
+      "cross_module_edges": {
+        "0": 5
+      },
+      "entry_names": [
+        "robotTokenControl"
+      ]
+    },
+    {
+      "module": 120,
+      "functions": 6,
+      "sized_functions": 6,
+      "function_bytes": 2768,
+      "cross_module_edges": {
+        "0": 24,
+        "10": 1
+      },
+      "entry_names": [
+        "fireExplosionInit",
+        "fireExplosionControl",
+        "smokingfireInit",
+        "smokingfireControl"
+      ]
+    },
+    {
+      "module": 121,
+      "functions": 4,
+      "sized_functions": 4,
+      "function_bytes": 4144,
+      "cross_module_edges": {
+        "0": 17
+      },
+      "entry_names": [
+        "shardClusterInit",
+        "shardClusterControl",
+        "shardClusterDestroy",
+        "func_overlay_121_079004D0_1FC72D8"
+      ]
+    },
+    {
+      "module": 122,
+      "functions": 5,
+      "sized_functions": 5,
+      "function_bytes": 4272,
+      "cross_module_edges": {
+        "0": 54,
+        "3": 2,
+        "105": 1
+      },
+      "entry_names": [
+        "ShirukenInit",
+        "func_overlay_122_07A00374_1FC825C",
+        "ShirukenControl",
+        "ShirukenPushMtx"
+      ]
+    },
+    {
+      "module": 123,
+      "functions": 2,
+      "sized_functions": 2,
+      "function_bytes": 1072,
+      "cross_module_edges": {
+        "0": 6
+      },
+      "entry_names": [
+        "spinlightInit",
+        "spinlightControl"
+      ]
+    },
+    {
+      "module": 124,
+      "functions": 5,
+      "sized_functions": 5,
+      "function_bytes": 2480,
+      "cross_module_edges": {
+        "0": 24,
+        "10": 1
+      },
+      "entry_names": [
+        "func_overlay_124_07C00000_1FC9678",
+        "func_overlay_124_07C00150_1FC97C8",
+        "func_overlay_124_07C001C8_1FC9840",
+        "spotlightInit"
+      ]
+    },
+    {
+      "module": 125,
+      "functions": 2,
+      "sized_functions": 2,
+      "function_bytes": 1424,
+      "cross_module_edges": {
+        "0": 12,
+        "85": 1
+      },
+      "entry_names": [
+        "targetswitchInit",
+        "targetswitchControl"
+      ]
+    },
+    {
+      "module": 126,
+      "functions": 3,
+      "sized_functions": 3,
+      "function_bytes": 4688,
+      "cross_module_edges": {
+        "0": 31
+      },
+      "entry_names": [
+        "teleportEffectInit",
+        "teleportEffectControl",
+        "teleportEffectDraw"
+      ]
+    },
+    {
+      "module": 127,
+      "functions": 6,
+      "sized_functions": 6,
+      "function_bytes": 4432,
+      "cross_module_edges": {
+        "0": 60,
+        "7": 3
+      },
+      "entry_names": [
+        "func_overlay_127_07F00000_1FCBC50",
+        "terminalInit",
+        "terminalControl",
+        "terminalCameraInit"
+      ]
+    },
+    {
+      "module": 128,
+      "functions": 2,
+      "sized_functions": 2,
+      "function_bytes": 704,
+      "cross_module_edges": {
+        "0": 9,
+        "6": 1
+      },
+      "entry_names": [
+        "totemPoleInit",
+        "totemPoleControl"
+      ]
+    },
+    {
+      "module": 129,
+      "functions": 12,
+      "sized_functions": 12,
+      "function_bytes": 4192,
+      "cross_module_edges": {
+        "0": 40,
+        "77": 4
+      },
+      "entry_names": [
+        "func_overlay_129_08100000_1FCD7D0",
+        "func_overlay_129_08100084_1FCD854",
+        "func_overlay_129_081000D0_1FCD8A0",
+        "func_overlay_129_08100224_1FCD9F4"
+      ]
+    },
+    {
+      "module": 130,
+      "functions": 2,
+      "sized_functions": 2,
+      "function_bytes": 1504,
+      "cross_module_edges": {
+        "0": 21
+      },
+      "entry_names": [
+        "TwinkleInit",
+        "TwinkleControl"
+      ]
+    },
+    {
+      "module": 131,
+      "functions": 3,
+      "sized_functions": 3,
+      "function_bytes": 1984,
+      "cross_module_edges": {
+        "0": 20
+      },
+      "entry_names": [
+        "twisterInit",
+        "twisterControl",
+        "twisterDraw"
+      ]
+    },
+    {
+      "module": 132,
+      "functions": 2,
+      "sized_functions": 2,
+      "function_bytes": 784,
+      "cross_module_edges": {
+        "0": 6,
+        "6": 1
+      },
+      "entry_names": [
+        "weaponPickupInit",
+        "weaponPickupControl"
+      ]
+    },
+    {
+      "module": 133,
+      "functions": 1,
+      "sized_functions": 1,
+      "function_bytes": 144,
+      "cross_module_edges": {
+        "0": 2
+      },
+      "entry_names": [
+        "osCartTest4_6105"
+      ]
+    },
+    {
+      "module": 134,
+      "functions": 2,
+      "sized_functions": 2,
+      "function_bytes": 240,
+      "cross_module_edges": {
+        "0": 2
+      },
+      "entry_names": [
+        "weatherInit",
+        "weatherControl"
+      ]
+    },
+    {
+      "module": 135,
+      "functions": 15,
+      "sized_functions": 15,
+      "function_bytes": 10704,
+      "cross_module_edges": {
+        "0": 70
+      },
+      "entry_names": [
+        "menuCamFocusInit",
+        "menuCamFocusControl",
+        "menuCamInit",
+        "menuCamControl"
+      ]
+    },
+    {
+      "module": 136,
+      "functions": 21,
+      "sized_functions": 21,
+      "function_bytes": 7600,
+      "cross_module_edges": {
+        "0": 24,
+        "11": 1,
+        "44": 1,
+        "154": 1
+      },
+      "entry_names": [
+        "exitInit",
+        "staticcamInit",
+        "setupInit",
+        "doorInit"
+      ]
+    },
+    {
+      "module": 137,
+      "functions": 4,
+      "sized_functions": 4,
+      "function_bytes": 5968,
+      "cross_module_edges": {
+        "0": 35,
+        "95": 1
+      },
+      "entry_names": [
+        "realReflectSurfaces",
+        "realReflectCreateList",
+        "realReflectPrint",
+        "func_overlay_137_08901580_1FD68C0"
+      ]
+    },
+    {
+      "module": 138,
+      "functions": 1,
+      "sized_functions": 1,
+      "function_bytes": 752,
+      "cross_module_edges": {
+        "0": 8,
+        "3": 2
+      },
+      "entry_names": [
+        "AntShipMover"
+      ]
+    },
+    {
+      "module": 139,
+      "functions": 5,
+      "sized_functions": 5,
+      "function_bytes": 992,
+      "cross_module_edges": {
+        "0": 2,
+        "3": 3
+      },
+      "entry_names": [
+        "_AutoInit00139",
+        "squadsMakeFoodList",
+        "squadsGetClosestFood",
+        "squadsIsFoodAvailable"
+      ]
+    },
+    {
+      "module": 140,
+      "functions": 1,
+      "sized_functions": 1,
+      "function_bytes": 944,
+      "cross_module_edges": {
+        "0": 8,
+        "3": 3
+      },
+      "entry_names": [
+        "BTSBBlackAnt"
+      ]
+    },
+    {
+      "module": 141,
+      "functions": 3,
+      "sized_functions": 3,
+      "function_bytes": 944,
+      "cross_module_edges": {
+        "0": 7,
+        "3": 6
+      },
+      "entry_names": [
+        "BTSBDragonfly",
+        "DragonflyMover",
+        "DragonflyTilt"
+      ]
+    },
+    {
+      "module": 142,
+      "functions": 11,
+      "sized_functions": 11,
+      "function_bytes": 5200,
+      "cross_module_edges": {
+        "0": 28,
+        "3": 2
+      },
+      "entry_names": [
+        "func_overlay_142_08E00000_1FD7EB8",
+        "func_overlay_142_08E001BC_1FD8074",
+        "func_overlay_142_08E002C0_1FD8178",
+        "func_overlay_142_08E002DC_1FD8194"
+      ]
+    },
+    {
+      "module": 143,
+      "functions": 11,
+      "sized_functions": 11,
+      "function_bytes": 11200,
+      "cross_module_edges": {
+        "0": 45,
+        "3": 15,
+        "87": 4
+      },
+      "entry_names": [
+        "func_overlay_143_08F00000_1FD9998",
+        "func_overlay_143_08F0007C_1FD9A14",
+        "FatBobDrawShockWave",
+        "FatBobShockWaveInit"
+      ]
+    },
+    {
+      "module": 144,
+      "functions": 1,
+      "sized_functions": 1,
+      "function_bytes": 16,
+      "cross_module_edges": {},
+      "entry_names": [
+        "osRamTest3_6105"
+      ]
+    },
+    {
+      "module": 145,
+      "functions": 2,
+      "sized_functions": 2,
+      "function_bytes": 928,
+      "cross_module_edges": {
+        "0": 10,
+        "3": 9
+      },
+      "entry_names": [
+        "BTSBFloater",
+        "FloaterMover"
+      ]
+    },
+    {
+      "module": 146,
+      "functions": 6,
+      "sized_functions": 6,
+      "function_bytes": 3360,
+      "cross_module_edges": {
+        "0": 25,
+        "3": 30,
+        "139": 1
+      },
+      "entry_names": [
+        "NewFlopsyFunction",
+        "FlopsyDogMover",
+        "FlopsyDogFacer",
+        "FlopsyDogSpotPlayer"
+      ]
+    },
+    {
+      "module": 147,
+      "functions": 3,
+      "sized_functions": 3,
+      "function_bytes": 1456,
+      "cross_module_edges": {
+        "0": 16,
+        "3": 8
+      },
+      "entry_names": [
+        "BTSBGalaxianCorkScrew",
+        "CorkScrewAttackMover",
+        "CorkScrewAttackFacer"
+      ]
+    },
+    {
+      "module": 148,
+      "functions": 2,
+      "sized_functions": 2,
+      "function_bytes": 544,
+      "cross_module_edges": {
+        "3": 4
+      },
+      "entry_names": [
+        "BTSBGunTurret",
+        "TurretFireMover"
+      ]
+    },
+    {
+      "module": 149,
+      "functions": 7,
+      "sized_functions": 7,
+      "function_bytes": 8608,
+      "cross_module_edges": {
+        "0": 67,
+        "3": 7
+      },
+      "entry_names": [
+        "BTSBSlugBoss",
+        "SlugBossPhaseChange",
+        "FlowerBoltInit",
+        "FlowerBoltControl"
+      ]
+    },
+    {
+      "module": 150,
+      "functions": 3,
+      "sized_functions": 3,
+      "function_bytes": 768,
+      "cross_module_edges": {
+        "0": 6,
+        "3": 2
+      },
+      "entry_names": [
+        "BTSBSpannerHand",
+        "LaserBeamInit",
+        "LaserBeamControl"
+      ]
+    },
+    {
+      "module": 151,
+      "functions": 7,
+      "sized_functions": 7,
+      "function_bytes": 4064,
+      "cross_module_edges": {
+        "0": 25,
+        "3": 16,
+        "8": 1,
+        "139": 2
+      },
+      "entry_names": [
+        "BTSBSpider",
+        "SpiderMover",
+        "SpiderEatStuffMover",
+        "SpiderSpitInit"
+      ]
+    },
+    {
+      "module": 152,
+      "functions": 5,
+      "sized_functions": 5,
+      "function_bytes": 3776,
+      "cross_module_edges": {
+        "0": 31
+      },
+      "entry_names": [
+        "GetWaveAboutPosition",
+        "GetPushPosition",
+        "BTSBWaterBoss",
+        "WaterBossDrawSprites"
+      ]
+    },
+    {
+      "module": 153,
+      "functions": 2,
+      "sized_functions": 2,
+      "function_bytes": 1104,
+      "cross_module_edges": {
+        "0": 11,
+        "3": 1,
+        "8": 1
+      },
+      "entry_names": [
+        "zombieFlobInit",
+        "zombieFlobControl"
+      ]
+    },
+    {
+      "module": 154,
+      "functions": 15,
+      "sized_functions": 15,
+      "function_bytes": 6240,
+      "cross_module_edges": {
+        "0": 8,
+        "3": 6
+      },
+      "entry_names": [
+        "SetBlockedNodes",
+        "GetClosestPatrolNode",
+        "GetFurthestPatrolNode",
+        "func_overlay_154_09A00410_1FE4A08"
+      ]
+    },
+    {
+      "module": 155,
+      "functions": 27,
+      "sized_functions": 27,
+      "function_bytes": 15472,
+      "cross_module_edges": {
+        "0": 52,
+        "3": 22
+      },
+      "entry_names": [
+        "_AutoInit00155",
+        "_AutoExit00155",
+        "func_overlay_155_09B000C8_1FE6548",
+        "func_overlay_155_09B001B4_1FE6634"
+      ]
+    },
+    {
+      "module": 156,
+      "functions": 1,
+      "sized_functions": 1,
+      "function_bytes": 48,
+      "cross_module_edges": {},
+      "entry_names": [
+        "osRamTest4_6105"
+      ]
+    },
+    {
+      "module": 157,
+      "functions": 1,
+      "sized_functions": 1,
+      "function_bytes": 384,
+      "cross_module_edges": {
+        "0": 1
+      },
+      "entry_names": [
+        "fxDrawWindow"
+      ]
+    }
+  ],
+  "limits": [
+    "Static graph over ELF function extents, not executed control flow or a completion percentage",
+    "Register-indirect calls/jumps, jump-table targets and data-driven callback reachability remain incomplete",
+    "Zero-size entries and interior targets need explicit boundaries before porting",
+    "Native decision mappings cover only their documented scope; legacy recompilation is not active integration",
+    "No MIPS, console device or emulator execution"
+  ]
+}

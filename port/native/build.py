@@ -12,7 +12,8 @@ toolchain = ROOT / "build/port-recomp/cross-toolchain/llvm-mingw-20260922-ucrt-u
 compiler = toolchain / "bin/x86_64-w64-mingw32-clang++"
 exe = out / "jfg_native_preview.exe"
 command = [str(compiler), "-std=c++17", "-O2", "-Wall", "-Wextra", "-Werror", "-DNOMINMAX", "-DWIN32_LEAN_AND_MEAN",
-           "-static", str(ROOT / "port/native/render.cpp"), "-o", str(exe), "-ld3d11", "-ld3dcompiler", "-ldxgi", "-lole32"]
+           "-static", str(ROOT / "port/native/render.cpp"), str(ROOT / "port/native/renderer_d3d11.cpp"),
+           "-o", str(exe), "-ld3d11", "-ld3dcompiler", "-ldxgi", "-lole32"]
 subprocess.run(command, check=True)
 math_exe = out / "check_animation.exe"
 subprocess.run([str(compiler), "-std=c++17", "-O2", "-Wall", "-Wextra", "-Werror", "-ffp-contract=off", "-static",
@@ -33,5 +34,15 @@ juno_exe = out / "check_juno_selection.exe"
 subprocess.run([str(compiler), "-std=c++17", "-O2", "-Wall", "-Wextra", "-Werror", "-ffp-contract=off", "-static",
                 str(ROOT / "port/native/check_juno_selection.cpp"), "-o", str(juno_exe)], check=True)
 report["juno_selection_executable_sha256"] = hashlib.sha256(juno_exe.read_bytes()).hexdigest()
+session_exe = out / "jfg_native_session.exe"
+subprocess.run([str(compiler), "-std=c++17", "-O2", "-Wall", "-Wextra", "-Werror", "-DNOMINMAX", "-DWIN32_LEAN_AND_MEAN", "-static",
+                str(ROOT / "port/native/session_main.cpp"), str(ROOT / "port/native/renderer_d3d11.cpp"), "-o", str(session_exe),
+                "-ld3d11", "-ld3dcompiler", "-ldxgi", "-lole32"], check=True)
+session_check = out / "check_session.exe"
+subprocess.run([str(compiler), "-std=c++17", "-O2", "-Wall", "-Wextra", "-Werror", "-ffp-contract=off", "-static",
+                str(ROOT / "port/native/check_session.cpp"), "-o", str(session_check)], check=True)
+report["renderer_sources"] = ["port/native/render.cpp", "port/native/renderer_d3d11.cpp"]
+report["native_session_executable_sha256"] = hashlib.sha256(session_exe.read_bytes()).hexdigest()
+report["native_session_check_sha256"] = hashlib.sha256(session_check.read_bytes()).hexdigest()
 (out / "build-report.json").write_text(json.dumps(report, indent=2) + "\n")
 print(json.dumps(report))

@@ -50,6 +50,11 @@ def main():
     juno_test = owned("juno_selection_test", [str(package / "check_juno_selection.exe"), *([str(package / "juno-selection.bin")] if juno else [])])
     if juno_test["exit_code"] or juno_test["timed_out"]:
         raise RuntimeError("Original Juno selection failed: " + juno_test["stderr"])
+    integration = (package / "jfg_native_session.exe").is_file()
+    session_test = owned("session_test", [str(package / "check_session.exe"),
+                         *([str(package / "scene.bin"), str(package / "juno-selection.bin")] if juno else [])])
+    if session_test["exit_code"] or session_test["timed_out"]:
+        raise RuntimeError("Native application session failed: " + session_test["stderr"])
     magic = (package / "scene.bin").read_bytes()[:8]
     multiple = magic == b"JFGNAT3\0"
     rigged = multiple or magic == b"JFGNAT2\0"
@@ -58,14 +63,20 @@ def main():
     options = (["--juno-selection", str(package / "juno_sequence.txt"), str(package / "juno-selection.bin")] if juno else
                ["--character", str(package / "character_sequence.txt")] if character else
                ["--sequence", str(package / "transition_sequence.txt")] if multiple else ["--animate"] if rigged else [])
-    render = owned("render", [*command, str(out / "frame"), *options])
+    render_command = ([str(package / "jfg_native_session.exe"), str(package / "scene.bin"),
+                       str(package / "juno-selection.bin"), str(out / "frame")] if integration else [*command, str(out / "frame"), *options])
+    render = owned("render", render_command)
     neutral = None
     cycle = None
     wide_cycle = None
     transitions = None
     character_regression = None
+    juno_regression = None
     if rigged and render["exit_code"] == 0 and not render["timed_out"]:
         if multiple:
+            if integration:
+                juno_regression = owned("juno", [*command, str(out / "juno"), "--juno-selection",
+                                                str(package / "juno_sequence.txt"), str(package / "juno-selection.bin")])
             if juno:
                 character_regression = owned("character", [*command, str(out / "character"), "--character", str(package / "character_sequence.txt")])
             if character:
@@ -84,10 +95,14 @@ def main():
               **render}
     result["character_test"] = character_test
     result["juno_selection_test"] = juno_test
+    result["session_test"] = session_test
+    result["session"] = json.loads((out / "frame.session.json").read_text()) if integration and (out / "frame.session.json").exists() else None
+    result["juno_selection_regression"] = juno_regression
     result["transition_regression"] = transitions
     result["character_regression"] = character_regression
     result["ok"] = bool(result["ok"] and (not character or (transitions and transitions["exit_code"] == 0 and not transitions["timed_out"])))
     result["ok"] = bool(result["ok"] and (not juno or (character_regression and character_regression["exit_code"] == 0 and not character_regression["timed_out"])))
+    result["ok"] = bool(result["ok"] and (not integration or (result["session"] and juno_regression and juno_regression["exit_code"] == 0 and not juno_regression["timed_out"])))
     (out / "result.json").write_text(json.dumps(result, indent=2) + "\n")
     print(json.dumps(result))
 

@@ -13,7 +13,7 @@ out = parser.parse_args().out.resolve()
 if not out.is_relative_to(ROOT / "build"):
     raise ValueError("Private package must remain under ignored build/")
 build = ROOT / "build/port-native"
-files = {name: (build / name).read_bytes() for name in ("jfg_native_preview.exe", "check_animation.exe", "check_player.exe", "check_character.exe", "check_juno_selection.exe")}
+files = {name: (build / name).read_bytes() for name in ("jfg_native_preview.exe", "check_animation.exe", "check_player.exe", "check_character.exe", "check_juno_selection.exe", "check_session.exe")}
 files["scene.bin"] = (out / "scene.bin").read_bytes()
 assets = json.loads((out / "assets-report.json").read_text())
 if assets["scene_sha256"] != hashlib.sha256(files["scene.bin"]).hexdigest():
@@ -28,6 +28,8 @@ if assets.get("juno_selection_profile"):
     selection = json.loads((out / "selection-assets-report.json").read_text())
     if hashlib.sha256(files["juno-selection.bin"]).hexdigest() != selection["payload_sha256"]:
         raise ValueError("Juno selection differs from its static audit")
+if assets.get("integration_profile"):
+    files["jfg_native_session.exe"] = (build / "jfg_native_session.exe").read_bytes()
 files["run_windows.py"] = (ROOT / "port/native/run_windows.py").read_bytes()
 files["PRIVATE.txt"] = b"Private game-derived meshes and textures. Do not publish this package.\n"
 files["hashes.json"] = (json.dumps({n: hashlib.sha256(v).hexdigest() for n, v in files.items()}, indent=2) + "\n").encode()

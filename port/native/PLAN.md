@@ -211,3 +211,10 @@ repetição, erro sem mutação e 20 seleções da tabela real. A RTX produziu
 instantâneo. O início em fração 0,5 do clipe de 50 quadros resultou em fase
 24,5, sem confundir com a mistura nativa de 0,2 segundo. As quatro provas
 gráficas anteriores permaneceram idênticas byte a byte.
+
+## Mudança de escala: estrutura geral do port
+
+Thiago pediu priorizar o contexto global e absorver os detalhes dentro
+dele. Essa orientação substitui a cadência isolada de animações como próxima
+prioridade. O plano da integração, fechado antes da implementação a partir
+de `42f9ab6`, está em [INTEGRATION_PLAN.md](INTEGRATION_PLAN.md).

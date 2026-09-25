@@ -11,7 +11,8 @@ posteriores do projeto original.
 
 O [plano atual](ROADMAP.md) define o caminho até uma partida, os riscos
 abertos e os critérios de cada entrega. A inicialização dos objetos está
-validada; a próxima prioridade é uma prova gráfica com asset real.
+validada; a prova gráfica já carrega um modelo e sua textura, enquanto a
+integração com o renderizador permanece em andamento.
 
 ## O que o protótipo faz
 
@@ -267,11 +268,18 @@ Windows x64. A fronteira atual do bootstrap é `explosionFlushBlasts`,
 em `mainInitRlo+0x78`, conforme o pacote definido previamente no plano.
 Controles físicos, renderização e som continuam pendentes.
 
+O [perfil de assets gráficos](graphics/README.md) executa os carregadores
+originais do modelo 35 e da textura `0x9097`, conferindo geometria, texels e
+comandos produzidos. Passou no Linux, na comparação MIPS e no Windows x64.
+O probe de identificação e a auditoria do RT64 mostraram a necessidade de
+adaptação F3DJFG. Os arquivos de diagnóstico PNG/OBJ ficam privados; ainda
+não representam um frame do jogo ou uma execução do renderer.
+
 As dependências e pendências de distribuição estão no
 [inventário de licenças](THIRD_PARTY_NOTICES.md).
 
-1. Provar a carga de assets individuais e uma via gráfica compatível com
-   F3DJFG no alvo Windows/NVIDIA, conforme o marco 2 do plano.
+1. Completar a prova gráfica com o par de assets já validado, estabelecendo
+   o estado DMA/matrizes e uma via F3DJFG ou RSP/RDP compatível com o renderer.
 2. Completar o bootstrap restante em grupos definidos e alcançar o primeiro
    ciclo do jogo com tarefas gráficas verificadas.
 3. Integrar menu utilizável, controles e produção de amostras de áudio.

@@ -10,8 +10,9 @@ x64 com NVIDIA. A base do jogo permanece em
 O [perfil de texturas](textures/README.md) executa o bootstrap até a entrada
 de `objInitObjects`, com o overlay 34 carregado. Memória, filas, threads,
 carregador, dados de áudio e diretórios de texturas/modelos têm evidências
-nativas e MIPS delimitadas. Ainda não há processamento de um modelo/textura
-individual, renderizador, saída de som ou partida.
+nativas e MIPS delimitadas. A [prova de assets reais](graphics/README.md)
+agora carrega e descompacta o modelo 35 e sua textura `0x9097`, com listas
+geradas na RAM. Ainda não há renderizador integrado, saída de som ou partida.
 
 O número de funções selecionadas descreve cada diagnóstico; ele não mede
 percentual de conclusão do jogo. Os marcos abaixo exigem comportamento
@@ -90,16 +91,17 @@ estimado sem base.
 | Marco | Resultado verificável | Dependências e decisão |
 | --- | --- | --- |
 | 1. Estado inicial dos objetos — concluído | Retorno de `objInitObjects`, dados corretos e módulos temporários liberados | Pacote descrito acima; três cenários nativos Linux/Windows e MIPS aprovados |
-| 2. Prova gráfica com asset real — próximo | Carregar/decodificar ao menos uma textura e um modelo identificados; obter comandos gráficos rastreáveis e testar uma imagem controlada | Mapear o microcódigo F3DJFG e verificar a compatibilidade efetiva do caminho RT64/RSP. Resolver essa incerteza antes de investir em toda a inicialização restante |
+| 2. Prova gráfica com asset real — em andamento | Carregamento do modelo 35/textura `0x9097` e comandos reais validados; imagem no renderer ainda pendente | O RT64 examinado não reconhece o microcódigo nem implementa os handlers específicos. Próximo pacote: adaptar F3DJFG ou provar a rota RSP original → RDP, com estado DMA/matrizes do chamador |
 | 3. Bootstrap completo e primeiro ciclo do jogo | `mainInitGame` retorna; o caminho de mudança de fase produz uma tarefa gráfica válida e avança o ciclo | Integrar a cadeia restante em grupos de efeitos, fontes/interface e estado do jogo, usando o contrato gráfico comprovado |
 | 4. Menu utilizável | Imagem estável, navegação, áudio produzido e retomada da espera entre frames | Entrada real, scheduler RSP/RDP, síntese de áudio e apresentação; a thread de áudio apenas bloqueada não satisfaz este marco |
 | 5. Fase jogável | Movimento, câmera, combate, transição, salvamento e carregamento exercitados | Ampliar cobertura de objetos, animações, colisões e recursos efetivamente usados; investigar estabilidade e desempenho |
 
-O risco gráfico é aberto: o RT64 ainda não está integrado e a compatibilidade
-F3DJFG não está comprovada neste fork. O marco 2 começa pelo levantamento do
-contrato e por um experimento limitado, não pela suposição de que basta ligar
-uma biblioteca. Comandos de display list na RAM, por si só, não provam uma
-imagem apresentada.
+A análise e o probe do [primeiro pacote gráfico](graphics/PLAN.md) confirmaram
+que o RT64 `43373749` não reconhece o microcódigo presente no snapshot real.
+As listas geradas contêm comandos específicos `0x04`, `0x05` e `0x07`; os
+vértices dependem de uma base DMA externa. A integração gráfica requer essa
+adaptação ou uma rota RSP/RDP verificada. Uma prévia de textura decodificada
+e comandos de display list na RAM não equivalem a um frame renderizado.
 
 ## Ordem restante conhecida do bootstrap
 

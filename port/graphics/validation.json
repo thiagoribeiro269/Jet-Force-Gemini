@@ -1,0 +1,1416 @@
+{
+  "recorded_at": "2026-09-24T22:20:34.323671-03:00",
+  "status": "asset_and_contract_tests_passed",
+  "milestone_2_status": "in_progress",
+  "rendered_frame": false,
+  "base_game_commit": "f409c111053c671ae91051a6cdff277e0af7d95e",
+  "inputs": {
+    "rom_sha1": "493ced9008dbe932d6e91179b68e8630cf23a023",
+    "elf_sha256": "8602828338230712be2d74ebc3673e286867f27c8131fbd69c73be17c31d5aa1"
+  },
+  "profile": {
+    "original_functions": 186,
+    "host_imports": 26,
+    "deferred_entries": 49,
+    "total_entries": 261,
+    "sections": 13,
+    "new_functions": 23,
+    "new_host_imports": 0,
+    "bootstrap_boundary": "explosionFlushBlasts",
+    "asset_call": {
+      "function": "modLoadModel",
+      "arguments": [
+        35,
+        0
+      ]
+    }
+  },
+  "dependencies": {
+    "N64ModernRuntime": "cdf5abbd5026fef5c364c676e4667c45e42b6863",
+    "N64Recomp": "81213c1831fab2521a6a5459c67b63437d67e253",
+    "Unicorn": "2.1.4",
+    "pyelftools": "0.32",
+    "windows_compiler": "LLVM-MinGW 20260922, Clang 23.1.2",
+    "RT64_source_only": "43373749dac9bbc1b653e6a02aed40a9e1783bed"
+  },
+  "native_linux": {
+    "status": "passed",
+    "platform": "Linux-6.8.0-139-generic-x86_64-with-glibc2.39",
+    "cases": [
+      {
+        "name": "real_graphics_assets_tv_1",
+        "status": "passed",
+        "bootstrap_boundary": {
+          "function": "explosionFlushBlasts",
+          "status": -3,
+          "target": "0x80029B78",
+          "call_site": "0x80185358",
+          "overlay36": "0x801852E0",
+          "overlay25": "0x00000000",
+          "retired_overlays": {
+            "33": "0x801D8FB0",
+            "34": "0x801B6D50"
+          }
+        },
+        "model_id": 35,
+        "texture_id": "0x9097",
+        "instance": "0x801DB6B0",
+        "pi_transfers": 5,
+        "assets": {
+          "model": {
+            "id": 35,
+            "rom_address": "0x013AB070",
+            "compressed_bytes": 176,
+            "decoded_bytes": 296,
+            "decoded_sha256": "d86c46d346fa1841090936060bf0dee9ad61286917b431a5fd0825b11642f6b1",
+            "cache_address": "0x801DA370",
+            "instance_address": "0x801DB6B0",
+            "vertices": 4,
+            "triangles": 2,
+            "lists": {
+              "0x74": {
+                "address": "0x801DB5F0",
+                "commands": 11,
+                "opcodes": [
+                  "0xE7",
+                  "0xB7",
+                  "0xFD",
+                  "0x07",
+                  "0xE7",
+                  "0xFC",
+                  "0xEF",
+                  "0x04",
+                  "0x05",
+                  "0xE7",
+                  "0xB8"
+                ],
+                "polygon_triangles": 2,
+                "vertex_records": 4,
+                "vertex_dma_base": "supplied by caller; word1=0",
+                "texture_dma_commands": 6,
+                "source_batch": "same two triangles in both lists",
+                "sha256": "b9949296e8d6932bbeaad7e507d5ac03164570c6e65b97ebe4e80efcc0436daa"
+              },
+              "0x78": {
+                "address": "0x801DB650",
+                "commands": 11,
+                "opcodes": [
+                  "0xE7",
+                  "0xB7",
+                  "0xFD",
+                  "0x07",
+                  "0xE7",
+                  "0xFC",
+                  "0xEF",
+                  "0x04",
+                  "0x05",
+                  "0xE7",
+                  "0xB8"
+                ],
+                "polygon_triangles": 2,
+                "vertex_records": 4,
+                "vertex_dma_base": "supplied by caller; word1=0",
+                "texture_dma_commands": 6,
+                "source_batch": "same two triangles in both lists",
+                "sha256": "b9949296e8d6932bbeaad7e507d5ac03164570c6e65b97ebe4e80efcc0436daa"
+              }
+            }
+          },
+          "texture": {
+            "id": "0x9097",
+            "rom_address": "0x00776E10",
+            "compressed_bytes": 1888,
+            "decoded_bytes": 4128,
+            "decoded_sha256": "5471e0969b2060c510091ef7cd7591dacb3943cda29415c0cc8e6e323eb1bc59",
+            "cache_address": "0x801DA520",
+            "width": 32,
+            "height": 64,
+            "format": "RGBA16",
+            "commands": 7,
+            "load_block_dxt": 0,
+            "command_address": "0x801DB540",
+            "command_opcodes": [
+              "0xFD",
+              "0xF5",
+              "0xE6",
+              "0xF3",
+              "0xE7",
+              "0xF5",
+              "0xF2"
+            ]
+          },
+          "scope": "Original CPU decode and generated RAM commands only; no RSP/RDP or RT64 image"
+        },
+        "threads_joined": 4
+      },
+      {
+        "name": "real_graphics_assets_tv_0",
+        "status": "passed",
+        "bootstrap_boundary": {
+          "function": "explosionFlushBlasts",
+          "status": -3,
+          "target": "0x80029B78",
+          "call_site": "0x8018CB58",
+          "overlay36": "0x8018CAE0",
+          "overlay25": "0x00000000",
+          "retired_overlays": {
+            "33": "0x801E07B0",
+            "34": "0x801BE550"
+          }
+        },
+        "model_id": 35,
+        "texture_id": "0x9097",
+        "instance": "0x801E2EB0",
+        "pi_transfers": 5,
+        "assets": {
+          "model": {
+            "id": 35,
+            "rom_address": "0x013AB070",
+            "compressed_bytes": 176,
+            "decoded_bytes": 296,
+            "decoded_sha256": "d86c46d346fa1841090936060bf0dee9ad61286917b431a5fd0825b11642f6b1",
+            "cache_address": "0x801E1B70",
+            "instance_address": "0x801E2EB0",
+            "vertices": 4,
+            "triangles": 2,
+            "lists": {
+              "0x74": {
+                "address": "0x801E2DF0",
+                "commands": 11,
+                "opcodes": [
+                  "0xE7",
+                  "0xB7",
+                  "0xFD",
+                  "0x07",
+                  "0xE7",
+                  "0xFC",
+                  "0xEF",
+                  "0x04",
+                  "0x05",
+                  "0xE7",
+                  "0xB8"
+                ],
+                "polygon_triangles": 2,
+                "vertex_records": 4,
+                "vertex_dma_base": "supplied by caller; word1=0",
+                "texture_dma_commands": 6,
+                "source_batch": "same two triangles in both lists",
+                "sha256": "38c4d26b4b3c79b7b6e0a863227f1812c03eecfc72b375455a38f0b6c83ce56d"
+              },
+              "0x78": {
+                "address": "0x801E2E50",
+                "commands": 11,
+                "opcodes": [
+                  "0xE7",
+                  "0xB7",
+                  "0xFD",
+                  "0x07",
+                  "0xE7",
+                  "0xFC",
+                  "0xEF",
+                  "0x04",
+                  "0x05",
+                  "0xE7",
+                  "0xB8"
+                ],
+                "polygon_triangles": 2,
+                "vertex_records": 4,
+                "vertex_dma_base": "supplied by caller; word1=0",
+                "texture_dma_commands": 6,
+                "source_batch": "same two triangles in both lists",
+                "sha256": "38c4d26b4b3c79b7b6e0a863227f1812c03eecfc72b375455a38f0b6c83ce56d"
+              }
+            }
+          },
+          "texture": {
+            "id": "0x9097",
+            "rom_address": "0x00776E10",
+            "compressed_bytes": 1888,
+            "decoded_bytes": 4128,
+            "decoded_sha256": "5471e0969b2060c510091ef7cd7591dacb3943cda29415c0cc8e6e323eb1bc59",
+            "cache_address": "0x801E1D20",
+            "width": 32,
+            "height": 64,
+            "format": "RGBA16",
+            "commands": 7,
+            "load_block_dxt": 0,
+            "command_address": "0x801E2D40",
+            "command_opcodes": [
+              "0xFD",
+              "0xF5",
+              "0xE6",
+              "0xF3",
+              "0xE7",
+              "0xF5",
+              "0xF2"
+            ]
+          },
+          "scope": "Original CPU decode and generated RAM commands only; no RSP/RDP or RT64 image"
+        },
+        "threads_joined": 4
+      },
+      {
+        "name": "real_graphics_assets_tv_2",
+        "status": "passed",
+        "bootstrap_boundary": {
+          "function": "explosionFlushBlasts",
+          "status": -3,
+          "target": "0x80029B78",
+          "call_site": "0x80185358",
+          "overlay36": "0x801852E0",
+          "overlay25": "0x00000000",
+          "retired_overlays": {
+            "33": "0x801D8FB0",
+            "34": "0x801B6D50"
+          }
+        },
+        "model_id": 35,
+        "texture_id": "0x9097",
+        "instance": "0x801DB6B0",
+        "pi_transfers": 5,
+        "assets": {
+          "model": {
+            "id": 35,
+            "rom_address": "0x013AB070",
+            "compressed_bytes": 176,
+            "decoded_bytes": 296,
+            "decoded_sha256": "d86c46d346fa1841090936060bf0dee9ad61286917b431a5fd0825b11642f6b1",
+            "cache_address": "0x801DA370",
+            "instance_address": "0x801DB6B0",
+            "vertices": 4,
+            "triangles": 2,
+            "lists": {
+              "0x74": {
+                "address": "0x801DB5F0",
+                "commands": 11,
+                "opcodes": [
+                  "0xE7",
+                  "0xB7",
+                  "0xFD",
+                  "0x07",
+                  "0xE7",
+                  "0xFC",
+                  "0xEF",
+                  "0x04",
+                  "0x05",
+                  "0xE7",
+                  "0xB8"
+                ],
+                "polygon_triangles": 2,
+                "vertex_records": 4,
+                "vertex_dma_base": "supplied by caller; word1=0",
+                "texture_dma_commands": 6,
+                "source_batch": "same two triangles in both lists",
+                "sha256": "b9949296e8d6932bbeaad7e507d5ac03164570c6e65b97ebe4e80efcc0436daa"
+              },
+              "0x78": {
+                "address": "0x801DB650",
+                "commands": 11,
+                "opcodes": [
+                  "0xE7",
+                  "0xB7",
+                  "0xFD",
+                  "0x07",
+                  "0xE7",
+                  "0xFC",
+                  "0xEF",
+                  "0x04",
+                  "0x05",
+                  "0xE7",
+                  "0xB8"
+                ],
+                "polygon_triangles": 2,
+                "vertex_records": 4,
+                "vertex_dma_base": "supplied by caller; word1=0",
+                "texture_dma_commands": 6,
+                "source_batch": "same two triangles in both lists",
+                "sha256": "b9949296e8d6932bbeaad7e507d5ac03164570c6e65b97ebe4e80efcc0436daa"
+              }
+            }
+          },
+          "texture": {
+            "id": "0x9097",
+            "rom_address": "0x00776E10",
+            "compressed_bytes": 1888,
+            "decoded_bytes": 4128,
+            "decoded_sha256": "5471e0969b2060c510091ef7cd7591dacb3943cda29415c0cc8e6e323eb1bc59",
+            "cache_address": "0x801DA520",
+            "width": 32,
+            "height": 64,
+            "format": "RGBA16",
+            "commands": 7,
+            "load_block_dxt": 0,
+            "command_address": "0x801DB540",
+            "command_opcodes": [
+              "0xFD",
+              "0xF5",
+              "0xE6",
+              "0xF3",
+              "0xE7",
+              "0xF5",
+              "0xF2"
+            ]
+          },
+          "scope": "Original CPU decode and generated RAM commands only; no RSP/RDP or RT64 image"
+        },
+        "threads_joined": 4
+      }
+    ],
+    "limits": [
+      "Original CPU loaders and generated command data only; no RT64, RSP execution, GPU or rendered frame",
+      "One selected model/texture pair; no general model, animation or texture-format coverage"
+    ]
+  },
+  "mips_asset_linux": {
+    "status": "passed",
+    "bootstrap_cases": 3,
+    "cases": [
+      {
+        "name": "original_asset_load_tv_1",
+        "status": "passed",
+        "compared_gprs": [
+          0,
+          2,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          28,
+          29,
+          30,
+          31
+        ],
+        "rom_transfers": 5,
+        "initial_ram_sha256": "dcd17699beff1e8c8516f824606a7ac23fa4203c9505a9758ec0074ab0cc0776",
+        "compared_ram_sha256": "aa771ed336fbed1998c976e35865c99a6f05c010293c8e837f13695ce432b321",
+        "masked_regions": [
+          [
+            "0x807A0000",
+            256
+          ],
+          [
+            "0x807A1600",
+            512
+          ],
+          [
+            "0x80778000",
+            8256
+          ],
+          [
+            "0x800FE000",
+            8
+          ]
+        ],
+        "assets": {
+          "model": {
+            "id": 35,
+            "rom_address": "0x013AB070",
+            "compressed_bytes": 176,
+            "decoded_bytes": 296,
+            "decoded_sha256": "d86c46d346fa1841090936060bf0dee9ad61286917b431a5fd0825b11642f6b1",
+            "cache_address": "0x801DA370",
+            "instance_address": "0x801DB6B0",
+            "vertices": 4,
+            "triangles": 2,
+            "lists": {
+              "0x74": {
+                "address": "0x801DB5F0",
+                "commands": 11,
+                "opcodes": [
+                  "0xE7",
+                  "0xB7",
+                  "0xFD",
+                  "0x07",
+                  "0xE7",
+                  "0xFC",
+                  "0xEF",
+                  "0x04",
+                  "0x05",
+                  "0xE7",
+                  "0xB8"
+                ],
+                "polygon_triangles": 2,
+                "vertex_records": 4,
+                "vertex_dma_base": "supplied by caller; word1=0",
+                "texture_dma_commands": 6,
+                "source_batch": "same two triangles in both lists",
+                "sha256": "b9949296e8d6932bbeaad7e507d5ac03164570c6e65b97ebe4e80efcc0436daa"
+              },
+              "0x78": {
+                "address": "0x801DB650",
+                "commands": 11,
+                "opcodes": [
+                  "0xE7",
+                  "0xB7",
+                  "0xFD",
+                  "0x07",
+                  "0xE7",
+                  "0xFC",
+                  "0xEF",
+                  "0x04",
+                  "0x05",
+                  "0xE7",
+                  "0xB8"
+                ],
+                "polygon_triangles": 2,
+                "vertex_records": 4,
+                "vertex_dma_base": "supplied by caller; word1=0",
+                "texture_dma_commands": 6,
+                "source_batch": "same two triangles in both lists",
+                "sha256": "b9949296e8d6932bbeaad7e507d5ac03164570c6e65b97ebe4e80efcc0436daa"
+              }
+            }
+          },
+          "texture": {
+            "id": "0x9097",
+            "rom_address": "0x00776E10",
+            "compressed_bytes": 1888,
+            "decoded_bytes": 4128,
+            "decoded_sha256": "5471e0969b2060c510091ef7cd7591dacb3943cda29415c0cc8e6e323eb1bc59",
+            "cache_address": "0x801DA520",
+            "width": 32,
+            "height": 64,
+            "format": "RGBA16",
+            "commands": 7,
+            "load_block_dxt": 0,
+            "command_address": "0x801DB540",
+            "command_opcodes": [
+              "0xFD",
+              "0xF5",
+              "0xE6",
+              "0xF3",
+              "0xE7",
+              "0xF5",
+              "0xF2"
+            ]
+          },
+          "scope": "Original CPU decode and generated RAM commands only; no RSP/RDP or RT64 image"
+        },
+        "threads_joined": 4
+      },
+      {
+        "name": "original_asset_load_tv_0",
+        "status": "passed",
+        "compared_gprs": [
+          0,
+          2,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          28,
+          29,
+          30,
+          31
+        ],
+        "rom_transfers": 5,
+        "initial_ram_sha256": "f5b0deb2f8806e5690010b4c61addfe7765e4ba3bee40ded3a97bd5783696d24",
+        "compared_ram_sha256": "13a43ce47912c1158a973eef0aa90549f63347446e24386b15b69a3713b66f4d",
+        "masked_regions": [
+          [
+            "0x807A0000",
+            256
+          ],
+          [
+            "0x807A1600",
+            512
+          ],
+          [
+            "0x80778000",
+            8256
+          ],
+          [
+            "0x800FE000",
+            8
+          ]
+        ],
+        "assets": {
+          "model": {
+            "id": 35,
+            "rom_address": "0x013AB070",
+            "compressed_bytes": 176,
+            "decoded_bytes": 296,
+            "decoded_sha256": "d86c46d346fa1841090936060bf0dee9ad61286917b431a5fd0825b11642f6b1",
+            "cache_address": "0x801E1B70",
+            "instance_address": "0x801E2EB0",
+            "vertices": 4,
+            "triangles": 2,
+            "lists": {
+              "0x74": {
+                "address": "0x801E2DF0",
+                "commands": 11,
+                "opcodes": [
+                  "0xE7",
+                  "0xB7",
+                  "0xFD",
+                  "0x07",
+                  "0xE7",
+                  "0xFC",
+                  "0xEF",
+                  "0x04",
+                  "0x05",
+                  "0xE7",
+                  "0xB8"
+                ],
+                "polygon_triangles": 2,
+                "vertex_records": 4,
+                "vertex_dma_base": "supplied by caller; word1=0",
+                "texture_dma_commands": 6,
+                "source_batch": "same two triangles in both lists",
+                "sha256": "38c4d26b4b3c79b7b6e0a863227f1812c03eecfc72b375455a38f0b6c83ce56d"
+              },
+              "0x78": {
+                "address": "0x801E2E50",
+                "commands": 11,
+                "opcodes": [
+                  "0xE7",
+                  "0xB7",
+                  "0xFD",
+                  "0x07",
+                  "0xE7",
+                  "0xFC",
+                  "0xEF",
+                  "0x04",
+                  "0x05",
+                  "0xE7",
+                  "0xB8"
+                ],
+                "polygon_triangles": 2,
+                "vertex_records": 4,
+                "vertex_dma_base": "supplied by caller; word1=0",
+                "texture_dma_commands": 6,
+                "source_batch": "same two triangles in both lists",
+                "sha256": "38c4d26b4b3c79b7b6e0a863227f1812c03eecfc72b375455a38f0b6c83ce56d"
+              }
+            }
+          },
+          "texture": {
+            "id": "0x9097",
+            "rom_address": "0x00776E10",
+            "compressed_bytes": 1888,
+            "decoded_bytes": 4128,
+            "decoded_sha256": "5471e0969b2060c510091ef7cd7591dacb3943cda29415c0cc8e6e323eb1bc59",
+            "cache_address": "0x801E1D20",
+            "width": 32,
+            "height": 64,
+            "format": "RGBA16",
+            "commands": 7,
+            "load_block_dxt": 0,
+            "command_address": "0x801E2D40",
+            "command_opcodes": [
+              "0xFD",
+              "0xF5",
+              "0xE6",
+              "0xF3",
+              "0xE7",
+              "0xF5",
+              "0xF2"
+            ]
+          },
+          "scope": "Original CPU decode and generated RAM commands only; no RSP/RDP or RT64 image"
+        },
+        "threads_joined": 4
+      },
+      {
+        "name": "original_asset_load_tv_2",
+        "status": "passed",
+        "compared_gprs": [
+          0,
+          2,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          28,
+          29,
+          30,
+          31
+        ],
+        "rom_transfers": 5,
+        "initial_ram_sha256": "374ecfa5bc051a0c846022b0510de59551bccad31572e689e7f49c164bb95c0b",
+        "compared_ram_sha256": "a1ebd405c4d0224cda0ee163f4ab22c17e0b5bb1b4f9fceb99d1ae08bcb4ef61",
+        "masked_regions": [
+          [
+            "0x807A0000",
+            256
+          ],
+          [
+            "0x807A1600",
+            512
+          ],
+          [
+            "0x80778000",
+            8256
+          ],
+          [
+            "0x800FE000",
+            8
+          ]
+        ],
+        "assets": {
+          "model": {
+            "id": 35,
+            "rom_address": "0x013AB070",
+            "compressed_bytes": 176,
+            "decoded_bytes": 296,
+            "decoded_sha256": "d86c46d346fa1841090936060bf0dee9ad61286917b431a5fd0825b11642f6b1",
+            "cache_address": "0x801DA370",
+            "instance_address": "0x801DB6B0",
+            "vertices": 4,
+            "triangles": 2,
+            "lists": {
+              "0x74": {
+                "address": "0x801DB5F0",
+                "commands": 11,
+                "opcodes": [
+                  "0xE7",
+                  "0xB7",
+                  "0xFD",
+                  "0x07",
+                  "0xE7",
+                  "0xFC",
+                  "0xEF",
+                  "0x04",
+                  "0x05",
+                  "0xE7",
+                  "0xB8"
+                ],
+                "polygon_triangles": 2,
+                "vertex_records": 4,
+                "vertex_dma_base": "supplied by caller; word1=0",
+                "texture_dma_commands": 6,
+                "source_batch": "same two triangles in both lists",
+                "sha256": "b9949296e8d6932bbeaad7e507d5ac03164570c6e65b97ebe4e80efcc0436daa"
+              },
+              "0x78": {
+                "address": "0x801DB650",
+                "commands": 11,
+                "opcodes": [
+                  "0xE7",
+                  "0xB7",
+                  "0xFD",
+                  "0x07",
+                  "0xE7",
+                  "0xFC",
+                  "0xEF",
+                  "0x04",
+                  "0x05",
+                  "0xE7",
+                  "0xB8"
+                ],
+                "polygon_triangles": 2,
+                "vertex_records": 4,
+                "vertex_dma_base": "supplied by caller; word1=0",
+                "texture_dma_commands": 6,
+                "source_batch": "same two triangles in both lists",
+                "sha256": "b9949296e8d6932bbeaad7e507d5ac03164570c6e65b97ebe4e80efcc0436daa"
+              }
+            }
+          },
+          "texture": {
+            "id": "0x9097",
+            "rom_address": "0x00776E10",
+            "compressed_bytes": 1888,
+            "decoded_bytes": 4128,
+            "decoded_sha256": "5471e0969b2060c510091ef7cd7591dacb3943cda29415c0cc8e6e323eb1bc59",
+            "cache_address": "0x801DA520",
+            "width": 32,
+            "height": 64,
+            "format": "RGBA16",
+            "commands": 7,
+            "load_block_dxt": 0,
+            "command_address": "0x801DB540",
+            "command_opcodes": [
+              "0xFD",
+              "0xF5",
+              "0xE6",
+              "0xF3",
+              "0xE7",
+              "0xF5",
+              "0xF2"
+            ]
+          },
+          "scope": "Original CPU decode and generated RAM commands only; no RSP/RDP or RT64 image"
+        },
+        "threads_joined": 4
+      }
+    ],
+    "limits": [
+      "Bootstrap proved independently from original RAM; asset comparison starts from a native pre-load snapshot after that validated bootstrap",
+      "Original MIPS CPU routines with declared ROM/PI/cache/interrupt contracts; no renderer or RSP execution",
+      "One selected model and its texture; caller-saved scratch GPRs and FPR/FCSR are not compared",
+      "Four diagnostic kernel/stack/wait-list regions excluded from asset RAM comparison; game assets and allocations included"
+    ]
+  },
+  "bootstrap_mips": {
+    "status": "passed",
+    "cases": [
+      {
+        "name": "original_graphics_tv_1",
+        "status": "passed",
+        "boundary": {
+          "function": "explosionFlushBlasts",
+          "status": -3,
+          "target": "0x80029B78",
+          "call_site": "0x80185358",
+          "overlay36": "0x801852E0",
+          "overlay25": "0x00000000",
+          "retired_overlays": {
+            "33": "0x801D8FB0",
+            "34": "0x801B6D50"
+          }
+        },
+        "rom_transfers": 34,
+        "ram_sha256": "e9f18931b60d6a4dc13ebbbfb1570222e58b9c61e1a411d1d05118e10fe9eb69",
+        "threads_joined": 3
+      },
+      {
+        "name": "original_graphics_tv_0",
+        "status": "passed",
+        "boundary": {
+          "function": "explosionFlushBlasts",
+          "status": -3,
+          "target": "0x80029B78",
+          "call_site": "0x8018CB58",
+          "overlay36": "0x8018CAE0",
+          "overlay25": "0x00000000",
+          "retired_overlays": {
+            "33": "0x801E07B0",
+            "34": "0x801BE550"
+          }
+        },
+        "rom_transfers": 34,
+        "ram_sha256": "d3027d404d420fd3f6e47f96a93e9d93442517fec23d2efa49c0bbd380a724a0",
+        "threads_joined": 3
+      },
+      {
+        "name": "original_graphics_tv_2",
+        "status": "passed",
+        "boundary": {
+          "function": "explosionFlushBlasts",
+          "status": -3,
+          "target": "0x80029B78",
+          "call_site": "0x80185358",
+          "overlay36": "0x801852E0",
+          "overlay25": "0x00000000",
+          "retired_overlays": {
+            "33": "0x801D8FB0",
+            "34": "0x801B6D50"
+          }
+        },
+        "rom_transfers": 34,
+        "ram_sha256": "350e165ac1c8d4a0d22e8e440476dc08ba7139a92dc7bb00db5d981ec502ccac",
+        "threads_joined": 3
+      }
+    ],
+    "limits": [
+      "The MIPS oracle executes main then the audio-thread prefix serially on one original RAM image; this is not a timing or scheduling proof",
+      "Stops before the first empty blocking osRecvMesg executes; no retrace or audio frame is simulated",
+      "Private kernel structures, queue wait lists and prior main-thread call stacks are excluded; the new audio frame and scheduler client are compared",
+      "Explicit platform hooks retained; 16 main-thread GPRs compared; a0 after the reset-queue poll is recorded separately because the native queue import preserves the argument while libultra leaves the interrupt mask",
+      "No general FPU/FCSR proof"
+    ]
+  },
+  "protocol_linux": {
+    "status": "passed",
+    "cases": [
+      "outputs_cannot_overlap_queue_metadata",
+      "absent_status_preserves_other_fields",
+      "repeated_init_does_not_touch_outputs",
+      "overlapping_read_rejected",
+      "missing_route_preserves_pending_read",
+      "completion_delivered_once",
+      "full_queue_keeps_existing_message",
+      "pending_read_cancelled_on_session_end"
+    ],
+    "limits": [
+      "Deliberately absent-port backend; no physical controller, buttons, PIF DMA or boot timer modeled"
+    ]
+  },
+  "native_windows": {
+    "recorded_at": "2026-09-25T01:15:25.3977424Z",
+    "exit_code": 0,
+    "protocol_report": {
+      "status": "passed",
+      "cases": [
+        "outputs_cannot_overlap_queue_metadata",
+        "absent_status_preserves_other_fields",
+        "repeated_init_does_not_touch_outputs",
+        "overlapping_read_rejected",
+        "missing_route_preserves_pending_read",
+        "completion_delivered_once",
+        "full_queue_keeps_existing_message",
+        "pending_read_cancelled_on_session_end"
+      ],
+      "limits": [
+        "Deliberately absent-port backend; no physical controller, buttons, PIF DMA or boot timer modeled"
+      ]
+    },
+    "windows": "Microsoft Windows NT 10.0.26200.0",
+    "python": "Python 3.12.10",
+    "package_sha256": "584da04e85746317186d9f6b68d495471fb2ff08ee1d274465a43d2e035e88b8",
+    "report": {
+      "status": "passed",
+      "platform": "Windows-11-10.0.26200-SP0",
+      "cases": [
+        {
+          "name": "real_graphics_assets_tv_1",
+          "status": "passed",
+          "bootstrap_boundary": {
+            "function": "explosionFlushBlasts",
+            "status": -3,
+            "target": "0x80029B78",
+            "call_site": "0x80185358",
+            "overlay36": "0x801852E0",
+            "overlay25": "0x00000000",
+            "retired_overlays": {
+              "33": "0x801D8FB0",
+              "34": "0x801B6D50"
+            }
+          },
+          "model_id": 35,
+          "texture_id": "0x9097",
+          "instance": "0x801DB6B0",
+          "pi_transfers": 5,
+          "assets": {
+            "model": {
+              "id": 35,
+              "rom_address": "0x013AB070",
+              "compressed_bytes": 176,
+              "decoded_bytes": 296,
+              "decoded_sha256": "d86c46d346fa1841090936060bf0dee9ad61286917b431a5fd0825b11642f6b1",
+              "cache_address": "0x801DA370",
+              "instance_address": "0x801DB6B0",
+              "vertices": 4,
+              "triangles": 2,
+              "lists": {
+                "0x74": {
+                  "address": "0x801DB5F0",
+                  "commands": 11,
+                  "opcodes": [
+                    "0xE7",
+                    "0xB7",
+                    "0xFD",
+                    "0x07",
+                    "0xE7",
+                    "0xFC",
+                    "0xEF",
+                    "0x04",
+                    "0x05",
+                    "0xE7",
+                    "0xB8"
+                  ],
+                  "polygon_triangles": 2,
+                  "vertex_records": 4,
+                  "vertex_dma_base": "supplied by caller; word1=0",
+                  "texture_dma_commands": 6,
+                  "source_batch": "same two triangles in both lists",
+                  "sha256": "b9949296e8d6932bbeaad7e507d5ac03164570c6e65b97ebe4e80efcc0436daa"
+                },
+                "0x78": {
+                  "address": "0x801DB650",
+                  "commands": 11,
+                  "opcodes": [
+                    "0xE7",
+                    "0xB7",
+                    "0xFD",
+                    "0x07",
+                    "0xE7",
+                    "0xFC",
+                    "0xEF",
+                    "0x04",
+                    "0x05",
+                    "0xE7",
+                    "0xB8"
+                  ],
+                  "polygon_triangles": 2,
+                  "vertex_records": 4,
+                  "vertex_dma_base": "supplied by caller; word1=0",
+                  "texture_dma_commands": 6,
+                  "source_batch": "same two triangles in both lists",
+                  "sha256": "b9949296e8d6932bbeaad7e507d5ac03164570c6e65b97ebe4e80efcc0436daa"
+                }
+              }
+            },
+            "texture": {
+              "id": "0x9097",
+              "rom_address": "0x00776E10",
+              "compressed_bytes": 1888,
+              "decoded_bytes": 4128,
+              "decoded_sha256": "5471e0969b2060c510091ef7cd7591dacb3943cda29415c0cc8e6e323eb1bc59",
+              "cache_address": "0x801DA520",
+              "width": 32,
+              "height": 64,
+              "format": "RGBA16",
+              "commands": 7,
+              "load_block_dxt": 0,
+              "command_address": "0x801DB540",
+              "command_opcodes": [
+                "0xFD",
+                "0xF5",
+                "0xE6",
+                "0xF3",
+                "0xE7",
+                "0xF5",
+                "0xF2"
+              ]
+            },
+            "scope": "Original CPU decode and generated RAM commands only; no RSP/RDP or RT64 image"
+          },
+          "threads_joined": 4
+        },
+        {
+          "name": "real_graphics_assets_tv_0",
+          "status": "passed",
+          "bootstrap_boundary": {
+            "function": "explosionFlushBlasts",
+            "status": -3,
+            "target": "0x80029B78",
+            "call_site": "0x8018CB58",
+            "overlay36": "0x8018CAE0",
+            "overlay25": "0x00000000",
+            "retired_overlays": {
+              "33": "0x801E07B0",
+              "34": "0x801BE550"
+            }
+          },
+          "model_id": 35,
+          "texture_id": "0x9097",
+          "instance": "0x801E2EB0",
+          "pi_transfers": 5,
+          "assets": {
+            "model": {
+              "id": 35,
+              "rom_address": "0x013AB070",
+              "compressed_bytes": 176,
+              "decoded_bytes": 296,
+              "decoded_sha256": "d86c46d346fa1841090936060bf0dee9ad61286917b431a5fd0825b11642f6b1",
+              "cache_address": "0x801E1B70",
+              "instance_address": "0x801E2EB0",
+              "vertices": 4,
+              "triangles": 2,
+              "lists": {
+                "0x74": {
+                  "address": "0x801E2DF0",
+                  "commands": 11,
+                  "opcodes": [
+                    "0xE7",
+                    "0xB7",
+                    "0xFD",
+                    "0x07",
+                    "0xE7",
+                    "0xFC",
+                    "0xEF",
+                    "0x04",
+                    "0x05",
+                    "0xE7",
+                    "0xB8"
+                  ],
+                  "polygon_triangles": 2,
+                  "vertex_records": 4,
+                  "vertex_dma_base": "supplied by caller; word1=0",
+                  "texture_dma_commands": 6,
+                  "source_batch": "same two triangles in both lists",
+                  "sha256": "38c4d26b4b3c79b7b6e0a863227f1812c03eecfc72b375455a38f0b6c83ce56d"
+                },
+                "0x78": {
+                  "address": "0x801E2E50",
+                  "commands": 11,
+                  "opcodes": [
+                    "0xE7",
+                    "0xB7",
+                    "0xFD",
+                    "0x07",
+                    "0xE7",
+                    "0xFC",
+                    "0xEF",
+                    "0x04",
+                    "0x05",
+                    "0xE7",
+                    "0xB8"
+                  ],
+                  "polygon_triangles": 2,
+                  "vertex_records": 4,
+                  "vertex_dma_base": "supplied by caller; word1=0",
+                  "texture_dma_commands": 6,
+                  "source_batch": "same two triangles in both lists",
+                  "sha256": "38c4d26b4b3c79b7b6e0a863227f1812c03eecfc72b375455a38f0b6c83ce56d"
+                }
+              }
+            },
+            "texture": {
+              "id": "0x9097",
+              "rom_address": "0x00776E10",
+              "compressed_bytes": 1888,
+              "decoded_bytes": 4128,
+              "decoded_sha256": "5471e0969b2060c510091ef7cd7591dacb3943cda29415c0cc8e6e323eb1bc59",
+              "cache_address": "0x801E1D20",
+              "width": 32,
+              "height": 64,
+              "format": "RGBA16",
+              "commands": 7,
+              "load_block_dxt": 0,
+              "command_address": "0x801E2D40",
+              "command_opcodes": [
+                "0xFD",
+                "0xF5",
+                "0xE6",
+                "0xF3",
+                "0xE7",
+                "0xF5",
+                "0xF2"
+              ]
+            },
+            "scope": "Original CPU decode and generated RAM commands only; no RSP/RDP or RT64 image"
+          },
+          "threads_joined": 4
+        },
+        {
+          "name": "real_graphics_assets_tv_2",
+          "status": "passed",
+          "bootstrap_boundary": {
+            "function": "explosionFlushBlasts",
+            "status": -3,
+            "target": "0x80029B78",
+            "call_site": "0x80185358",
+            "overlay36": "0x801852E0",
+            "overlay25": "0x00000000",
+            "retired_overlays": {
+              "33": "0x801D8FB0",
+              "34": "0x801B6D50"
+            }
+          },
+          "model_id": 35,
+          "texture_id": "0x9097",
+          "instance": "0x801DB6B0",
+          "pi_transfers": 5,
+          "assets": {
+            "model": {
+              "id": 35,
+              "rom_address": "0x013AB070",
+              "compressed_bytes": 176,
+              "decoded_bytes": 296,
+              "decoded_sha256": "d86c46d346fa1841090936060bf0dee9ad61286917b431a5fd0825b11642f6b1",
+              "cache_address": "0x801DA370",
+              "instance_address": "0x801DB6B0",
+              "vertices": 4,
+              "triangles": 2,
+              "lists": {
+                "0x74": {
+                  "address": "0x801DB5F0",
+                  "commands": 11,
+                  "opcodes": [
+                    "0xE7",
+                    "0xB7",
+                    "0xFD",
+                    "0x07",
+                    "0xE7",
+                    "0xFC",
+                    "0xEF",
+                    "0x04",
+                    "0x05",
+                    "0xE7",
+                    "0xB8"
+                  ],
+                  "polygon_triangles": 2,
+                  "vertex_records": 4,
+                  "vertex_dma_base": "supplied by caller; word1=0",
+                  "texture_dma_commands": 6,
+                  "source_batch": "same two triangles in both lists",
+                  "sha256": "b9949296e8d6932bbeaad7e507d5ac03164570c6e65b97ebe4e80efcc0436daa"
+                },
+                "0x78": {
+                  "address": "0x801DB650",
+                  "commands": 11,
+                  "opcodes": [
+                    "0xE7",
+                    "0xB7",
+                    "0xFD",
+                    "0x07",
+                    "0xE7",
+                    "0xFC",
+                    "0xEF",
+                    "0x04",
+                    "0x05",
+                    "0xE7",
+                    "0xB8"
+                  ],
+                  "polygon_triangles": 2,
+                  "vertex_records": 4,
+                  "vertex_dma_base": "supplied by caller; word1=0",
+                  "texture_dma_commands": 6,
+                  "source_batch": "same two triangles in both lists",
+                  "sha256": "b9949296e8d6932bbeaad7e507d5ac03164570c6e65b97ebe4e80efcc0436daa"
+                }
+              }
+            },
+            "texture": {
+              "id": "0x9097",
+              "rom_address": "0x00776E10",
+              "compressed_bytes": 1888,
+              "decoded_bytes": 4128,
+              "decoded_sha256": "5471e0969b2060c510091ef7cd7591dacb3943cda29415c0cc8e6e323eb1bc59",
+              "cache_address": "0x801DA520",
+              "width": 32,
+              "height": 64,
+              "format": "RGBA16",
+              "commands": 7,
+              "load_block_dxt": 0,
+              "command_address": "0x801DB540",
+              "command_opcodes": [
+                "0xFD",
+                "0xF5",
+                "0xE6",
+                "0xF3",
+                "0xE7",
+                "0xF5",
+                "0xF2"
+              ]
+            },
+            "scope": "Original CPU decode and generated RAM commands only; no RSP/RDP or RT64 image"
+          },
+          "threads_joined": 4
+        }
+      ],
+      "limits": [
+        "Original CPU loaders and generated command data only; no RT64, RSP execution, GPU or rendered frame",
+        "One selected model/texture pair; no general model, animation or texture-format coverage"
+      ]
+    }
+  },
+  "package": {
+    "name": "jfg-graphics-windows-x64.zip",
+    "size": 466949,
+    "sha256": "584da04e85746317186d9f6b68d495471fb2ff08ee1d274465a43d2e035e88b8",
+    "dll_sha256": "6d3c29b42f6f904da778d56204eb63406ec51a9f86ce10770684f15acf6670a5",
+    "published": false
+  },
+  "rt64_identification_probe": {
+    "test": "rt64_gbi_identification_only",
+    "rt64_commit": "43373749dac9bbc1b653e6a02aed40a9e1783bed",
+    "rt64_source_sha256": {
+      "rt64_gbi.cpp": "ecb1dc7bb915576ba2fe4116fee0c8de9d4c696e2d5f6c87c67491335e40ae53",
+      "rt64_gbi.h": "38b849582be5f674c6e9522433a0b5488ebda53d639837ffd73ede31efeeb6da"
+    },
+    "rom_sha1": "493ced9008dbe932d6e91179b68e8630cf23a023",
+    "xxhash_version_number": 802,
+    "hash_memory_origin": "actual_8mib_snapshot",
+    "ram_snapshot_sha256": "15c61748f429c3466f2062331757c6617a32f1f5d33494757c5ec561f2791271",
+    "snapshot_microcode_equals_rom": true,
+    "intervals": {
+      "boot": {
+        "rom_start": "0x9FE50",
+        "rom_end_exclusive": "0x9FFD0",
+        "vram_start": "0x8009F250",
+        "size": 384,
+        "sha256": "99fb08f1dd08774268202cf502036ce6fc565d77305b82f205fb97ee4bff6d35",
+        "rom_equals_elf": true
+      },
+      "text": {
+        "rom_start": "0x9FFD0",
+        "rom_end_exclusive": "0xA1260",
+        "vram_start": "0x8009F3D0",
+        "size": 4752,
+        "sha256": "41c7f6dc9ff906d876bc858b36a0ddb0b78313f53b2a2df8a740f66c8af406d4",
+        "rom_equals_elf": true
+      },
+      "data": {
+        "rom_start": "0xB0F50",
+        "rom_end_exclusive": "0xB1750",
+        "vram_start": "0x800B0350",
+        "size": 2048,
+        "sha256": "0763ee36082c69cc8328261c700deb0ff13682f56c2bfeffada97433600333ac",
+        "rom_equals_elf": true
+      }
+    },
+    "rdram_layout": "word-swapped (each big-endian ROM word reversed)",
+    "tables": {
+      "textSegments": {
+        "rows": 94,
+        "lengths": [
+          3744,
+          3792,
+          3944,
+          4008,
+          4080,
+          4272,
+          4488,
+          4496,
+          4504,
+          4656,
+          4976,
+          4984,
+          5008,
+          5024,
+          5056,
+          5064,
+          5072,
+          5088,
+          5096,
+          5112,
+          5120,
+          5128,
+          5136,
+          5144,
+          5152,
+          5160,
+          5168,
+          5296,
+          5680,
+          6112,
+          6336,
+          6352
+        ]
+      },
+      "dataSegments": {
+        "rows": 105,
+        "lengths": [
+          912,
+          944,
+          960,
+          1008,
+          1024,
+          1040,
+          1056,
+          1072,
+          2048,
+          4032
+        ]
+      }
+    },
+    "text_prefix_extends_beyond_named_blob": true,
+    "data_prefix_extends_beyond_named_blob": true,
+    "static_image_caveat": null,
+    "prefix_hashes_xxh3_64": {
+      "text": {
+        "0xEA0": "0x9ACD4F96AA0D2772",
+        "0xED0": "0x00BCE788124B5D23",
+        "0xF68": "0x9320CAAFDA316ECC",
+        "0xFA8": "0x947EDE1AA67BB04F",
+        "0xFF0": "0x8E16D1B17ACA472F",
+        "0x10B0": "0x33DDE4CFF1091C50",
+        "0x1188": "0x994AC031DDD1596C",
+        "0x1190": "0x3A25B291766D4210",
+        "0x1198": "0xE6524DDE3D6E3E26",
+        "0x1230": "0x6CF90AEC5C0A0FEC",
+        "0x1370": "0x4D1DA9A1291EC0FB",
+        "0x1378": "0x8E7952CC1E9DD40F",
+        "0x1390": "0xEC4054E9044C5BB7",
+        "0x13A0": "0xEC4718C74757D654",
+        "0x13C0": "0xD3E28B13BC6E7354",
+        "0x13C8": "0xB75FEA489BC94233",
+        "0x13D0": "0x225F59152F851EE6",
+        "0x13E0": "0x7FD437744A85AE86",
+        "0x13E8": "0x2E0DA15D679833C5",
+        "0x13F8": "0xBA4E9749B5DE381F",
+        "0x1400": "0x4CF6E0FC8750EB5D",
+        "0x1408": "0x00AA4839C1D02A32",
+        "0x1410": "0x5E59336ECEDD47FE",
+        "0x1418": "0xA2CD8E933A316ACA",
+        "0x1420": "0x07CEAE017AC25C16",
+        "0x1428": "0x6E320CB5BF30D26A",
+        "0x1430": "0xE194859C362DB6F5",
+        "0x14B0": "0x560BC8CD048B44A7",
+        "0x1630": "0xFA0ACF4B5532A9BF",
+        "0x17E0": "0x4282F6EAA0C31FE5",
+        "0x18C0": "0x4B3CACA8484AE737",
+        "0x18D0": "0x82CC770BB8848CD1"
+      },
+      "data": {
+        "0x390": "0x8E336D44316B0456",
+        "0x3B0": "0x021EA41DAA8B1266",
+        "0x3C0": "0x2D3772BC383A5824",
+        "0x3F0": "0xFD3CBFBC35F40239",
+        "0x400": "0xA26BD7F773838D21",
+        "0x410": "0x0446D56A1E684847",
+        "0x420": "0x5395F50A32D944B6",
+        "0x430": "0x397D0B18F89E23F3",
+        "0x800": "0x84AE0F119D75BD2C",
+        "0xFC0": "0x4AE00751DDB385B1"
+      }
+    },
+    "matches": {
+      "text": [],
+      "data": []
+    },
+    "all_matching_instance_intersection": [],
+    "rt64_selected_text_row": null,
+    "rt64_selected_data_row": null,
+    "rt64_selected_instance_intersection": [],
+    "rt64_gbi_lookup_status": "unsupported",
+    "actual_ram_snapshot_used": true,
+    "graphics_compatibility_established": false,
+    "f3djfg_or_f3ddkr_enum_present": false,
+    "opcode_gaps": {
+      "0x04": "JFG G_VTX uses custom DMA encoding; RT64 F3D has a generic vertex handler",
+      "0x05": "JFG G_TRIN polygon command; no matching RT64 handler",
+      "0x07": "JFG G_DMADL DMA display-list command; no matching RT64 handler"
+    }
+  },
+  "private_exports": {
+    "published": false,
+    "rendered_frame": false,
+    "png_sha256": "d40f3243e012deb4756bd5746c464514416fa486227de955e26e25870c3ac7ea",
+    "obj_sha256": "192004bbb9a14fb21c1e1fbf68c418bd1b3532075a5b50f8fd7edd7f7b9fdafc",
+    "export_report_sha256": "14536d5868abea6e9adade977998d34987a09bfe43c9154cfc2986b90f0cbffb",
+    "png_scope": "RGBA16 texel sampling preview for LOADBLOCK DXT0, with odd-row word swap; no renderer or lighting"
+  },
+  "n64_matching": {
+    "make_version_us": "passed",
+    "binary_identical": true
+  },
+  "limits": [
+    "RT64 is not linked, built, or executed; the identification algorithm was reproduced from pinned source tables against actual game RAM",
+    "No F3DJFG handlers or RSP execution, GPU test, rendered game frame, audio output or physical controller input",
+    "Model vertex commands require an external DMA base; captured lists are not complete render tasks",
+    "One selected model and texture; no general asset format, animation or game compatibility claim",
+    "Asset MIPS comparison uses validated pre-load native snapshot and four diagnostic masks; bootstrap is compared independently",
+    "ROM, extracted images/geometry, RAM, generated game C and binaries stay private in ignored paths"
+  ],
+  "next_step": "Plan and test a bounded F3DJFG adapter or the original RSP-to-RDP route with caller DMA/matrix state before claiming a rendered frame",
+  "delegation": {
+    "agents": 3,
+    "model": "gpt-6-sol",
+    "reasoning_effort": "medium",
+    "fork_turns": "none",
+    "scope": [
+      "RT64 source audit and identification probe",
+      "local microcode/task contract, runners and independent review",
+      "asset selection, profile and independent checks"
+    ],
+    "coordinator": "Defined constrained test, integrated native/MIPS execution, inspected real RAM and private exports, validated Windows and scoped renderer gap",
+    "cost_measurement": "No comparable token or cost measurements"
+  },
+  "source_sha256": {
+    "port/graphics/checks_graphics.py": "232ef6ed606a0987b69c97cdd8aa586f9b8f128eb1c7a3ce07c0532934a910b3",
+    "port/graphics/export_private.py": "9b5e209a2f015073d06df72d5406379c01790387feedc800e4608e1f97e5bb4b",
+    "port/graphics/graphics_asset_checks.py": "062f9d85673ab2e1fc439c8923e0b2ef8a5e10c0f9094764ac3a444a7a07d6fe",
+    "port/graphics/package_windows.py": "638bde1a7d5e74b632977ed7146ac4ca24a5dc866bce1adeb48d3293461a084d",
+    "port/graphics/prepare_graphics.py": "166b0363d8e743d2835bbc180df312d2bbd56cfeb364a08085cee5968194b69d",
+    "port/graphics/rt64_probe.py": "68bc7a7a1107a0118dce811ce6c032bff6b343c2e2502cc3c87055807fe0a16d",
+    "port/graphics/run.py": "dd750d2c5925a52ad48622f97a5a4ab9e5709238b9cb03432ae3d8bd0d84d2c5",
+    "port/graphics/verify_graphics.py": "f48bc727aa8358e2b260b459696e6e4e94c127649f8f331f0c6aa84a80862852"
+  },
+  "local_report_sha256": {
+    "build/port-graphics/native-report.json": "72058bee86e3a19799cba545d972d4922640f39c19b196ca32889b98074e47d6",
+    "build/port-graphics/mips-report.json": "e380b9ec3b81038d8bdb3dbc7b077ad0820b8e5defa7c6fa1ae937ffbc30c06c",
+    "build/port-graphics/bootstrap-mips-report.json": "50cf9156680ca4a602f73a77e4a9120b7b76cd7d2c173b7d576a666b7580815c",
+    "build/port-graphics/protocol-report.json": "8e38f1fb916d71ccbe40554e41b3d25314c8d46700ab3b29198934c50d0ba0b3",
+    "build/port-graphics/rtx-windows-result.json": "bf6c6504655cd58341d8ba235c431e1c79f9270c2b79434cc6873d87ff905a99",
+    "build/port-graphics/package-report.json": "e3f808a7d260dfb8ac96d389081ab4a1439b53b8fb266663609dfabc74d1ba20",
+    "build/port-graphics/rt64-probe-report.json": "133523c9c1e81a89dc54173f1b9e08e17fd587000e104d00938db1d38d28ae92",
+    "build/port-graphics/matching.log": "4de21e57c9a00cf1b98c8389f4d441d403cc70b871cdf3a0143b45713c059f0d"
+  }
+}

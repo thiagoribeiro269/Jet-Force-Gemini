@@ -39,17 +39,20 @@ struct AssetPackage {
     std::vector<uint32_t> vertexBones;
     std::vector<Bone> skeleton;
     std::vector<Clip> clips;
+    bool worldGeometry = false;
 };
 inline AssetPackage loadAssetPackage(const char *input) {
     AssetReader reader(input);
     const auto *magic = reader.take(8);
     const bool multipleClips = std::memcmp(magic, "JFGNAT3\0", 8) == 0;
     const bool rigged = multipleClips || std::memcmp(magic, "JFGNAT2\0", 8) == 0;
-    assetRequire(rigged || std::memcmp(magic, "JFGNAT1\0", 8) == 0, "Wrong native scene magic");
+    const bool worldGeometry = std::memcmp(magic, "JFGWRL1\0", 8) == 0;
+    assetRequire(worldGeometry || rigged || std::memcmp(magic, "JFGNAT1\0", 8) == 0, "Wrong native scene magic");
     const uint32_t textureCount = reader.u32(), drawCount = reader.u32(), vertexCount = reader.u32();
     const uint32_t boneCount = reader.u32();
-    assetRequire(boneCount == (rigged ? 21U : 0U) && textureCount && textureCount <= 64 && drawCount && drawCount <= 1024 &&
-            vertexCount && vertexCount <= 65536 && vertexCount % 3 == 0, "Unsupported scene counts");
+    assetRequire(boneCount == (rigged ? 21U : 0U) && textureCount && textureCount <= (worldGeometry ? 256U : 64U) &&
+            drawCount && drawCount <= (worldGeometry ? 8192U : 1024U) && vertexCount &&
+            vertexCount <= (worldGeometry ? 1000000U : 65536U) && vertexCount % 3 == 0, "Unsupported scene counts");
     std::vector<TextureData> textures;
     for (uint32_t t = 0; t < textureCount; ++t) {
         TextureData texture;
@@ -65,8 +68,8 @@ inline AssetPackage loadAssetPackage(const char *input) {
     for (uint32_t d = 0; d < drawCount; ++d) {
         MeshDraw draw{reader.u32(), reader.u32(), reader.u32(), reader.u32(), reader.u32()};
         assetRequire(draw.first == coveredVertices && draw.first <= vertexCount && draw.count && draw.count % 3 == 0 &&
-                draw.count <= vertexCount - draw.first && draw.texture < textureCount && draw.flags < 4 &&
-                (draw.model == 220 || draw.model == 309), "Invalid native draw range");
+                draw.count <= vertexCount - draw.first && draw.texture < textureCount && draw.flags < (worldGeometry ? 16U : 4U) &&
+                (worldGeometry ? (draw.model >= 0x10000 && draw.model < 0x20000) : (draw.model == 220 || draw.model == 309)), "Invalid native draw range");
         coveredVertices += draw.count; draws.push_back(draw);
     }
     assetRequire(coveredVertices == vertexCount, "Mesh coverage incomplete");
@@ -106,9 +109,9 @@ inline AssetPackage loadAssetPackage(const char *input) {
     assetRequire(reader.offset == reader.bytes.size(), "Trailing scene payload");
     for (const auto &vertex : vertices) {
         std::array<float, 9> values{}; std::memcpy(values.data(), &vertex, sizeof(vertex));
-        for (float value : values) assetRequire(std::isfinite(value) && std::abs(value) < 8192, "Invalid vertex value");
+        for (float value : values) assetRequire(std::isfinite(value) && std::abs(value) < (worldGeometry ? 65536 : 8192), "Invalid vertex value");
     }
     return {rigged, multipleClips, std::move(textures), std::move(draws), std::move(vertices),
-            std::move(vertexBones), std::move(skeleton), std::move(clips)};
+            std::move(vertexBones), std::move(skeleton), std::move(clips), worldGeometry};
 }
 }

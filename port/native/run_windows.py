@@ -55,6 +55,11 @@ def main():
                          *([str(package / "scene.bin"), str(package / "juno-selection.bin")] if juno else [])])
     if session_test["exit_code"] or session_test["timed_out"]:
         raise RuntimeError("Native application session failed: " + session_test["stderr"])
+    region = (package / "jfg_native_region.exe").is_file()
+    region_inputs = [str(package / name) for name in ("scene.bin", "juno-selection.bin", "region-mesh.bin", "region-info.bin")]
+    region_test = owned("region_test", [str(package / "check_region.exe"), *(region_inputs if region else [])])
+    if region_test["exit_code"] or region_test["timed_out"]:
+        raise RuntimeError("Native region/camera checks failed: " + region_test["stderr"])
     magic = (package / "scene.bin").read_bytes()[:8]
     multiple = magic == b"JFGNAT3\0"
     rigged = multiple or magic == b"JFGNAT2\0"
@@ -63,7 +68,8 @@ def main():
     options = (["--juno-selection", str(package / "juno_sequence.txt"), str(package / "juno-selection.bin")] if juno else
                ["--character", str(package / "character_sequence.txt")] if character else
                ["--sequence", str(package / "transition_sequence.txt")] if multiple else ["--animate"] if rigged else [])
-    render_command = ([str(package / "jfg_native_session.exe"), str(package / "scene.bin"),
+    render_command = ([str(package / "jfg_native_region.exe"), *region_inputs, str(out / "frame")] if region else
+                      [str(package / "jfg_native_session.exe"), str(package / "scene.bin"),
                        str(package / "juno-selection.bin"), str(out / "frame")] if integration else [*command, str(out / "frame"), *options])
     render = owned("render", render_command)
     neutral = None
@@ -72,8 +78,12 @@ def main():
     transitions = None
     character_regression = None
     juno_regression = None
+    integration_regression = None
     if rigged and render["exit_code"] == 0 and not render["timed_out"]:
         if multiple:
+            if region:
+                integration_regression = owned("integration", [str(package / "jfg_native_session.exe"), str(package / "scene.bin"),
+                                                               str(package / "juno-selection.bin"), str(out / "integration")])
             if integration:
                 juno_regression = owned("juno", [*command, str(out / "juno"), "--juno-selection",
                                                 str(package / "juno_sequence.txt"), str(package / "juno-selection.bin")])
@@ -96,13 +106,18 @@ def main():
     result["character_test"] = character_test
     result["juno_selection_test"] = juno_test
     result["session_test"] = session_test
-    result["session"] = json.loads((out / "frame.session.json").read_text()) if integration and (out / "frame.session.json").exists() else None
+    session_path = out / ("integration.session.json" if region else "frame.session.json")
+    result["session"] = json.loads(session_path.read_text()) if integration and session_path.exists() else None
+    result["region_test"] = region_test
+    result["region_trace"] = json.loads((out / "frame.region.json").read_text()) if region and (out / "frame.region.json").exists() else None
+    result["integration_regression"] = integration_regression
     result["juno_selection_regression"] = juno_regression
     result["transition_regression"] = transitions
     result["character_regression"] = character_regression
     result["ok"] = bool(result["ok"] and (not character or (transitions and transitions["exit_code"] == 0 and not transitions["timed_out"])))
     result["ok"] = bool(result["ok"] and (not juno or (character_regression and character_regression["exit_code"] == 0 and not character_regression["timed_out"])))
     result["ok"] = bool(result["ok"] and (not integration or (result["session"] and juno_regression and juno_regression["exit_code"] == 0 and not juno_regression["timed_out"])))
+    result["ok"] = bool(result["ok"] and (not region or (result["region_trace"] and integration_regression and integration_regression["exit_code"] == 0 and not integration_regression["timed_out"])))
     (out / "result.json").write_text(json.dumps(result, indent=2) + "\n")
     print(json.dumps(result))
 

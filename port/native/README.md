@@ -7,9 +7,9 @@ substitui a arquitetura dos checkpoints anteriores.
 A prioridade agora é a [estrutura geral do port](ARCHITECTURE.md), com mapa
 do programa, sessão de aplicação, cenas, entidades e backend gráfico
 separados. As provas abaixo passaram a servir como regressões desse backend.
-O [roteiro vigente](../ROADMAP.md) prioriza carregar uma região original no
-host já integrado; a cadência isolada de animações deixou de ser o próximo
-marco principal.
+A região original [Forest First](REGION.md) já foi integrada ao host com
+o Juno. O [roteiro vigente](../ROADMAP.md) prevê movimento e colisão nesse
+ambiente como próximo marco.
 
 O executável C++ recebe meshes e texturas convertidos diretamente da ROM
 local e desenha por Direct3D 11 com shaders HLSL próprios. Não contém
@@ -17,6 +17,13 @@ interpretador de instruções MIPS, display lists, microcódigo RSP ou comandos
 RDP. Não simula CIC/PIF. A única API gráfica utilizada é a do Windows.
 
 ## Resultado observado
+
+O checkpoint mais recente desenha **Forest First, nível 21**, e Juno na
+mesma sessão nativa: 2.018 triângulos de cenário, 44 texturas de terreno,
+câmera em perspectiva e animação de repouso. A RTX produziu 180 frames
+em seis segundos, mantendo as seis provas anteriores idênticas byte a byte.
+O personagem ainda não percorre a região; câmera, alinhamento dos pés e
+materiais usam as políticas nativas documentadas em [REGION.md](REGION.md).
 
 O personagem Juno foi renderizado na RTX 5070 Ti, Windows x64, a 640 × 480:
 corpo 220 e mão 309, 534 triângulos, 17 texturas e 21 chamadas de desenho.
@@ -202,6 +209,18 @@ Testes no Linux ASAN/UBSAN e Windows, auditoria estática e quatro regressões
 gráficas passaram. Detalhes em [juno-selection-validation.json](juno-selection-validation.json).
 
 ## Build e teste
+
+Para o checkpoint atual da região:
+
+```sh
+python3 port/native/prepare_assets.py --region --out build/port-native/region
+python3 port/native/build.py
+python3 port/native/package.py --out build/port-native/region
+```
+
+O pacote privado inclui `jfg_native_region.exe`, testes e regressões do
+mesmo host. Instruções da execução Windows, recuperação dos frames e
+validação estão em [REGION.md](REGION.md#reprodução).
 
 Para preparar e testar a sessão de integração:
 

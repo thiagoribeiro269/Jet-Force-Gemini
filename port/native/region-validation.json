@@ -1,0 +1,319 @@
+{
+  "status": "passed",
+  "recorded_date": "2026-09-25",
+  "previous_checkpoint": "a4f098cc663aef5b96ff3ad81dd63df5c833866c",
+  "architecture": "original_region_and_character_in_shared_native_session_and_D3D11_backend",
+  "assets": {
+    "level": 21,
+    "name": "Forest First",
+    "geometry": 17,
+    "source_geometry_bytes": 99206,
+    "stored_vertices": 3539,
+    "stored_triangles": 2342,
+    "visible_triangles": 2018,
+    "hidden_triangles": 324,
+    "collision_triangles": 2342,
+    "draws": 264,
+    "source_texture_slots": 45,
+    "textures_converted": 44,
+    "player_object": 126,
+    "player_definition": 1,
+    "player_model": 220,
+    "player_scale": 0.25999999046325684,
+    "mesh_sha256": "f94bd112bfaa7b3a061cac43f1303ab457e8a58338e83b873bde8f6cacb6f34e",
+    "region_info_sha256": "3ef813bbb85e7700627b3fef1a7d5f7e6621e8b767a0e7e5979674089e684adf"
+  },
+  "source_audit": {
+    "routines": 9,
+    "bytes_compared_to_rom": 11104,
+    "source_audits": [
+      {
+        "source": "asm/nonmatchings/level/levelInit.s",
+        "bytes": 1824,
+        "sha256": "09c6739387ad86db3ba6edf038c3953ac44f0ba3e3b26fcff030f55497d54e33"
+      },
+      {
+        "source": "asm/nonmatchings/level/levelGetName.s",
+        "bytes": 152,
+        "sha256": "63e63b8bbb5cff40b69d0d8138960d9bc463a95f836f878c4f7c3289ec713c81"
+      },
+      {
+        "source": "asm/nonmatchings/objects/objLoadObjList.s",
+        "bytes": 548,
+        "sha256": "d642b74a98956e22dda498574a7f59da773895a0a6ab643a7541a86759c76d80"
+      },
+      {
+        "source": "asm/nonmatchings/objects/objGetControlNo.s",
+        "bytes": 84,
+        "sha256": "6fe48694785402e3e8fd9c80a76fa37b419afb99794c4ac9631ad1c876100bc3"
+      },
+      {
+        "source": "asm/nonmatchings/objects/objSetupPlayers.s",
+        "bytes": 1460,
+        "sha256": "c108bbe350c5101036b377b5537d902d5a6f1a009a7b91ef465f8785e1035a98"
+      },
+      {
+        "source": "asm/nonmatchings/objects/objSetupObject.s",
+        "bytes": 3848,
+        "sha256": "b7a1bcb59bc3fad57e88a52b2d328650eccdbd3121091167f733bc66588dbf4d"
+      },
+      {
+        "source": "asm/nonmatchings/track/func_80014B6C.s",
+        "bytes": 876,
+        "sha256": "a8672e5c15d27d9b3ce9d8d3631ea686e38db230772575508601420a597a2417"
+      },
+      {
+        "source": "asm/nonmatchings/overlays/o24/overlay_24/trackInit.s",
+        "bytes": 504,
+        "sha256": "260934a1a1774696522bc1b70e3ec8837628e9c24191326a6e06e7ce109f5e56"
+      },
+      {
+        "source": "asm/nonmatchings/overlays/o24/overlay_24/func_overlay_24_018001F8_1F41D28.s",
+        "bytes": 1808,
+        "sha256": "fef56a8706969122fc097a9904fe157f914fcb57edb22501a7e9bbfca858b7bf"
+      }
+    ]
+  },
+  "build": {
+    "status": "built",
+    "source": "port/native/render.cpp",
+    "api": "D3D11",
+    "executable_sha256": "e457b742d3744c4b9741963a0ead606d8cdf73c21b6cfbd59aa0437207cee243",
+    "animation_math_executable_sha256": "26318d27a1831934f55a77793ba097a432c885ab031db3e40ed2f38d5be67b3f",
+    "animation_player_executable_sha256": "8f733c36a968f9dd2322b2d9b68535a2824a970e39005ae8c7516242ee105ab2",
+    "emulator_dependencies": [],
+    "graphics_libraries": [
+      "Windows D3D11",
+      "Windows D3DCompiler",
+      "Windows DXGI"
+    ],
+    "character_executable_sha256": "9629cfa9b573e49e3f1c4aa3e4f48171e63e83f1db7be2c79061cf892bc70434",
+    "juno_selection_executable_sha256": "ce745d641012349557fe4cf7328cdba8d15e853ad0ff90eafc817f16791d1874",
+    "renderer_sources": [
+      "port/native/render.cpp",
+      "port/native/renderer_d3d11.cpp"
+    ],
+    "native_session_executable_sha256": "a36a723fc311d23840ac60cc2a03bcb2ad7a5b4be6c504de796c87dc786a10ca",
+    "native_session_check_sha256": "8e30bbbc4414b06cde99b6f2dd936253241622b93f1112190baf482ec9ff9449",
+    "native_region_executable_sha256": "21d21436cc65690f3509486d6a400f5a4bbc0a378a7a5e2920e2a4267d018c70",
+    "native_region_check_sha256": "b8c1fdecd05591aacc5260dc12420d307da28405f41d6fbd54982e83988c498c"
+  },
+  "imports": {
+    "jfg_native_preview.exe": {
+      "architecture": "x64",
+      "imports": [
+        "d3d11.dll",
+        "D3DCOMPILER_47.dll",
+        "dxgi.dll",
+        "api-ms-win-crt-stdio-l1-1-0.dll",
+        "api-ms-win-crt-runtime-l1-1-0.dll",
+        "api-ms-win-crt-locale-l1-1-0.dll",
+        "api-ms-win-crt-math-l1-1-0.dll",
+        "api-ms-win-crt-heap-l1-1-0.dll",
+        "api-ms-win-crt-private-l1-1-0.dll",
+        "api-ms-win-crt-string-l1-1-0.dll",
+        "KERNEL32.dll",
+        "api-ms-win-crt-time-l1-1-0.dll",
+        "api-ms-win-crt-multibyte-l1-1-0.dll",
+        "api-ms-win-crt-convert-l1-1-0.dll",
+        "api-ms-win-crt-environment-l1-1-0.dll",
+        "api-ms-win-crt-filesystem-l1-1-0.dll"
+      ]
+    },
+    "jfg_native_session.exe": {
+      "architecture": "x64",
+      "imports": [
+        "d3d11.dll",
+        "D3DCOMPILER_47.dll",
+        "dxgi.dll",
+        "api-ms-win-crt-stdio-l1-1-0.dll",
+        "api-ms-win-crt-runtime-l1-1-0.dll",
+        "api-ms-win-crt-locale-l1-1-0.dll",
+        "api-ms-win-crt-math-l1-1-0.dll",
+        "api-ms-win-crt-heap-l1-1-0.dll",
+        "api-ms-win-crt-private-l1-1-0.dll",
+        "api-ms-win-crt-string-l1-1-0.dll",
+        "KERNEL32.dll",
+        "api-ms-win-crt-time-l1-1-0.dll",
+        "api-ms-win-crt-multibyte-l1-1-0.dll",
+        "api-ms-win-crt-convert-l1-1-0.dll",
+        "api-ms-win-crt-environment-l1-1-0.dll",
+        "api-ms-win-crt-filesystem-l1-1-0.dll"
+      ]
+    },
+    "jfg_native_region.exe": {
+      "architecture": "x64",
+      "imports": [
+        "d3d11.dll",
+        "D3DCOMPILER_47.dll",
+        "dxgi.dll",
+        "api-ms-win-crt-stdio-l1-1-0.dll",
+        "api-ms-win-crt-runtime-l1-1-0.dll",
+        "api-ms-win-crt-locale-l1-1-0.dll",
+        "api-ms-win-crt-math-l1-1-0.dll",
+        "api-ms-win-crt-heap-l1-1-0.dll",
+        "api-ms-win-crt-private-l1-1-0.dll",
+        "api-ms-win-crt-string-l1-1-0.dll",
+        "KERNEL32.dll",
+        "api-ms-win-crt-time-l1-1-0.dll",
+        "api-ms-win-crt-multibyte-l1-1-0.dll",
+        "api-ms-win-crt-convert-l1-1-0.dll",
+        "api-ms-win-crt-environment-l1-1-0.dll",
+        "api-ms-win-crt-filesystem-l1-1-0.dll"
+      ]
+    }
+  },
+  "private_package_sha256": "237303f527a0a8429265d8133bba19fb5ffc65a255e370a761b06b04b42e393f",
+  "windows": "Windows-11-10.0.26200-SP0",
+  "tests": {
+    "linux_asan_ubsan": {
+      "check_animation": {
+        "status": "passed",
+        "math_cases": 6,
+        "rejected_cases": 4
+      },
+      "check_player": {
+        "status": "passed",
+        "controller_cases": 8,
+        "rejected_cases": 6
+      },
+      "check_character": {
+        "status": "passed",
+        "character_cases": 10,
+        "rejected_cases": 20
+      },
+      "check_juno_selection": {
+        "status": "passed",
+        "choice_cases": 18,
+        "priority_cases": 8,
+        "bridge_cases": 8,
+        "rejected_cases": 19,
+        "original_table_cases": 20
+      },
+      "check_session": {
+        "status": "passed",
+        "session_cases": 9,
+        "rejected_cases": 18,
+        "presentation_rates": [
+          30,
+          60,
+          144
+        ],
+        "cadence_checkpoints": 12,
+        "original_assets": true
+      },
+      "check_region": {
+        "status": "passed",
+        "geometry_camera_cases": 6,
+        "rejected_cases": 11,
+        "original_region": true
+      }
+    },
+    "windows": {
+      "math_test": {
+        "status": "passed",
+        "math_cases": 6,
+        "rejected_cases": 4
+      },
+      "controller_test": {
+        "status": "passed",
+        "controller_cases": 8,
+        "rejected_cases": 6
+      },
+      "character_test": {
+        "status": "passed",
+        "character_cases": 10,
+        "rejected_cases": 20
+      },
+      "juno_selection_test": {
+        "status": "passed",
+        "choice_cases": 18,
+        "priority_cases": 8,
+        "bridge_cases": 8,
+        "rejected_cases": 19,
+        "original_table_cases": 20
+      },
+      "session_test": {
+        "status": "passed",
+        "session_cases": 9,
+        "rejected_cases": 18,
+        "presentation_rates": [
+          30,
+          60,
+          144
+        ],
+        "cadence_checkpoints": 12,
+        "original_assets": true
+      },
+      "region_test": {
+        "status": "passed",
+        "geometry_camera_cases": 6,
+        "rejected_cases": 11,
+        "original_region": true
+      }
+    }
+  },
+  "region": {
+    "status": "passed",
+    "level": 21,
+    "geometry": 17,
+    "frames": 180,
+    "unique_frames": 180,
+    "terrain_pixels_first_frame": 306945,
+    "character_pixels_in_isolation": 4553,
+    "character_contribution_in_world": 4553,
+    "changed_pixels_outside_character_box": 0,
+    "character_box_first_frame": [
+      289,
+      247,
+      351,
+      389
+    ],
+    "region_coverage_range": [
+      306794,
+      307200
+    ],
+    "source_spawn": [
+      40,
+      19,
+      841
+    ],
+    "original_model_scale": 0.259999990463,
+    "ground_height": -2,
+    "native_visual_offset_y": -21.221578598,
+    "source_y_preserved_separately_from_visual_alignment": true,
+    "shared_session_region_and_character": true,
+    "all_six_previous_gpu_proofs_byte_equal": true,
+    "raw_sha256": "bc88c5e72006d0b82036558e498f3cbcacb9b1afed5399643f68dc978c4c7a22",
+    "terrain_capture_sha256": "e794431e55cebb65ac9060808b7ef59aaee28c895c6fa7ad03da2295cc4ed278",
+    "character_capture_sha256": "4673b2ca8cce7a67bfd067320a92843b976a2248e2f8c38759977a8f2d94ad82",
+    "video_sha256": "fb37e27b1fe201c20d8ae3c2cd5322d4acf95136652829af05330f67c808ac55",
+    "fps_output": 30,
+    "duration_seconds": 6,
+    "limits": [
+      "Original region geometry/material inputs in the native host, not full original levelInit or playable gameplay",
+      "Controlled perspective camera and native repeated-UV/alpha material policy; original sky/effects and object behaviors omitted",
+      "Original source position and scale retained; visual foot alignment uses a native vertical ground query, not original gravity",
+      "No wall collision, swept character collision, audio, enemies or physical input",
+      "No emulation or emulator code; ROM and derived assets remain private"
+    ]
+  },
+  "video": {
+    "codec_name": "h264",
+    "width": 640,
+    "height": 480,
+    "avg_frame_rate": "30/1",
+    "duration": "6.000000",
+    "nb_frames": "180",
+    "private": true
+  },
+  "matching_rom_byte_equal": true,
+  "rom_sha1": "493ced9008dbe932d6e91179b68e8630cf23a023",
+  "program_map_summary_unchanged": true,
+  "us_source_labels_exclude_kiosk": true,
+  "emulation_used": false,
+  "visual_review": "Initial and middle frames inspected: complete Juno, textured path and trees visible under the controlled perspective camera.",
+  "scope": "Original region geometry/material inputs with idle Juno; not full level startup, original physics or playable gameplay",
+  "next_milestone": "Integrate movement and collision within Forest First through the same native host",
+  "ai_assistance": "OpenAI Codex, main agent only"
+}

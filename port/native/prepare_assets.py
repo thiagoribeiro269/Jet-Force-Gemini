@@ -222,7 +222,10 @@ def main():
     parser.add_argument("--character", action="store_true")
     parser.add_argument("--juno-selection", action="store_true")
     parser.add_argument("--integration", action="store_true")
+    parser.add_argument("--region", action="store_true")
     args = parser.parse_args()
+    if args.region:
+        args.integration = True
     if args.integration:
         args.juno_selection = True
     out = args.out.resolve()
@@ -230,6 +233,11 @@ def main():
     assets = Assets(args.rom.read_bytes())
     data, report = convert(assets, animated=args.animation, transitions=args.transitions, character=args.character, juno_selection=args.juno_selection)
     out.mkdir(parents=True, exist_ok=True)
+    if args.region:
+        from region_assets import convert_region
+        mesh, info, region_report = convert_region(assets)
+        (out / "region-mesh.bin").write_bytes(mesh); (out / "region-info.bin").write_bytes(info)
+        (out / "region-assets-report.json").write_text(json.dumps(region_report, indent=2) + "\n")
     if args.juno_selection:
         from juno_selection_assets import prepare_selection
         selection, audit = prepare_selection(assets, args.rom)
@@ -238,6 +246,7 @@ def main():
     (out / "scene.bin").write_bytes(data)
     report["scene_sha256"] = hashlib.sha256(data).hexdigest()
     report["integration_profile"] = args.integration
+    report["region_profile"] = args.region
     (out / "assets-report.json").write_text(json.dumps(report, indent=2) + "\n")
     print(json.dumps({k: report[k] for k in ("status", "triangles", "draws", "texture_count", "bones", "scene_sha256")}))
 

@@ -30,6 +30,8 @@ def require(condition, why):
 def source_index(names):
     result = {}
     for path in sorted((ROOT / "src").rglob("*.c")):
+        if "overlays_kiosk" in path.parts:
+            continue  # This inventory verifies the US ELF; do not overwrite its source labels.
         text = path.read_text(errors="replace")
         for asm in re.findall(r'#pragma GLOBAL_ASM\("([^"\n]+)"\)', text):
             result[Path(asm).stem] = str(path.relative_to(ROOT))

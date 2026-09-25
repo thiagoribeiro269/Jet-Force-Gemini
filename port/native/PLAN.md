@@ -218,3 +218,12 @@ Thiago pediu priorizar o contexto global e absorver os detalhes dentro
 dele. Essa orientação substitui a cadência isolada de animações como próxima
 prioridade. O plano da integração, fechado antes da implementação a partir
 de `42f9ab6`, está em [INTEGRATION_PLAN.md](INTEGRATION_PLAN.md).
+
+O pacote seguinte, autorizado após essa integração, é a região original
+`Forest First` no mesmo host. O escopo e as evidências de formato estão em
+[REGION_PLAN.md](REGION_PLAN.md), definidos antes de implementar o conversor.
+
+Resultado: Forest First e Juno integrados e validados na RTX, com catálogo
+de dois recursos, perspectiva e consulta vertical de piso. As seis provas
+anteriores permanecem idênticas. O checkpoint está em [REGION.md](REGION.md);
+o próximo marco é movimento e colisão dentro da região.

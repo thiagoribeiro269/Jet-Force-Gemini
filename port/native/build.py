@@ -44,5 +44,14 @@ subprocess.run([str(compiler), "-std=c++17", "-O2", "-Wall", "-Wextra", "-Werror
 report["renderer_sources"] = ["port/native/render.cpp", "port/native/renderer_d3d11.cpp"]
 report["native_session_executable_sha256"] = hashlib.sha256(session_exe.read_bytes()).hexdigest()
 report["native_session_check_sha256"] = hashlib.sha256(session_check.read_bytes()).hexdigest()
+region_exe = out / "jfg_native_region.exe"
+subprocess.run([str(compiler), "-std=c++17", "-O2", "-Wall", "-Wextra", "-Werror", "-DNOMINMAX", "-DWIN32_LEAN_AND_MEAN", "-static",
+                str(ROOT / "port/native/region_main.cpp"), str(ROOT / "port/native/renderer_d3d11.cpp"), "-o", str(region_exe),
+                "-ld3d11", "-ld3dcompiler", "-ldxgi", "-lole32"], check=True)
+region_check = out / "check_region.exe"
+subprocess.run([str(compiler), "-std=c++17", "-O2", "-Wall", "-Wextra", "-Werror", "-ffp-contract=off", "-static",
+                str(ROOT / "port/native/check_region.cpp"), "-o", str(region_check)], check=True)
+report["native_region_executable_sha256"] = hashlib.sha256(region_exe.read_bytes()).hexdigest()
+report["native_region_check_sha256"] = hashlib.sha256(region_check.read_bytes()).hexdigest()
 (out / "build-report.json").write_text(json.dumps(report, indent=2) + "\n")
 print(json.dumps(report))

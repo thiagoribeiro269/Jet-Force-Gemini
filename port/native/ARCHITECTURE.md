@@ -7,8 +7,9 @@ com código nativo, sem RT64, emulação, código de emuladores ou Android.
 O port tem agora um host de aplicação separado dos diagnósticos de animação.
 Ele carrega recursos, mantém cenas e entidades, atualiza o mundo em passos
 fixos e entrega snapshots ao mesmo renderer D3D11 usado pelas regressões.
-Isso é uma estrutura de integração em funcionamento; ainda não executa uma
-fase original nem o ciclo completo de gameplay do JFG.
+O host também carrega a geometria de Forest First com Juno, câmera em
+perspectiva e consulta vertical de piso. Ainda não executa o ciclo completo
+de gameplay do JFG nem oferece uma fase jogável.
 
 ## Fluxo original identificado
 
@@ -64,6 +65,8 @@ por módulo, sem instruções ou assets extraídos.
 flowchart LR
     A[Conversão offline da ROM local] --> B[AssetPackage imutável]
     B --> C[NativeSession: cena e entidades]
+    A --> R[NativeRegion: geometria e metadados]
+    R --> C
     I[TickInput: comandos tipados] --> C
     J[Seletor original recuperado] --> C
     C --> D[SessionSnapshot: poses e transformações]
@@ -75,21 +78,24 @@ flowchart LR
 | Arquivo | Responsabilidade e fronteira |
 | --- | --- |
 | `scene_assets.h` | Leitura/validação de recursos PC; não inclui Windows ou D3D |
+| `region_assets.py` / `region.h` | Conversão e leitura de região, associação ao ponto de entrada e consulta vertical de piso |
+| `camera.h` | Matrizes de câmera em perspectiva no espaço do PC |
 | `session.h` | Inicialização, transações de cena, vida das entidades, relógio, pausa e encerramento |
 | `planar_motion.h` | Movimento provisório separado da seleção/animação |
 | `juno_selection.h` | As duas decisões originais já recuperadas e sua ponte para animação |
 | `animation_player.h` / `animation.h` | Relógios dos clipes, mistura, poses e hierarquia |
 | `renderer.h` / `renderer_d3d11.cpp` | Backend que recebe instâncias prontas; não escolhe clipes nem avança o jogo |
 | `session_main.cpp` | Executável de integração por console, sem janela |
+| `region_main.cpp` / `region_scenario.h` | Região e personagem no mesmo host, com câmera e entrada controladas |
 | `render.cpp` | Frontend dos diagnósticos antigos, agora usando o backend compartilhado |
 | `integration_scenario.h` | Entradas/cenas explícitas da prova, sem alegar que sejam uma fase original |
 
-O backend desenha várias instâncias independentes do mesmo recurso composto
-do Juno. O catálogo atual ainda contém um modelo composto (`mesh=0`); o
-formato e a validação de recursos permanecem limitados aos perfis convertidos.
-A extensão para geometria de regiões e outros modelos é o próximo contrato
-de dados a integrar. Transparência entre objetos ainda não possui ordenação
-geral por profundidade; esta prova não estabelece essa fidelidade.
+O backend recebe um catálogo de recursos imutáveis. A cena da região usa
+Juno (`mesh=0`) e Forest First (`mesh=1`), cada recurso com seus buffers e
+texturas. O snapshot da sessão inclui terreno e atores. No modo de mundo,
+lotes transparentes são ordenados pela profundidade do centro do lote;
+isso não resolve toda interseção de polígonos transparentes. O formato e
+a validação continuam limitados aos perfis efetivamente convertidos.
 
 ## Ciclo e propriedade dos dados
 
@@ -121,9 +127,10 @@ snapshot ainda retido pelo consumidor.
 
 As transações usam cópias dos pequenos estados de entidades desta prova.
 O renderer também prepara vértices de cada instância na CPU. A estrutura
-tem limite de 64 entidades/instâncias; custo em cenas grandes, interpolação,
-catálogo de múltiplas malhas e otimização de alocações ainda precisam de
-medição. A validação de apresentação a 144 Hz não é benchmark de desempenho.
+tem limite de 64 entidades e 64 instâncias por frame; a malha da região
+ocupa uma dessas instâncias, deixando até 63 para atores na apresentação.
+Custo em cenas grandes, interpolação e otimização de alocações ainda
+precisam de medição. A validação a 144 Hz não é benchmark de desempenho.
 
 ## Contratos do port completo
 
@@ -131,16 +138,17 @@ medição. A validação de apresentação a 144 Hz não é benchmark de desempe
 | --- | --- |
 | Inicialização e ciclo principal | Host e ciclo de vida implementados; não chama o boot original completo |
 | Memória e carregamento de overlays | Recursos com propriedade explícita; rotinas devem ser adaptadas ou ligadas estaticamente, sem imitar RAM/chips |
-| `levelInit`, `trackInit`, listas de objetos | Próxima integração: regiões, materiais, geometria e registros de spawn |
+| `levelInit`, `trackInit`, listas de objetos | Formatos inspecionados; geometria/material de Forest First e ponto de entrada convertidos. Inicialização completa e comportamentos dos objetos pendentes |
 | `objObjectsTick`, `controlPlayer`, `boyControl` | Entidades e comandos integrados; apenas os dois seletores originais foram portados neste caminho |
-| Colisão, gravidade e física de personagem | Pendente; movimento atual é o diagnóstico documentado |
-| Câmera, desenho de mundo e materiais | Backend D3D11 ativo; câmera e materiais gerais do jogo pendentes |
+| Colisão, gravidade e física de personagem | Consulta vertical de piso disponível; gravidade, obstáculos e controle original pendentes |
+| Câmera, desenho de mundo e materiais | Perspectiva, catálogo e terreno ativos em D3D11; câmera jogável, céu e efeitos originais pendentes |
 | Armas, projéteis, inimigos e scripts | Pendente; deverá usar a mesma vida de entidades, sem cenários paralelos isolados |
 | Áudio e música | Saída/síntese ainda não integradas |
 | Interface, salvamento e entrada física | Pendentes; só há entrada de teste e encerramento controlado |
 
 `requireOriginalService` rejeita pedidos dos serviços ainda ausentes. Pedir
-uma cena marcada como nível original também falha. Não há stubs de áudio,
+uma cena marcada como gameplay original também falha; `regionId` identifica
+separadamente a geometria convertida. Não há stubs de áudio,
 colisão, salvamento ou dispositivos que retornem sucesso fictício.
 
 Os perfis legados em `port/boot`, `port/init`, `port/objects` e similares
@@ -161,8 +169,12 @@ total e até duas simultâneas. São 180 frames, 150 imagens distintas e 31
 frames idênticos cobrindo a pausa. As cinco provas gráficas anteriores
 permaneceram idênticas byte a byte após separar o backend. [Evidência](integration-validation.json).
 
-O próximo marco é **uma região original do jogo integrada ao host**, com
-geometria, materiais e spawn do personagem. Esse caminho deve usar o mapa
-`levelInit → trackInit → objetos`, ampliar o catálogo de recursos e preparar
-o contrato de colisão. Particularidades de animação entram nesse contexto,
-sem voltar a ser a única linha de avanço.
+Forest First foi integrada a esse mesmo host com Juno, escala original,
+câmera em perspectiva e consulta de piso. A RTX produziu 180 frames distintos;
+as seis provas gráficas anteriores permaneceram idênticas byte a byte.
+Capturas separadas do cenário e do personagem conferem sua contribuição
+na imagem conjunta. [Resultado e limites](REGION.md).
+
+O próximo marco é **movimento e colisão dentro dessa região**, começando
+pelo contrato de controle, gravidade, piso e obstáculos. As particularidades
+de animação entram nesse contexto, preservando as regressões do host.

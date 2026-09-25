@@ -3,6 +3,7 @@
 #include "planar_motion.h"
 #include "juno_selection.h"
 #include "renderer.h"
+#include "region.h"
 #include <functional>
 #include <optional>
 #include <set>
@@ -35,8 +36,14 @@ struct ActorInput {
     std::optional<uint32_t> directMove;
     double initialFraction = 0, blendSeconds = 0.2;
 };
-struct SpawnSpec { uint32_t slot; double x = 0, y = 0, z = 0, yaw = 0; ActorInput input; };
-struct SceneSpec { std::string name; bool originalLevel = false; std::vector<SpawnSpec> entities; };
+struct SpawnSpec {
+    uint32_t slot; double x = 0, y = 0, z = 0, yaw = 0; ActorInput input;
+    float scale = 1, visualOffsetY = 0;
+};
+struct SceneSpec {
+    std::string name; bool originalLevel = false; std::vector<SpawnSpec> entities;
+    std::optional<uint32_t> regionId = std::nullopt; // Imported geometry; originalLevel still requires full gameplay startup.
+};
 struct EntityInput { EntityHandle entity; ActorInput input; };
 struct TickInput {
     std::optional<SceneSpec> scene;
@@ -58,8 +65,10 @@ struct SessionSnapshot {
     std::string sceneName;
     std::shared_ptr<const AssetPackage> assets;
     std::vector<EntitySnapshot> entities;
+    std::shared_ptr<const NativeRegion> region;
     std::vector<RenderInstance> renderInstances() const {
         std::vector<RenderInstance> result;
+        if (region) result.push_back({1, {}});
         for (const auto &entity : entities) result.push_back(entity.render);
         return result;
     }
@@ -72,12 +81,16 @@ class NativeSession {
     struct Actor {
         EntityHandle handle;
         double elevation;
+        float scale, visualOffsetY;
         PlanarMotion motion;
         JunoAnimationController animation;
         ActorInput held;
         Actor(EntityHandle id, const SpawnSpec &spawn, const AssetPackage &assets, const JunoSelectionData &selection)
-            : handle(id), elevation(spawn.y), motion(spawn.x, spawn.z, spawn.yaw), animation(selection, assets.clips, assets.skeleton.size()), held(spawn.input) {
+            : handle(id), elevation(spawn.y), scale(spawn.scale), visualOffsetY(spawn.visualOffsetY),
+              motion(spawn.x, spawn.z, spawn.yaw), animation(selection, assets.clips, assets.skeleton.size()), held(spawn.input) {
             if (!std::isfinite(elevation) || std::abs(elevation) > 1000000) throw std::runtime_error("Invalid entity elevation");
+            if (!std::isfinite(scale) || scale <= 0 || scale > 1024 || !std::isfinite(visualOffsetY) || std::abs(visualOffsetY) > 8192)
+                throw std::runtime_error("Invalid native model placement");
             consume(held);
         }
         void consume(const ActorInput &input) {
@@ -98,13 +111,15 @@ class NativeSession {
         uint64_t updates = 0;
         std::vector<std::unique_ptr<Actor>> actors;
         std::set<uint32_t> usedSlots;
+        std::shared_ptr<const NativeRegion> region;
         World() = default;
-        World(const World &other) : name(other.name), generation(other.generation), updates(other.updates), usedSlots(other.usedSlots) {
+        World(const World &other) : name(other.name), generation(other.generation), updates(other.updates), usedSlots(other.usedSlots), region(other.region) {
             for (const auto &actor : other.actors) actors.push_back(std::make_unique<Actor>(*actor));
         }
     };
     SessionPhase phase_ = SessionPhase::Cold;
     std::shared_ptr<const AssetPackage> assets_;
+    std::shared_ptr<const NativeRegion> region_;
     JunoSelectionData selection_;
     std::unique_ptr<World> world_;
     uint64_t hostTick_ = 0, accumulator_ = 0;
@@ -130,6 +145,10 @@ class NativeSession {
             if (input.scene->name.empty() || input.scene->name.size() > 128 || generation_ == UINT32_MAX)
                 throw std::runtime_error("Invalid native scene definition");
             next = std::make_unique<World>(); next->name = input.scene->name; next->generation = ++nextGeneration;
+            if (input.scene->regionId) {
+                if (!region_ || region_->level != *input.scene->regionId) throw std::runtime_error("Scene references an unloaded native region");
+                next->region = region_;
+            }
             for (const auto &entity : input.scene->entities) spawn(*next, entity);
             paused = false;
         }
@@ -163,12 +182,14 @@ public:
     NativeSession() = default;
     NativeSession(const NativeSession &) = delete;
     NativeSession &operator=(const NativeSession &) = delete;
-    void boot(std::shared_ptr<const AssetPackage> assets, const JunoSelectionData &selection) {
+    void boot(std::shared_ptr<const AssetPackage> assets, const JunoSelectionData &selection, std::shared_ptr<const NativeRegion> region = {}) {
         if (phase_ != SessionPhase::Cold || !assets || !assets->rigged || assets->skeleton.empty())
             throw std::runtime_error("Invalid or repeated native boot");
         JunoAnimationController validate(selection, assets->clips, assets->skeleton.size());
         composePose(assets->skeleton, validate.animation().current());
-        selection_ = selection; assets_ = std::move(assets); phase_ = SessionPhase::Ready;
+        if (region && (!region->mesh || !region->mesh->worldGeometry || region->mesh->rigged || region->triangles.empty()))
+            throw std::runtime_error("Invalid native region binding");
+        selection_ = selection; assets_ = std::move(assets); region_ = std::move(region); phase_ = SessionPhase::Ready;
     }
     void apply(const TickInput &input) { execute(input, false); }
     void advanceNanoseconds(uint64_t elapsed, const std::function<TickInput(uint64_t)> &source) {
@@ -184,11 +205,15 @@ public:
         }
     }
     SessionSnapshot snapshot() const {
-        SessionSnapshot result{phase_, hostTick_, world_ ? world_->updates : 0, generation_, world_ ? world_->name : "", assets_, {}};
+        SessionSnapshot result{phase_, hostTick_, world_ ? world_->updates : 0, generation_, world_ ? world_->name : "", assets_, {}, world_ ? world_->region : nullptr};
         if (world_) for (const auto &actor : world_->actors) {
             auto bones = composePose(assets_->skeleton, actor->animation.animation().current());
             auto world = actor->motion.world(); world[13] = float(actor->elevation);
-            for (auto &bone : bones) bone = multiply(bone, world);
+            if (actor->visualOffsetY != 0) world[13] += actor->visualOffsetY;
+            for (auto &bone : bones) {
+                if (actor->scale != 1) bone = multiply(bone, uniformScale(actor->scale));
+                bone = multiply(bone, world);
+            }
             result.entities.push_back({actor->handle, actor->motion.x(), actor->elevation, actor->motion.z(), actor->motion.yaw(),
                                        actor->animation.animation().frame(), actor->animation.animation().id(),
                                        actor->animation.selection().transitionProfile, {0, std::move(bones)}});
@@ -196,7 +221,7 @@ public:
         return result;
     }
     void stop() {
-        world_.reset(); assets_.reset(); selection_ = {}; accumulator_ = 0; phase_ = SessionPhase::Stopped;
+        world_.reset(); assets_.reset(); region_.reset(); selection_ = {}; accumulator_ = 0; phase_ = SessionPhase::Stopped;
     }
 };
 }

@@ -20,16 +20,17 @@ estão explicitamente pendentes; esse mapa não mede percentual de conclusão.
 
 O host nativo já possui recursos separados do backend gráfico, ciclo em
 passos fixos, snapshots, entidades independentes, pausa/retomada, troca de
-cena validada e encerramento. A sessão foi executada na RTX. As cenas ainda
-são de diagnóstico; o jogo completo, cenário original e física não estão
-integrados. As provas individuais passaram a ser regressões do mesmo backend.
+cena validada e encerramento. Forest First e Juno já foram desenhados juntos
+na RTX com câmera em perspectiva. A prova continua controlada: movimento
+na região, física e gameplay completo permanecem pendentes. As provas
+individuais são regressões do mesmo backend. [Resultado da região](native/REGION.md).
 
 ## Marcos orientados à integração
 
 | Marco | Critério observável | Situação e dependências |
 | --- | --- | --- |
 | Estrutura geral e inventário | Carregar duas cenas, atualizar entidades, pausar, trocar cena e liberar referências; renderer recebe snapshots | Concluído no escopo de diagnóstico; cinco regressões GPU preservadas |
-| Região original | Geometria/material de uma região da ROM e personagem inseridos no mesmo host, com câmera reproduzível | Próximo: seguir `levelInit`, `trackInit` e carregamento de listas; converter dados diretamente para recursos PC |
+| Região original | Geometria/material de uma região da ROM e personagem inseridos no mesmo host, com câmera reproduzível | Concluído no escopo documentado: Forest First + Juno, 180 frames, seis regressões GPU preservadas |
 | Movimento na região | Deslocamento, gravidade, piso/obstáculos e câmera coerentes | Integrar consultas de colisão e rotinas de controle; substituir movimento e cadência provisórios |
 | Interação de gameplay | Arma, projétil, alvo/inimigo, dano e ciclo de criação/remoção | Selecionar um encontro simples da mesma região e ampliar comportamentos/recursos necessários |
 | Sessão utilizável | Entrada física, áudio, interface, troca de região e save/load | Integrar serviços nativos, mantendo métodos de acesso ao PC autorizados; nenhum dispositivo virtual de N64 |
@@ -37,15 +38,14 @@ integrados. As provas individuais passaram a ser regressões do mesmo backend.
 
 ## Ordem do próximo bloco
 
-1. Usar o mapa global para entender `levelInit → trackInit → listas/objetos`,
-   seus formatos e dependências; escolher uma região a partir dos dados
-   disponíveis, sem supor que ela seja um mesh de personagem.
-2. Definir o pacote de recursos da região: geometria, materiais, transformações,
-   identificadores e spawn. Manter dados derivados privados e validar limites.
-3. Ampliar o catálogo do backend e carregar a região pela sessão existente.
-   A primeira imagem deve reunir mundo e personagem no mesmo sistema.
-4. Mapear a interface de colisão/controle nesse contexto e escolher o recorte
-   de movimento que possa ser conferido por geometria e comportamento.
+1. Mapear os contratos de controle e colisão usados por `controlPlayer` e
+   `boyControl`, mantendo a análise estática do código original.
+2. Ampliar a consulta vertical já disponível para o recorte necessário de
+   piso, gravidade e obstáculos; definir limites antes de implementar.
+3. Integrar deslocamento do personagem a Forest First pela sessão existente,
+   com comandos reproduzíveis e câmera coerente com o trajeto.
+4. Conferir contato com o terreno, paredes e mudanças de altura, separando
+   comportamento original recuperado das políticas provisórias do port.
 5. Revalidar a sessão, os assets anteriores e a ROM matching. Registrar
    o que passou, o que foi adaptado e o que continua sem implementação.
 

@@ -192,7 +192,9 @@ def convert(assets, animated=False, transitions=False, character=False, juno_sel
             data.extend(struct.pack("<i3f", parent, *local))
         indices = (0, 14, 51, 1, 2, 3, 16, 28, 36) if juno_selection else (0, 14, 51) if character else (0, 14) if transitions else (0,)
         if movement:
-            indices += (5, 6, 7, 9, 10, 15, 17, 18, 24, 25)
+            indices += (5, 6, 7, 9, 10, 15, 17, 18, 24, 25,
+                        19, 20, 26, 27, 29, 30, 31, 32, 34, 35, 45, 47, 48,
+                        4, 8, 11, 12, 13, 22, 33, 44, 49, 50)
         if transitions:
             data.extend(struct.pack("<I", len(indices)))
         for index in indices:

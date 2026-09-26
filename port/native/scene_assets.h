@@ -88,16 +88,24 @@ inline AssetPackage loadAssetPackage(const char *input) {
             skeleton.push_back({parent, reader.vec3()});
         }
         const uint32_t clipCount = multipleClips ? reader.u32() : 1;
-        assetRequire(multipleClips ? (clipCount == 2 || clipCount == 3 || clipCount == 9 || clipCount == 19) : clipCount == 1,
+        assetRequire(multipleClips ? (clipCount == 2 || clipCount == 3 || clipCount == 9 || clipCount == 42) : clipCount == 1,
                      "Unsupported clip collection size");
         for (uint32_t i = 0; i < clipCount; ++i) {
             jfg_native::Clip clip;
             clip.id = reader.u32(); const uint32_t keyCount = reader.u32(), looping = reader.u32();
             clip.sourceRate = reader.f32();
+            // Movement profile: base clips, jumps/strafe/skid/idle/fall, the
+            // gun-held remap variants, then crouch and roll moves.
             const uint32_t ids[] = {1026, 1030, 1071, 1027, 1028, 1025, 1019, 1055, 1061,
-                                    1039, 1040, 1041, 1042, 1043, 1044, 1020, 1021, 1048, 1050};
-            const uint32_t counts[] = {16, 10, 3, 16, 16, 16, 50, 16, 16, 31, 21, 21, 16, 16, 6, 40, 50, 9, 11};
-            const uint32_t loops[] = {1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 0};
+                                    1039, 1040, 1041, 1042, 1043, 1044, 1020, 1021, 1048, 1050,
+                                    1022, 1023, 1054, 1053, 1056, 1057, 1058, 1059, 1063, 1062, 1024, 1064, 1065,
+                                    1033, 1038, 1031, 1036, 1029, 1035, 1060, 1034, 1032, 1037};
+            const uint32_t counts[] = {16, 10, 3, 16, 16, 16, 50, 16, 16, 31, 21, 21, 16, 16, 6, 40, 50, 9, 11,
+                                       40, 40, 16, 5, 16, 16, 16, 16, 16, 16, 55, 16, 16,
+                                       16, 22, 26, 14, 15, 8, 4, 16, 26, 14};
+            const uint32_t loops[] = {1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 0,
+                                      0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1,
+                                      1, 0, 0, 0, 0, 1, 0, 1, 0, 0};
             assetRequire(clip.id == ids[i] && keyCount == counts[i] && looping == loops[i] && clip.sourceRate == 15,
                     "Unsupported animation profile");
             clip.loop = looping != 0;

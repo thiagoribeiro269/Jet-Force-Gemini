@@ -65,6 +65,15 @@ SOURCE_LISTINGS = [
     ("asm/nonmatchings/charControl/controlGrabOK.s", "controlGrabOK"),
     ("asm/nonmatchings/track/trackGetLedgeCrossed.s", "trackGetLedgeCrossed"),
     ("asm/nonmatchings/overlays/o156/overlay_156/osRamTest4_6105.s", "osRamTest4_6105"),
+    # Collision profiles per move, gun-weight remap and the crouch states.
+    ("asm/nonmatchings/charControl/controlSetTransition.s", "controlSetTransition"),
+    ("asm/nonmatchings/charControl/controlPlayerGunWeight.s", "controlPlayerGunWeight"),
+    ("asm/nonmatchings/overlays/o16/overlay_16/func_overlay_16_01004F78_1F22F90.s", "func_overlay_16_01004F78_1F22F90"),
+    ("asm/nonmatchings/overlays/o16/overlay_16/func_overlay_16_01002EB4_1F20ECC.s", "func_overlay_16_01002EB4_1F20ECC"),
+    ("asm/nonmatchings/overlays/o16/overlay_16/func_overlay_16_0100321C_1F21234.s", "func_overlay_16_0100321C_1F21234"),
+    ("asm/nonmatchings/charControl/controlCeiling.s", "controlCeiling"),
+    ("asm/nonmatchings/charControl/controlMakeV.s", "controlMakeV"),
+    ("asm/nonmatchings/track/trackGetIntersect.s", "trackGetIntersect"),
 ]
 
 # Overlay 16 data constants used by the ported walking/air/movement code, in
@@ -76,6 +85,9 @@ OVERLAY16_CONSTANTS = [
     ("slopeBias", 0xA7C), ("slopeLimit", 0xA80), ("lockedDamping", 0xA84), ("jumpAnimFloor", 0x8E8),
     ("airSpeedScale", 0x908), ("airSpeedBase", 0x90C), ("airTurnScale", 0x910), ("airTurnBase", 0x914),
     ("strafeLeftRate", 0x950), ("strafeRightRate", 0x954),
+    # Crouch states 1/2 (0x2EB4, 0x321C) and the rolls of 0x4934.
+    ("slideLateralDecay", 0x8D4), ("crouchSpeedDecay", 0x8D8), ("crouchStickScale", 0x8DC), ("crouchSpeedRate", 0x8E0),
+    ("crouchTurnRate", 0x8E4), ("rollRate3", 0x958), ("rollRate4", 0x95C), ("rollRate1", 0x960), ("rollRate2", 0x964),
 ]
 
 
@@ -215,7 +227,45 @@ def convert_physics(assets, rom_path):
     arctan = struct.unpack_from(">1025h", main_bytes(assets, 0x800A8D98, 1025 * 2))
     require(sine[0] == 0 and sine[1024] == 1 and arctan[0] == 0 and arctan[1024] == 0x2000, "Math tables differ")
     strafe = struct.unpack("<f", struct.pack("<f", 0.2))[0]
-    require(tuple(constants[-2:]) == (strafe, strafe), "Original strafe acceleration differs")
+    require(tuple(constants[20:22]) == (strafe, strafe), "Original strafe acceleration differs")
+    # Collision profiles used by func_overlay_16_01004F78 through
+    # controlSetTransition: overlay 16 data +0x1F4, seven 0x14-byte entries whose
+    # sphere pointer arrays are resolved from the overlay relocations.
+    relocs = {}
+    for secondary in (False, True):
+        for entry in reloc.get_relocation_entries(16, secondary=secondary):
+            relocs[entry.target_offset] = entry
+    overlay_base = reloc.offsets["overlay_data_base"] + header.rom_offset
+    def local_pointer(offset):
+        entry = relocs.get(offset)
+        require(entry is not None and entry.reloc_type == 1 and entry.patch_type == 2, "Collision profile pointer is not a local word")
+        return entry.symbol_index + struct.unpack_from(">I", assets.rom, overlay_base + offset)[0]
+    profiles = []
+    for index in range(7):
+        at = header.text_size + 0x1F4 + index * 0x14
+        spheres_at = local_pointer(at)
+        skip, feet, mask6, mask7 = assets.rom[overlay_base + at + 4: overlay_base + at + 8]
+        frames = struct.unpack_from(">i", assets.rom, overlay_base + at + 8)[0]
+        profile_spheres = []
+        for k in range(5):
+            sphere_at = overlay_base + local_pointer(spheres_at + k * 4)
+            x, y, z, radius = struct.unpack_from(">4f", assets.rom, sphere_at)
+            profile_spheres.append((x, y, z, radius, assets.rom[sphere_at + 16], assets.rom[sphere_at + 17]))
+        profiles.append((skip, feet, mask6, mask7, frames, profile_spheres))
+    require([p[:5] for p in profiles] == [(0x18, 1, 8, 0x16, 5), (0x18, 7, 8, 0x10, 5), (0x1C, 1, 8, 0x16, 5), (8, 1, 8, 0x16, 5),
+                                          (0xC, 1, 8, 0x16, 5), (0x10, 1, 8, 0x16, 1), (8, 1, 8, 0x16, 5)]
+            and [s[:4] for s in profiles[0][5]] == [(0, 15, 0, 15), (0, 30, 0, 15), (0, 45, 0, 15), (0, 61, 0, 3), (0, 34, 0, 8)]
+            and [s[:4] for s in profiles[1][5][:3]] == [(0, 15, 0, 15), (0, 15, 15, 15), (0, 15, -15, 15)],
+            "Juno collision profiles differ")
+    # controlPlayerGunWeight: weaponTable[weapon].byte0 >> type & 1. Juno
+    # (type 0) holds the pistol (weapon 0) in a new game, so his moves use the
+    # gun columns of the remap table.
+    weapon_table = main_bytes(assets, 0x800A1490, 0x30)
+    gun_weight = weapon_table[0] & 1
+    require(weapon_table[0] == 0x33 and gun_weight == 1, "Pistol gun weight differs")
+    # 0x4934 roll distance curves (controlMakeV), 12 floats each.
+    roll_curves = [struct.unpack_from(">12f", assets.rom, data_base + offset) for offset in (0x78C, 0x7BC)]
+    require(roll_curves[0][0] == 0 and roll_curves[1][0] == 0, "Roll curves differ")
     # ControlModeNormal/ControlModeExpert (charControl .data), selected by
     # controlPlayer through frontGetTargetControl (menu bss, zero at boot).
     modes = [struct.unpack(">9I", main_bytes(assets, address, 36)) for address in (0x800A18B4, 0x800A18D8)]
@@ -226,7 +276,7 @@ def convert_physics(assets, rom_path):
     for address, word in ((0x80047B80, 0x300900FF), (0x80047B84, 0x240A0001), (0x80047B88, 0x24080001), (0x80047B8C, 0x012A5804),
                           (0x80047B90, 0xA268006F), (0x80047B94, 0xA2600070), (0x80047B98, 0xA66B000A)):
         require(struct.unpack(">I", main_bytes(assets, address, 4))[0] == word, "Default character weapons differ")
-    out = bytearray(struct.pack("<8sII", b"JFGPHY2\0", len(spheres), len(constants)))
+    out = bytearray(struct.pack("<8sII", b"JFGPHY3\0", len(spheres), len(constants)))
     for sphere in spheres:
         out.extend(struct.pack("<4fBBxx", *sphere))
     out.extend(masks)
@@ -244,13 +294,23 @@ def convert_physics(assets, rom_path):
     for mode in modes:
         out.extend(struct.pack("<9I", *mode))
     out.extend(struct.pack("<3I", 1, 0, 1))  # weapon count, current weapon, owned mask
+    out.extend(struct.pack("<I", gun_weight))
+    for skip, feet, mask6, mask7, frames, profile_spheres in profiles:
+        out.extend(struct.pack("<4Bi", skip, feet, mask6, mask7, frames))
+        for sphere in profile_spheres:
+            out.extend(struct.pack("<4fBBxx", *sphere))
+    for curve in roll_curves:
+        out.extend(struct.pack("<12f", *curve))
     report = {"status": "prepared", "spheres": [list(s) for s in spheres], "masks": list(masks),
               "exclude_mask": "0xCE002000", "include_mask": "0x02000000",
               "gravity_character": gravity_character, "gravity_state": gravity_state,
               "constants": {name: value for (name, _), value in zip(OVERLAY16_CONSTANTS, constants)},
               "animation_rates": rates, "move_thresholds": thresholds, "initial_rng_seed": hex(rng_seed),
               "control_modes": {"normal": [hex(w) for w in modes[0]], "expert": [hex(w) for w in modes[1]]},
-              "default_weapons": {"count": 1, "current": 0, "owned_mask": 1},
+              "default_weapons": {"count": 1, "current": 0, "owned_mask": 1, "pistol_gun_weight": gun_weight},
+              "collision_profiles": [{"skip": p[0], "feet": p[1], "mask6": p[2], "mask7": p[3], "frames": p[4],
+                                      "spheres": [list(s) for s in p[5]]} for p in profiles],
+              "roll_curves": roll_curves,
               "routine_audits": audits, "emulation_used": False, "sha256": hashlib.sha256(out).hexdigest(),
               "limits": ["Juno walking/air subset; object hit models, water, weapons and other states not converted",
                          "Forest First has no ledge-pairing faces, so the track never reports a ledge to controlHangOK/controlGrabOK",

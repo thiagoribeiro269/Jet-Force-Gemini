@@ -1,14 +1,14 @@
 {
   "status": "passed",
   "recorded_date": "2026-09-26",
-  "previous_checkpoint": "9d29f1a",
+  "previous_checkpoint": "6842ccf",
   "architecture": "Native C++ host with recovered Juno control/physics, original controller reading, track collision and free camera; Direct3D 11 renderer with window presentation; XInput adapter to raw N64 pad values; no emulation",
   "build": {
-    "native_movement_executable_sha256": "7faff43bc6dca724f2c27a6723e76eda01ec7a83cd2d5651514ce054dd18a88f",
-    "native_movement_check_sha256": "da7337c84267b570a701d6797b792979367335bc2f7320bd84a9478ff69965e3",
-    "native_play_executable_sha256": "de9e09dad58a445748bb729d90e5ff55fcb119f88210682ccb4119a1fc749508",
-    "native_replay_executable_sha256": "2a62e08bab359aaf8a793bebd3910e42f43196d3ed05ee7ca1b162987c3bf951",
-    "native_play_check_sha256": "398cd4387be9e32bd4647754c3ca845e3d88006a6feb1a0a49c6c86814ef6e51"
+    "native_movement_executable_sha256": "dcb9708d0eebae0227a7e0182381eca0c7e9e59778b3baa6b2836ecc52d08add",
+    "native_movement_check_sha256": "17a4e09e06e1c0d7cae3c9b3ed70915e08963fd814de87fd75ac2dc79a3a1af3",
+    "native_play_executable_sha256": "444aea5e629f1b793a1491983285519690ab5ee27b222f462b3c87532310b6f3",
+    "native_replay_executable_sha256": "8a149c3be07ce583d37bb937f9f33274552918fb77d5faeb7cc5818cddfb1b23",
+    "native_play_check_sha256": "046eabdb6fa161a42a24cb268a1c1270f5a090850e3db1a3ec1f89cc30b13710"
   },
   "imports": {
     "jfg_native_movement.exe": [
@@ -36,8 +36,8 @@
     ],
     "plus_windows_ucrt_api_sets_only": true
   },
-  "private_package_sha256": "14d5f1d1b9ff0ddaa96e5a6e1172c6a21d1ced0127c161bd48c4e91c87ed08bb",
-  "play_package_sha256": "40056b356d41e5511b1165c09f2a7286dfc87ac35aae44533e198cca1d599cef",
+  "private_package_sha256": "12c69442e8af7ef9ed506a2dd7d8536b2011aad7c3dce0747bc6ee48c7d03796",
+  "play_package_sha256": "d2dbc553ed57b3f31997d5ec6a5850d99ca7515077419a0af93301a77acae977",
   "windows": "Windows-11-10.0.26200-SP0",
   "tests": {
     "windows": {
@@ -91,7 +91,7 @@
         "not_ported_stops": 5,
         "rejected_cases": 18,
         "original_region": true,
-        "scenario_digest": "15e32a2955901859"
+        "scenario_digest": "34a6aef42baa9c40"
       },
       "play_test": {
         "status": "passed",
@@ -101,7 +101,7 @@
         "replay_cases": 5,
         "rejected_cases": 11,
         "original_data": true,
-        "replay_digest": "26dcf5ece0128e08"
+        "replay_digest": "b4d6b2de44992aa9"
       }
     },
     "linux_asan_ubsan": {
@@ -155,7 +155,7 @@
         "not_ported_stops": 5,
         "rejected_cases": 18,
         "original_region": true,
-        "scenario_digest": "15e32a2955901859"
+        "scenario_digest": "34a6aef42baa9c40"
       },
       "check_play": {
         "status": "passed",
@@ -165,7 +165,7 @@
         "replay_cases": 5,
         "rejected_cases": 11,
         "original_data": true,
-        "replay_digest": "26dcf5ece0128e08"
+        "replay_digest": "b4d6b2de44992aa9"
       }
     }
   },
@@ -214,7 +214,7 @@
           "coverage": 1
         }
       ],
-      "state_digest": "26dcf5ece0128e08",
+      "state_digest": "b4d6b2de44992aa9",
       "stop": "Aim state 0xB (controlKeys 0x10) is not ported",
       "restart": true
     },
@@ -226,12 +226,12 @@
       "paused": false,
       "failures": [],
       "final": {
-        "x": 49.8339043,
-        "y": -0.899419785,
-        "z": 306.564148,
+        "x": 49.6920128,
+        "y": -0.914111137,
+        "z": 308.762756,
         "state": 0
       },
-      "state_digest": "26dcf5ece0128e08"
+      "state_digest": "b4d6b2de44992aa9"
     },
     "replay_digest_equal_on_linux_and_windows": true,
     "window_and_physical_controller": "not verifiable over SSH (no desktop); pending Thiago's test on his PC"
@@ -255,28 +255,28 @@
       "not_ported_stops": 5,
       "rejected_cases": 18,
       "original_region": true,
-      "scenario_digest": "15e32a2955901859"
+      "scenario_digest": "34a6aef42baa9c40"
     },
     "scenario_digest_equal_on_linux_and_windows": true,
     "final_position": {
-      "x": 49.8339043,
-      "y": -0.899419785,
-      "z": 306.564148
+      "x": 49.6920128,
+      "y": -0.914111137,
+      "z": 308.762756
     },
-    "lowest_y": -1.98999977,
-    "highest_y": 164.136353,
-    "wall_contact_ticks": 61,
+    "lowest_y": -1.98999786,
+    "highest_y": 163.337021,
+    "wall_contact_ticks": 62,
     "airborne_ticks": 45,
-    "move_changes": 11,
+    "move_changes": 12,
     "strafe_frames_at_full_speed": 14,
     "clips_played": [
-      1019,
       1021,
-      1026,
-      1027,
-      1028,
+      1024,
       1040,
-      1042
+      1061,
+      1062,
+      1063,
+      1064
     ],
     "key_frames": {
       "landing": 4,
@@ -306,9 +306,9 @@
       "edge_capacity": 80,
       "sha256": "9f5491d1ba050a88125ff7091f8e3fe213f892e5c54503d46e290dd5be05b5cd"
     },
-    "physics_sha256": "c7152677aa3fca7ec452a2033f6bd75f65d8c5e1f3b8d1b6792130d1ed347bec",
-    "routine_audits": 44,
-    "audited_bytes": 60620,
+    "physics_sha256": "b141dcad5c33478869501b75b83448340882508ee96f73e4ed28574960ff8b20",
+    "routine_audits": 52,
+    "audited_bytes": 63732,
     "camera": {
       "sha256": "d634db125c653457f3eecb9523a651898bcce5bcda898717367fd3966e391c8b",
       "mode": 1,
@@ -327,8 +327,8 @@
       "yaw_at_start": -32768,
       "yaw_at_end": -3801
     },
-    "raw_sha256": "c073e92b9660757a20243d53981e8e06deb1f11e9a168d77a21ed90d6335bbdb",
-    "video_sha256": "c2d6cabd64d1b8138355b90b7a218bec87fdd88c01f3403da5fd80bba64e89dc",
+    "raw_sha256": "1be2c4883ba9ab8c209480d6dc24541befc257ff17ce68c12044163e0321f3c8",
+    "video_sha256": "342ff1666f044e17ba07786fe14d1cfb4a29d0b0819e7154edb7ffc3746476e3",
     "fps_output": 30,
     "duration_seconds": 9.0,
     "limits": [
@@ -347,6 +347,6 @@
     "other Juno states and moves",
     "track bounds restart"
   ],
-  "next_milestone": "Thiago's test of the playable executable; then crouch states 1/2 and aim states 0xB/5",
+  "next_milestone": "Crouch states 1/2 with rolls; then aim states 0xB/5",
   "ai_assistance": "Claude Code (Anthropic); reviewed changes and recorded evidence"
 }

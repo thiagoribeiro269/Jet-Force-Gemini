@@ -26,13 +26,19 @@ struct JunoPhysicsData {
     float turnAimRate = 0, turnAimTarget = 0, turnRate = 0, turnTarget = 0, turnFloor = 0, halfTurnFactor = 0, speedRate = 0,
           brakeTrigger = 0, leanFactor = 0, lateralDecay = 0, lateralZeroLow = 0, lateralZeroHigh = 0, slopeBias = 0,
           slopeLimit = 0, lockedDamping = 0, jumpAnimFloor = 0, airSpeedScale = 0, airSpeedBase = 0, airTurnScale = 0, airTurnBase = 0,
-          strafeLeftRate = 0, strafeRightRate = 0;
+          strafeLeftRate = 0, strafeRightRate = 0, slideLateralDecay = 0, crouchSpeedDecay = 0, crouchStickScale = 0,
+          crouchSpeedRate = 0, crouchTurnRate = 0, rollRate3 = 0, rollRate4 = 0, rollRate1 = 0, rollRate2 = 0;
     uint32_t rngSeed = 0;
     std::array<float, 52> rates{};
     std::array<float, 14> thresholds{};  // data +0xA44..+0xA78
     OriginalMath math;
     std::array<ControlModeKeys, 2> controlModes{};  // Normal, Expert
     uint32_t weaponCount = 0, currentWeapon = 0, weaponMask = 0;  // mainSetDefaultCharacter
+    uint32_t gunWeight = 0;  // controlPlayerGunWeight for the pistol and Juno
+    // Overlay 16 data +0x1F4: collision profile per move (controlSetTransition).
+    struct CollisionProfile { uint8_t skip = 0, feet = 0, mask6 = 0, mask7 = 0; int32_t frames = 0; std::array<JunoSphere, 5> spheres{}; };
+    std::array<CollisionProfile, 7> profiles{};
+    std::array<std::array<float, 12>, 2> rollCurves{};  // data +0x78C (crouch-walk rolls), +0x7BC (crouch rolls)
 };
 
 inline std::shared_ptr<const JunoPhysicsData> readJunoPhysics(const char *path) {
@@ -47,15 +53,16 @@ inline std::shared_ptr<const JunoPhysicsData> readJunoPhysics(const char *path) 
         if (!std::isfinite(value)) throw std::runtime_error("Nonfinite Juno physics value");
         return value;
     };
-    if (bytes.size() < 16 || std::memcmp(take(8), "JFGPHY2\0", 8)) throw std::runtime_error("Wrong Juno physics format");
-    if (u32() != 5 || u32() != 22) throw std::runtime_error("Unsupported Juno physics profile");
+    if (bytes.size() < 16 || std::memcmp(take(8), "JFGPHY3\0", 8)) throw std::runtime_error("Wrong Juno physics format");
+    if (u32() != 5 || u32() != 31) throw std::runtime_error("Unsupported Juno physics profile");
     auto data = std::make_shared<JunoPhysicsData>();
-    for (auto &sphere : data->spheres) {
+    auto sphereFrom = [&](JunoSphere &sphere) {
         sphere.offset = {f32(), f32(), f32()}; sphere.radius = f32();
         sphere.flags = *take(1); sphere.rotate = *take(1);
         if (take(2)[0] | bytes[at - 1]) throw std::runtime_error("Nonzero Juno sphere padding");
         if (!(sphere.radius > 0) || sphere.radius > 64) throw std::runtime_error("Invalid Juno sphere radius");
-    }
+    };
+    for (auto &sphere : data->spheres) sphereFrom(sphere);
     std::memcpy(data->masks.data(), take(4), 4);
     data->exclude = u32(); data->include = u32();
     for (auto &value : data->gravityCharacter) value = f32();
@@ -64,7 +71,9 @@ inline std::shared_ptr<const JunoPhysicsData> readJunoPhysics(const char *path) 
                          &data->halfTurnFactor, &data->speedRate, &data->brakeTrigger, &data->leanFactor, &data->lateralDecay,
                          &data->lateralZeroLow, &data->lateralZeroHigh, &data->slopeBias, &data->slopeLimit, &data->lockedDamping,
                          &data->jumpAnimFloor, &data->airSpeedScale, &data->airSpeedBase, &data->airTurnScale, &data->airTurnBase,
-                         &data->strafeLeftRate, &data->strafeRightRate})
+                         &data->strafeLeftRate, &data->strafeRightRate, &data->slideLateralDecay, &data->crouchSpeedDecay,
+                         &data->crouchStickScale, &data->crouchSpeedRate, &data->crouchTurnRate, &data->rollRate3, &data->rollRate4,
+                         &data->rollRate1, &data->rollRate2})
         *value = f32();
     data->rngSeed = u32();
     for (auto &value : data->rates) value = f32();
@@ -76,12 +85,23 @@ inline std::shared_ptr<const JunoPhysicsData> readJunoPhysics(const char *path) 
     while (at % 4) if (*take(1)) throw std::runtime_error("Nonzero Juno physics padding");
     for (auto &mode : data->controlModes) for (auto &word : mode.word) word = u32();
     data->weaponCount = u32(); data->currentWeapon = u32(); data->weaponMask = u32();
+    data->gunWeight = u32();
+    for (auto &profile : data->profiles) {
+        const auto *m = take(4);
+        profile.skip = m[0]; profile.feet = m[1]; profile.mask6 = m[2]; profile.mask7 = m[3];
+        profile.frames = int32_t(u32());
+        if (profile.frames < 1 || profile.frames > 127) throw std::runtime_error("Invalid Juno collision profile");
+        for (auto &sphere : profile.spheres) sphereFrom(sphere);
+    }
+    for (auto &curve : data->rollCurves) for (auto &value : curve) value = f32();
     if (at != bytes.size()) throw std::runtime_error("Trailing Juno physics payload");
     data->math = OriginalMath(sine, arctan);
     const auto &normal = data->controlModes[0], &expert = data->controlModes[1];
     if (normal.fire() != Pad::Z || normal.jump() != Pad::A || normal.crouch() != Pad::B || normal.strafeLeft() != Pad::CLeft ||
         normal.strafeRight() != Pad::CRight || expert.jump() != Pad::CUp || expert.crouch() != Pad::CDown ||
-        data->weaponCount != 1 || data->currentWeapon != 0 || data->weaponMask != 1 || data->strafeLeftRate != 0.2f)
+        data->weaponCount != 1 || data->currentWeapon != 0 || data->weaponMask != 1 || data->strafeLeftRate != 0.2f ||
+        data->gunWeight != 1 || data->profiles[0].spheres[0].radius != 15.0f || data->profiles[1].feet != 7 ||
+        data->rollCurves[0][11] != 32.0f || data->rollCurves[1][11] != 44.0f)
         throw std::runtime_error("Juno control data differ from the inspected profile");
     if (data->exclude != 0xCE002000u || data->include != 0x02000000u || data->masks != std::array<uint8_t, 4>{0x18, 0x01, 0x08, 0x16} ||
         data->gravityCharacter[0] != 0.45f || data->gravityState[0] != 1.0f || data->speedRate != 0.95f || data->rates[0] != 0.015f)
@@ -137,7 +157,11 @@ public:
     float push6C = 0, push70 = 0, fallStart57C = 0;
     uint8_t floor532 = 0, wall533 = 0, ceiling534 = 0, skip531 = 0;
     uint32_t surfaceFlags520 = 0;
-    std::array<Vec3f, 5> sphereBase364, sphereCurrent3C4, spherePrevious484;
+    std::array<Vec3f, 5> sphereBase364, sphereCurrent3C4, spherePrevious484, delta424;
+    // +0x360: -1 is the controlPlayerInit profile (D_800A1BF8[0]); from the first
+    // func_overlay_16_01004F78 on, an overlay 16 profile. +0x535 counts the
+    // frames left to move the sphere offsets toward it.
+    int8_t profile360 = -1, transition535 = 0;
     // Object animation fields driven by the move machine.
     uint32_t move3B = 16;                    // +0x3B
     float progress28 = 0;                    // +0x28, normalized clip position
@@ -160,17 +184,24 @@ public:
         fallStart57C = spawn.y;
         skip531 = data_->masks[0];
         for (size_t i = 0; i < 5; ++i) sphereBase364[i] = data_->spheres[i].offset;
-        placeSpheres();
+        placeSpheres(0);
         spherePrevious484 = sphereCurrent3C4;
         previous3C = safe524 = position;
-        requestMove(16, 0.0f); // objAnimSetMove(arg0, 0x10, 0) for types 0/1.
+        move3B = 16;  // objAnimSetMove(arg0, 0x10, 0) for types 0/1: no remap, no profile change
     }
     const TrackQuery &query() const { return query_; }
     // objMoveXYZ(player, dx, 0, dz) issued by the free camera (func_8002CF78).
     void pushByCamera(float dx, float dz) { objMove({dx, 0.0f, dz}); }
     const JunoPhysicsData &data() const { return *data_; }
-    uint32_t clipId() const { return selector_.resolve(move3B, {}).clip; }
-    bool grounded() const { return data_->masks[1] & floor532; }
+    uint32_t clipId() const { return selector_.local(move3B).clip; }
+    // Sphere definitions and floor masks of the current collision profile (+0x360).
+    const JunoSphere &sphereDef(size_t i) const { return profile360 < 0 ? data_->spheres[i] : data_->profiles[size_t(profile360)].spheres[i]; }
+    uint8_t profileMask(unsigned k) const {  // 1: +5 feet, 2: +6, 3: +7
+        if (profile360 < 0) return data_->masks[k];
+        const auto &p = data_->profiles[size_t(profile360)];
+        return k == 1 ? p.feet : k == 2 ? p.mask6 : p.mask7;
+    }
+    bool grounded() const { return profileMask(1) & floor532; }
 
     // One original frame for player type 0.
     void tick(const JunoControl &control) {
@@ -209,9 +240,9 @@ public:
         float speed = magnitude * scale;
         stickSpeed = speed;
         int16_t direction = speed != 0.0f ? int16_t(int32_t(math.arctanf(float(stickX), float(-stickY))) - control.cameraYaw) : heading11C;
-        const uint8_t feet = data_->masks[1];
+        const uint8_t feet = profileMask(1);
         if ((state568 == 0 || state568 == 5 || state568 == 11) && !(feet & floor532)) becomeAirborne(frames);
-        else if ((state568 == 2 || state568 == 1) && !(feet & floor532) && !(data_->masks[2] & floor532) && !(data_->masks[3] & floor532))
+        else if ((state568 == 2 || state568 == 1) && !(feet & floor532) && !(profileMask(2) & floor532) && !(profileMask(3) & floor532))
             becomeAirborne(frames);
         else airborne185 = 0;
         if (((feet & floor532) && state568 != 3) || state568 == 4) fallStart57C = position.y;
@@ -269,9 +300,14 @@ private:
             state.idleDraw = uint32_t(random_.next(16, 19));
         return selector_.choose(state);
     }
-    // func_overlay_16_01004F78: remap, then objAnimSetMove only on change.
+    // func_overlay_16_01004F78: remap by the pistol's gun weight (firing
+    // column while +0x1F4 runs), objAnimSetMove only on change, then
+    // controlSetTransition to the destination row's collision profile.
     void requestMove(uint32_t requested, float fraction) {
-        const auto selected = selector_.resolve(requested, {});
+        JunoSelectionState remap;
+        remap.gunWeight = data_->gunWeight != 0;
+        remap.flag1F4 = firing1F4 != 0;
+        const auto selected = selector_.resolve(requested, remap);
         if (forcedMove_ != -1 || selected.local != move3B) {
             if (fraction > 1.0f) fraction = 1.0f;
             else if (fraction < 0.0f) fraction = 0.0f;
@@ -281,6 +317,23 @@ private:
         }
         forcedMove_ = -1;
         transitionProfile = selected.transitionProfile;
+        setTransition(selected.transitionProfile);
+    }
+    // controlSetTransition: a new profile sets the skip mask and moves the
+    // sphere offsets toward its spheres over its frame count.
+    void setTransition(uint32_t index) {
+        if (index >= data_->profiles.size()) throw std::runtime_error("Juno collision profile outside the table");
+        if (profile360 == int8_t(index)) return;
+        const auto &p = data_->profiles[index];
+        skip531 = p.skip;
+        profile360 = int8_t(index);
+        transition535 = int8_t(p.frames);
+        const float frames = float(transition535);
+        for (size_t i = 0; i < 5; ++i) {
+            const auto &target = p.spheres[i].offset;
+            delta424[i] = {(target.x - sphereBase364[i].x) / frames, (target.y - sphereBase364[i].y) / frames,
+                           (target.z - sphereBase364[i].z) / frames};
+        }
     }
     bool clipLoops() const {
         const auto id = clipId();
@@ -297,11 +350,20 @@ private:
             jumpReleased58E = 0;
         }
     }
-    // func_80035628: sphere centres from base offsets, orientation and position.
-    void placeSpheres() {
+    // func_80035628: advance the profile transition, then sphere centres from
+    // the base offsets, orientation and position.
+    void placeSpheres(int32_t frames) {
+        float step = 0.0f;
+        if (transition535 > 0) {
+            const int32_t left = transition535 - frames;
+            if (left >= 0) { transition535 = int8_t(left); step = float(frames); }
+            else { step = float(transition535); transition535 = 0; }
+        }
         for (size_t i = 0; i < 5; ++i) {
-            Vec3f p = sphereBase364[i];
-            if (data_->spheres[i].rotate) p = data_->math.rotateRPY(orientation, p);
+            auto &base = sphereBase364[i];
+            if (step > 0.0f) base = {base.x + (delta424[i].x * step), base.y + (delta424[i].y * step), base.z + (delta424[i].z * step)};
+            Vec3f p = base;
+            if (sphereDef(i).rotate) p = data_->math.rotateRPY(orientation, p);
             sphereCurrent3C4[i] = {p.x + position.x, p.y + position.y, p.z + position.z};
         }
     }
@@ -633,15 +695,15 @@ private:
     }
     // controlGroundHits for the five Juno spheres without object hit models.
     uint8_t groundHits(int32_t frames) {
-        placeSpheres();
+        placeSpheres(frames);
         std::array<Vec3f, 5> ends{}, offsets{};
         std::array<float, 5> radii{};
         std::array<uint16_t, 5> flags{};
         uint8_t skip = skip531;
         for (size_t i = 0; i < 5; ++i, skip >>= 1) {
             ends[i] = sphereCurrent3C4[i];
-            radii[i] = data_->spheres[i].radius;
-            flags[i] = data_->spheres[i].flags;
+            radii[i] = sphereDef(i).radius;
+            flags[i] = sphereDef(i).flags;
             if (skip & 1) flags[i] = uint16_t(flags[i] | 0x40);
             offsets[i] = {ends[i].x - position.x, ends[i].y - position.y, ends[i].z - position.z};
         }

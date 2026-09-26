@@ -20,12 +20,19 @@ def clip_for_model(assets, model_id, clip_index=0):
                  # Movement profile: jumps, strafe, skid, idle variants, fall and landing.
                  5: (1039, 31, 35, 280), 6: (1040, 21, 33, 259), 7: (1041, 21, 33, 259), 9: (1042, 16, 31, 242),
                  10: (1043, 16, 31, 245), 15: (1044, 6, 6, 47), 17: (1020, 40, 6, 42), 18: (1021, 50, 11, 86),
-                 24: (1048, 9, 30, 237), 25: (1050, 11, 26, 202)}
+                 24: (1048, 9, 30, 237), 25: (1050, 11, 26, 202),
+                 # Gun-held variants (pistol remap columns 2 and 1) and crouch/roll moves.
+                 19: (1022, 40, 15, 117), 20: (1023, 40, 7, 56), 26: (1054, 16, 14, 110), 27: (1053, 5, 5, 35),
+                 29: (1056, 16, 17, 130), 30: (1057, 16, 20, 155), 31: (1058, 16, 19, 147), 32: (1059, 16, 20, 158),
+                 34: (1063, 16, 37, 296), 35: (1062, 16, 35, 276), 45: (1024, 55, 15, 116), 47: (1064, 16, 32, 250),
+                 48: (1065, 16, 32, 252), 4: (1033, 16, 47, 375), 44: (1034, 16, 49, 385), 8: (1038, 22, 50, 394),
+                 11: (1031, 26, 52, 414), 12: (1036, 14, 50, 394), 13: (1029, 15, 26, 203), 22: (1035, 8, 11, 84),
+                 33: (1060, 4, 22, 171), 49: (1032, 26, 52, 414), 50: (1037, 14, 50, 394)}
     require(model_id == 220 and clip_index in supported, "Animation index outside the validated native subset")
     expected_id, expected_count, expected_stride, expected_bits = supported[clip_index]
     require((animation_id, channel_bones, frame_count, stride) == (expected_id, 21, expected_count, expected_stride),
             "Selected native animation header differs")
-    looping = clip_index not in (16, 51, 6, 15, 17, 18, 24, 25)
+    looping = clip_index not in (16, 51, 6, 15, 17, 18, 24, 25, 19, 20, 45, 8, 11, 12, 13, 33, 49, 50)
     require((raw[1] & 0xF0) == (0x10 if looping else 0), "Selected native animation playback flags differ")
     mapping_start, mapping_end = struct.unpack(">II", region(assets.section(0x2C), model_id * 4, 8))
     mappings = region(assets.section(0x2D), mapping_start, mapping_end - mapping_start)

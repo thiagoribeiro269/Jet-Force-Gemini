@@ -67,6 +67,12 @@ public:
         return {requested, selected, destination.clip, destination.transitionProfiles[profileColumn]};
     }
     JunoSelectedMove fromMotion(const JunoSelectionState &state) const { return resolve(choose(state), state); }
+    // A move already remapped (object +0x3B): its own row, clip and profile.
+    JunoSelectedMove local(uint32_t move) const {
+        if (move >= data_.rows.size()) throw std::runtime_error("Juno move outside original table");
+        const auto &row = data_.rows[move];
+        return {move, move, row.clip, row.transitionProfiles[0]};
+    }
 };
 
 inline JunoSelectionData readJunoSelection(const char *path) {

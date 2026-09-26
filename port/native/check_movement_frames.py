@@ -41,7 +41,7 @@ def main():
         require((frame["x"] - frame["camera_x"]) ** 2 + (frame["z"] - frame["camera_z"]) ** 2 >= 1023, "Camera inside Juno")
         require(frame["camera_y"] >= -1.99 - 100 - 1e-3, "Camera below the recovered track limit")
     clips = [frame["clip"] for frame in frames]
-    for clip in (1019, 1026, 1027, 1028, 1040):
+    for clip in (1024, 1061, 1062, 1063, 1064, 1040):
         require(clip in clips, f"Original clip {clip} missing from the movement proof")
     airborne = [i for i, f in enumerate(frames) if f["state"] == 3]
     require(airborne and trace["highest_y"] > 150 and trace["wall_ticks"] > 20, "Jump, slope or wall contact missing")

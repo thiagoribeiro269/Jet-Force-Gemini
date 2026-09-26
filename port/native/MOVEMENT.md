@@ -11,7 +11,7 @@ são um roteiro: veja [Limites](#limites).
 ## Rotinas recuperadas
 
 A leitura foi estática, sobre as listagens ASM do repositório. O conversor
-confere 44 rotinas, 60.620 bytes, contra a ROM US antes de gerar os dados.
+confere 52 rotinas, 63.732 bytes, contra a ROM US antes de gerar os dados.
 
 | Original | Port | Papel |
 | --- | --- | --- |
@@ -30,6 +30,7 @@ confere 44 rotinas, 60.620 bytes, contra a ROM US antes de gerar os dados.
 | `controlUpdatePlayerAim`, `controlUpdateWeapon`, `boyCanFire` | `aimWithoutTargets`, `canFire` | Contador de tiro `+0x1F4` e decisão de disparo da pistola |
 | `0x5BB8`, `objMoveXYZ`, `controlPlatform` | `JunoBody::move`, `objMove` | Gravidade, deslocamento, colisão e velocidade real |
 | `0x5120`, `objAnimDframe`, `objAnimSetMove`, `0x4F78` | `JunoBody::animate`, `requestMove` | Máquina de movimentos e posição dos clipes |
+| `controlSetTransition`, `controlPlayerGunWeight` | `setTransition`, remapeamento em `requestMove` | Perfil de colisão de cada movimento e variantes com arma |
 | `controlHalfTurn`, `controlWalkingBack`, `dAngle` | `halfTurn` e auxiliares | Meia-volta e limites de velocidade |
 | `joyClamp`, `mathRnd`, `Sinf`, `Arctanf`, `Powerf`, rotações | `joyClamp`, `OriginalRandom`, `OriginalMath` | Primitivas numéricas originais |
 
@@ -44,8 +45,16 @@ transformação de texto para o descompilador m2c; não executa código.
 
 - Um tique do host, a 60 Hz, é um quadro original com `frames = 1`. O jogo
   aceita passos maiores; o port usa o menor, sempre fixo.
-- O corpo do Juno são três esferas de raio 13 a 13, 26 e 39 unidades acima
-  dos pés. Duas esferas da tabela ficam fora da colisão pela máscara 0x18.
+- O corpo do Juno depende do movimento. Cada pedido de movimento aplica o
+  perfil de colisão da linha escolhida (`controlSetTransition`), e as esferas
+  migram até ele em cinco quadros. Andando, são três esferas de raio 15 a 15,
+  30 e 45 unidades acima dos pés; a cabeça e a arma ficam fora pela máscara
+  0x18. Só o primeiro quadro usa a tabela do `controlPlayerInit`, com raio 13.
+- Com a pistola, `controlPlayerGunWeight` vale 1 para o Juno. Os movimentos
+  são remapeados para as variantes com a arma em punho: parado vira o 45,
+  andar o 36, correr o 35 e o 34, e o passo lateral o 47 e o 48. Enquanto o
+  contador de tiro corre, vale a coluna de tiro, com o perfil 3, que mantém a
+  esfera da arma.
 - A gravidade é 0,45 por tique ao quadrado, das tabelas `objGetTable(1)` e
   `(2)`. O pulo correndo soma 10 à velocidade vertical; parado, o pulo é
   carregado por até 24 tiques e soma de 6 a 12.
@@ -188,10 +197,13 @@ Métricas e hashes estão em [movement-validation.json](movement-validation.json
 - Só os estados de andar e de ar do Juno. Mira, agachar, tiro, água, lava e
   os demais estados param de forma explícita quando alcançados. Objetos com
   modelos de colisão e os outros personagens ainda não existem.
+- O modelo da pistola não é desenhado: a pose das variantes com arma
+  aparece com as mãos vazias.
 - As rotações de juntas não foram portadas. No original, o tronco do Juno
   gira durante o passo lateral (`0x4840`) e a cabeça acompanha a mira
   (`0x6290`); no port, o corpo segue só a animação.
-- A mistura entre clipes é nativa; `controlSetTransition` não foi portado.
+- A mistura entre clipes é nativa. A parte de colisão de `controlSetTransition`
+  foi portada; a interpolação visual entre clipes continua própria do port.
 - Não há inimigos, áudio nem `levelInit` completo.
 
 ## Reprodução

@@ -124,7 +124,7 @@ class NativeSession {
             motion = next;
         }
         void followBody(double seconds) {
-            const auto move = animation.selector().resolve(body->move3B, {});
+            const auto move = animation.selector().local(body->move3B);
             animation.follow(move, body->progress28, held.blendSeconds, seconds);
         }
         void setInput(const ActorInput &input) {

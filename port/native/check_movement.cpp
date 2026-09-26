@@ -268,7 +268,12 @@ int main(int argc, char **argv) {
             // Entry point: fall 21 units onto the path.
             JunoBody body(physics, collision, selection, character->clips, {40, 19, 841}, 0);
             for (int t = 0; t < 30; ++t) body.tick({});
-            near(body.position.y, -1.99, 1e-4); check(body.grounded() && body.state568 == 0 && body.move3B == 16, "Entry landing differs");
+            near(body.position.y, -1.99, 1e-4);
+            // First func_overlay_16_01004F78: the pistol remaps idle 16 to 45 and
+            // switches to overlay profile 0 (radius 15 at 15/30/45) over 5 frames.
+            check(body.grounded() && body.state568 == 0 && body.move3B == 45 && body.clipId() == 1024 && body.profile360 == 0 &&
+                  body.transition535 == 0 && std::abs(body.sphereBase364[2].y - 45.0f) < 1e-4f && body.sphereDef(0).radius == 15.0f,
+                  "Entry landing differs");
             ++movementCases;
             // Drive a copy with raw pads through joyRead, as the session does.
             auto drive = [&](JunoBody &b, JoypadReader &reader, PadState pad, int ticks, uint8_t mode = 0) {
@@ -279,7 +284,7 @@ int main(int argc, char **argv) {
                 drive(b, reader, {Pad::CLeft, 0, 0}, 1);
                 check(b.lateral10 == -0.2f && b.strafing56C == 1 && b.controlKeys == Pad::CLeft, "Strafe step differs");
                 drive(b, reader, {Pad::CLeft, 0, 0}, 14);
-                check(b.lateral10 == -2.5f && b.move3B == 9 && b.position.x < 40.0f - 20.0f, "Strafe clamp, move or direction differs");
+                check(b.lateral10 == -2.5f && b.move3B == 47 && b.position.x < 40.0f - 20.0f, "Strafe clamp, move or direction differs");
                 const float before = b.lateral10;
                 drive(b, reader, {}, 1);
                 check(b.strafing56C == 0 && b.lateral10 == before * physics->lateralDecay, "Strafe release decay differs");
@@ -306,14 +311,16 @@ int main(int argc, char **argv) {
                 drive(b, reader, {0, 0, 70}, 60);
                 drive(b, reader, {0, 0, -70}, 1);
                 check(b.halfTurn13E == 1 && b.skid576 == 2, "Half-turn skid did not start");
-                bool blocked = false;
+                bool blocked = false, firingProfile = false;
                 stop([&] {
                     for (int t = 0; t < 120; ++t) {
                         b.tick({reader.read({Pad::Z, 0, -70}), 0, 0});
                         blocked = blocked || (b.firing1F4 == 0xF && (b.skid576 != 0 || b.halfTurn13E != 0));
+                        // Firing column of the remap: profile 3 keeps the gun sphere (skip mask 0x08).
+                        firingProfile = firingProfile || (b.profile360 == 3 && b.skip531 == 0x08 && b.sphereDef(4).offset.z == -32.0f);
                     }
                 }, "Pistol shot did not stop the session");
-                check(blocked, "boyCanFire did not hold the shot during the skid");
+                check(blocked && firingProfile, "boyCanFire or the firing profile differs during the skid");
             }
             stop([&] { JunoBody b = body; JoypadReader r; drive(b, r, {Pad::Z, 0, 0}, 1); }, "Standing shot did not stop");
             stop([&] { JunoBody b = body; JoypadReader r; drive(b, r, {Pad::R, 0, 0}, 1); }, "Aim state did not stop");
@@ -350,7 +357,7 @@ int main(int argc, char **argv) {
                     JunoControl control{reader.read(movementPad(t)), cam.yaw(), 0};
                     juno.tick(control);
                     cam.tick(juno, cameraKeys(juno.controlKeys), 1);
-                    strafeTicks += juno.move3B == 9 && juno.lateral10 < -2.0f;
+                    strafeTicks += juno.move3B == 47 && juno.lateral10 < -2.0f;
                     const float dx = juno.position.x - cam.position.x, dz = juno.position.z - cam.position.z;
                     check((dx * dx) + (dz * dz) >= 1023.0f, "Camera left Juno inside its 32-unit push radius");
                     check(cam.position.y >= float(collision->extents[2]) - 100.0f - 1e-3f, "Camera below the track floor limit");
@@ -399,7 +406,9 @@ int main(int argc, char **argv) {
             check(scriptTick == MovementTicks, "Session did not run the whole script");
             check(session.body(juno)->position == one.position && session.camera(juno)->position == cameraOne.position,
                   "Session and bare body/camera diverged");
-            for (uint32_t id : {1019u, 1026u, 1027u, 1028u, 1040u}) check(clips.count(id), "Expected original clip was not played");
+            // Gun-held variants: idle 45, walk 36, run 35/34, strafe 47; running jump 6.
+            for (uint32_t id : {1024u, 1061u, 1062u, 1063u, 1064u, 1040u}) check(clips.count(id), "Expected original clip was not played");
+            for (uint32_t id : {1019u, 1026u, 1027u, 1028u, 1042u}) check(!clips.count(id), "Clip without the pistol remap was played");
             ++movementCases;
             reject([&] {  // Controller bits outside the standard N64 buttons.
                 TickInput input; ActorInput actor; actor.pad = PadState{0x0080, 0, 0};

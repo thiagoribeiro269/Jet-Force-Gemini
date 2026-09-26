@@ -1,14 +1,14 @@
 {
   "status": "passed",
   "recorded_date": "2026-09-26",
-  "previous_checkpoint": "36018ef",
-  "architecture": "Native C++ host with recovered Juno control/physics, original controller reading, track collision, free and aim cameras, joint turns and the aim fade; Direct3D 11 renderer with window presentation; XInput adapter to raw N64 pad values; no emulation",
+  "previous_checkpoint": "4e54471",
+  "architecture": "Native C++ host with recovered Juno control/physics, original controller reading, track collision, free and aim cameras, joint turns, the aim fade and gen_anim_data's pose; Direct3D 11 renderer with window presentation; XInput adapter to raw N64 pad values; no emulation",
   "build": {
-    "native_movement_executable_sha256": "9cdfd8992915362bb40be88b622a6e0f7d9289bece3e25aec19c8ac7b627c890",
-    "native_movement_check_sha256": "3951c0a2859495f7d5d2fc4bc1f5807f5ffd4ac62510344ecc718ed457e8fe36",
-    "native_play_executable_sha256": "cb573a45d4a7fe706557950bc0ac19728ae87a2b552ae3793fd884e11eab81a0",
-    "native_replay_executable_sha256": "4497d350a89640425812ff92febb073ae425f719c91242ef10ab66639431d4f5",
-    "native_play_check_sha256": "ef4abe6d7b55a7fb550d747688b676ef2e7268d8da4d6248e5bc5b6272d9b475"
+    "native_movement_executable_sha256": "3ec5efc97fffbfb0050c4d59063f77106f02a48881d186da665def49ac7bc268",
+    "native_movement_check_sha256": "6e16e0b1df16dc01c792f1d7aba3bd869b5b162cc75d1e079bcaff70469acd63",
+    "native_play_executable_sha256": "fc6f223cf6f9eb63bda58e679d556659be68e950ecfd03b422777df484f0778f",
+    "native_replay_executable_sha256": "90e868a647c77d9fe4849452254c4b3223f9508217307183c3b044b99bae8842",
+    "native_play_check_sha256": "b80bcdd7ef8e07a8cfa962ffff69987fd2b23b4bd38cf2f87ce368da45af790a"
   },
   "imports": {
     "jfg_native_movement.exe": [
@@ -36,8 +36,8 @@
     ],
     "plus_windows_ucrt_api_sets_only": true
   },
-  "private_package_sha256": "ac5ad0dd3f1c718a9dbce60157727b61b8524b11979bae5ecf79d45f248dfa5e",
-  "play_package_sha256": "a36261053459a35e3ba99c2f8578b5c4ceb2cfa5b6752a49ebbc013308179a12",
+  "private_package_sha256": "54f37ab1f0ec0ccb15cb4d8d34eda7938e21cb417e95130b51e7b7ec3a5e3cf7",
+  "play_package_sha256": "fff8df0793d2f2a887551afe1a554a8723c4bde552f25c8beb838a61d79667d6",
   "windows": "Windows-11-10.0.26200-SP0",
   "tests": {
     "windows": {
@@ -87,12 +87,13 @@
         "math_cases": 6,
         "input_cases": 4,
         "collision_cases": 11,
-        "movement_cases": 16,
+        "movement_cases": 18,
         "not_ported_stops": 4,
-        "rejected_cases": 23,
+        "rejected_cases": 20,
         "original_region": true,
         "scenario_digest": "e0ea92f5755c3377",
-        "pose_digest": "d6a8040098b4a5b8"
+        "pose_digest": "3874e35e3795912d",
+        "outside_stream_reads": 1
       },
       "play_test": {
         "status": "passed",
@@ -152,12 +153,13 @@
         "math_cases": 6,
         "input_cases": 4,
         "collision_cases": 11,
-        "movement_cases": 16,
+        "movement_cases": 18,
         "not_ported_stops": 4,
-        "rejected_cases": 23,
+        "rejected_cases": 20,
         "original_region": true,
         "scenario_digest": "e0ea92f5755c3377",
-        "pose_digest": "d6a8040098b4a5b8"
+        "pose_digest": "3874e35e3795912d",
+        "outside_stream_reads": 1
       },
       "check_play": {
         "status": "passed",
@@ -253,12 +255,13 @@
       "math_cases": 6,
       "input_cases": 4,
       "collision_cases": 11,
-      "movement_cases": 16,
+      "movement_cases": 18,
       "not_ported_stops": 4,
-      "rejected_cases": 23,
+      "rejected_cases": 20,
       "original_region": true,
       "scenario_digest": "e0ea92f5755c3377",
-      "pose_digest": "d6a8040098b4a5b8"
+      "pose_digest": "3874e35e3795912d",
+      "outside_stream_reads": 1
     },
     "scenario_digest_equal_on_linux_and_windows": true,
     "final_position": {
@@ -333,7 +336,7 @@
       307200
     ],
     "terrain_pixels_first_frame": 295709,
-    "character_pixels_in_isolation": 8293,
+    "character_pixels_in_isolation": 8019,
     "all_seven_previous_gpu_proofs_byte_equal": true,
     "collision": {
       "blocks": 13,
@@ -345,9 +348,9 @@
       "edge_capacity": 80,
       "sha256": "9f5491d1ba050a88125ff7091f8e3fe213f892e5c54503d46e290dd5be05b5cd"
     },
-    "physics_sha256": "5332f5c3a5f4247e74e97e07c0ec0b548ef46face4b2c867be9c57a4e7909516",
-    "routine_audits": 59,
-    "audited_bytes": 71280,
+    "physics_sha256": "b6641572e0104072fe7547d7752ee5f50b881b77badc17d0c9e8354f02994c6c",
+    "routine_audits": 68,
+    "audited_bytes": 80112,
     "camera": {
       "sha256": "d634db125c653457f3eecb9523a651898bcce5bcda898717367fd3966e391c8b",
       "mode": 1,
@@ -366,8 +369,8 @@
       "yaw_at_start": -32768,
       "yaw_at_end": 28997
     },
-    "raw_sha256": "98c016695c138604410fabcb105d8e43c0d6ea6c8f31b4acdb9f269318d82495",
-    "video_sha256": "bef96607f96f6fb60c36256f8a771c51dc5f21a403fb06ec71fc8d67ad7ed616",
+    "raw_sha256": "b47a185f4abeea38d2b674716cef156f3b8ddf8877ef9df7bcbb6f420901da35",
+    "video_sha256": "cf7d703147b0eaec13ece7e9bfd258134be92931b195cd3c0baaeccf97eb0363",
     "fps_output": 30,
     "duration_seconds": 19.333333333333332,
     "limits": [
@@ -376,7 +379,7 @@
       "Joint turns of the aim (0x3DB0, 0x3F30, 0x6290) and the torso twist (0x4840) are drawn; recoil turns need shots, which are not ported",
       "controlFadePlayer's aim fade is drawn with the translucent render mode (Z compare, no Z update, texel alpha times opacity); the port renderer interprets materials, not display lists",
       "A scripted controller stands in for a physical controller; raw N64 pad values pass through the original joyRead and controlReadJoypad",
-      "Native animation blend between clips; move selection, clip positions and collision profiles follow the original machine",
+      "Juno's pose is gen_anim_data's: packed streams decoded at run time, joint turns on the channels, Euler matrices from the sine table, quaternion blends driven by the +0x5E counter and the object matrix of matrix_SCL_RPY_XYZ; where the first frame of a move change reads past a stream (heap memory in the original) the port reads zero bytes",
       "No enemies, weapons, audio or full levelInit; no emulation; ROM and derived assets remain private"
     ]
   },
@@ -387,7 +390,16 @@
     "36018ef_raw_sha256": "b4e96cab731a32f43ad69a24b387d811549859fcef12ed8cce7e2726b84d17e2",
     "36018ef_opaque_frames_byte_identical": 503,
     "36018ef_faded_frames_changed": 77,
+    "4e54471_raw_sha256": "98c016695c138604410fabcb105d8e43c0d6ea6c8f31b4acdb9f269318d82495",
+    "4e54471_frames_identical": 2,
+    "4e54471_frames_changed_by_the_original_pose": 578,
     "body_and_camera_trace_identical": true
+  },
+  "pose": {
+    "source": "gen_anim_data, modGenAnimMatrices, objAnimSetMove, func_8003CB50, func_8003CD70, matrix_SCL_RPY_XYZ",
+    "pose_digest_equal_on_linux_and_windows": true,
+    "outside_stream_reads_in_script": 1,
+    "outside_stream_substitute": "zero bytes where the original reads heap memory past a streamed clip"
   },
   "not_ported_stops": [
     "Z pistol shot when boyCanFire allows it (crouched: after the model clip blend of moves 0xE/0x21)",

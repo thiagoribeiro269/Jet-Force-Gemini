@@ -25,6 +25,7 @@ public:
         for (size_t i = 1; i < sine_.size(); ++i)
             if (!(sine_[i] >= sine_[i - 1]) || !(arctan_[i] >= arctan_[i - 1])) throw std::runtime_error("Nonmonotonic original table");
     }
+    const std::array<float, 1025> &sineTable() const { return sine_; }
     // Sinf: quarter-wave table indexed by bits 4..13; the second quadrant
     // mirrors with one extra step when bits 0..3 are nonzero.
     float sinf(int32_t angle) const {

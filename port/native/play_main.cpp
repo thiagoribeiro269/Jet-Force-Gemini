@@ -252,6 +252,10 @@ struct SessionLog {
             << (header.controlMode ? "Expert" : "Normal") << "\ntentativas de tique: " << run.attempts()
             << "\ntiques do host: " << run.session().hostTick() << "\ntempo descartado em paradas da janela (ms): "
             << discardedMilliseconds << "\ncontrole conectado no fim: " << (controller ? "sim" : "não") << "\n";
+        // gen_anim_data reads past a clip stream on the first frame of some move
+        // changes; the original reads heap memory there, the port zero bytes.
+        if (const auto *body = run.body())
+            out << "quadros de animação lidos além do clipe, desde o último reinício: " << body->outsideStreamReads() << "\n";
         for (const auto &f : run.failures)
             out << "parada na tentativa " << f.attempt << ", tique " << f.hostTick << ": " << f.explanation << " [" << f.technical << "]\n";
     }

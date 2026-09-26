@@ -110,6 +110,7 @@ class NativeSession {
                 if (spawn.input.directMove || spawn.input.movement.x != 0 || spawn.input.movement.z != 0 || spawn.input.movement.low)
                     throw std::runtime_error("Original-body actors take controller input only");
                 body.emplace(physics, collision, selection, assets.clips, Vec3f{float(spawn.x), float(spawn.y), float(spawn.z)}, spawn.originalYaw);
+                body->scale08 = spawn.scale;  // object scale (+0x8) from the definition
                 if (cameraData) camera.emplace(cameraData, *body);
                 followBody(0);
             } else {
@@ -273,22 +274,23 @@ public:
     SessionSnapshot snapshot() const {
         SessionSnapshot result{phase_, hostTick_, world_ ? world_->updates : 0, generation_, world_ ? world_->name : "", assets_, {}, world_ ? world_->region : nullptr};
         if (world_) for (const auto &actor : world_->actors) {
-            auto local = actor->animation.animation().current();
-            if (actor->body) applyJointTurns(local, *actor->body);
-            auto bones = composePose(assets_->skeleton, local);
-            auto world = actor->motion.world(); world[13] = float(actor->elevation);
-            if (actor->visualOffsetY != 0) world[13] += actor->visualOffsetY;
-            if (actor->body) world = originalWorld(*actor->body);
-            for (auto &bone : bones) {
-                if (actor->scale != 1) bone = multiply(bone, uniformScale(actor->scale));
-                bone = multiply(bone, world);
-            }
             if (actor->body) {
+                // The bone matrices of gen_anim_data, object matrix and scale included.
                 const auto &b = *actor->body;
+                const auto posed = b.bones();
+                if (posed.size() != assets_->skeleton.size()) throw std::runtime_error("Original pose does not match the skeleton");
+                std::vector<Matrix> bones(posed.begin(), posed.end());
                 result.entities.push_back({actor->handle, b.position.x, b.position.y, b.position.z, b.orientation[0] * (2 * double(Pi) / 65536),
                                            actor->animation.animation().frame(), actor->animation.animation().id(),
                                            actor->animation.selection().transitionProfile, {0, std::move(bones), identityMatrix(), b.opacity()}});
                 continue;
+            }
+            auto bones = composePose(assets_->skeleton, actor->animation.animation().current());
+            auto world = actor->motion.world(); world[13] = float(actor->elevation);
+            if (actor->visualOffsetY != 0) world[13] += actor->visualOffsetY;
+            for (auto &bone : bones) {
+                if (actor->scale != 1) bone = multiply(bone, uniformScale(actor->scale));
+                bone = multiply(bone, world);
             }
             result.entities.push_back({actor->handle, actor->motion.x(), actor->elevation, actor->motion.z(), actor->motion.yaw(),
                                        actor->animation.animation().frame(), actor->animation.animation().id(),
@@ -299,13 +301,6 @@ public:
     void stop() {
         world_.reset(); assets_.reset(); region_.reset(); physics_.reset(); collision_.reset(); camera_.reset();
         selection_ = {}; accumulator_ = 0; phase_ = SessionPhase::Stopped;
-    }
-    // Original object orientation (mathOneFloatRPY basis) and position.
-    static Matrix originalWorld(const JunoBody &body) {
-        const auto &math = body.data().math;
-        const auto x = math.rotateRPY(body.orientation, {1, 0, 0}), y = math.rotateRPY(body.orientation, {0, 1, 0});
-        const auto z = math.rotateRPY(body.orientation, {0, 0, 1});
-        return {x.x, x.y, x.z, 0, y.x, y.y, y.z, 0, z.x, z.y, z.z, 0, body.position.x, body.position.y, body.position.z, 1};
     }
     const JunoCamera *camera(EntityHandle id) const {
         if (!world_) return nullptr;

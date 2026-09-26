@@ -83,6 +83,14 @@ SOURCE_LISTINGS = [
     ("asm/nonmatchings/overlays/o16/overlay_16/func_overlay_16_01003F30_1F21F48.s", "func_overlay_16_01003F30_1F21F48"),
     ("asm/nonmatchings/models/modGenAnimMatrices.s", "modGenAnimMatrices"),
     ("asm/nonmatchings/objects/objResetAnimModels.s", "objResetAnimModels"),
+    # Pose of the model: animation instance, streamed clip cache and object matrix;
+    # gen_anim_data itself is hand-written assembly covered by the matching build.
+    ("asm/nonmatchings/models/func_8003CB50.s", "func_8003CB50"), ("asm/nonmatchings/models/func_8003CD70.s", "func_8003CD70"),
+    ("asm/hasm/math_matrix.s", "matrix_SCL_RPY_XYZ"),
+    # Aim fade: controlFadePlayer, the opacity of the draw list and the translucent display lists.
+    ("asm/nonmatchings/charControl/controlFadePlayer.s", "controlFadePlayer"), ("asm/nonmatchings/track/func_80015CB8.s", "func_80015CB8"),
+    ("asm/nonmatchings/track/func_80015D54.s", "func_80015D54"), ("asm/nonmatchings/objects/objPrintModelObject.s", "objPrintModelObject"),
+    ("asm/nonmatchings/models/makeModelGfx.s", "makeModelGfx"), ("asm/nonmatchings/textures/texDPTextureX.s", "texDPTextureX"),
 ]
 
 # Overlay 16 data constants used by the ported walking/air/movement code, in
@@ -301,6 +309,24 @@ def convert_physics(assets, rom_path):
     channel_maps = region(assets.section(0x2D), map_start, map_end - map_start)
     require(all(channel_maps[move * 21:(move + 1) * 21] == bytes(range(21)) for move in range(52)),
             "Juno clip channel maps are not the identity")
+    # The original pose (gen_anim_data) decodes Juno's streamed clips at run
+    # time: every move's packed stream (asset 0x2B, as func_8003CD70 caches
+    # it), the per-clip channel maps and the model's bone entries (+0x54).
+    model = assets.model(220)
+    # func_8003C8A8 fills +0x4E with the move count of asset 0x28 at load; +0x64
+    # selects the streamed clip cache.
+    require(len(model_clips) == 52 and model[0x4F] == 21 and model[0x64] == 1, "Juno model animation layout differs")
+    streams = []
+    for move in range(52):
+        clip_start, clip_end = struct.unpack(">II", region(assets.section(0x2A), model_clips[move] * 4, 8))
+        raw = bytes(region(assets.section(0x2B), clip_start, clip_end - clip_start))
+        descriptors = struct.unpack(">60H", raw[16:136])
+        require(struct.unpack(">H", raw[2:4])[0] == 142 and raw[9] == 21 and raw[136:142] == bytes(6) and
+                not any(d & 0x10 for d in descriptors) and len(raw) >= 142 + raw[13] * raw[11] and raw[1] & 0xF == blend_steps[move],
+                "Juno clip stream layout differs")
+        streams.append((model_clips[move], raw))
+    bone_entries = bytes(region(model, word(model, 0x54), 21 * 16))
+    require(all(bone_entries[i * 16 + 1:i * 16 + 4] == bytes((i, i, i)) for i in range(21)), "Juno bone entries differ")
     # boyControl adds the weapon bone commands 0x4024/0x4026/0x4028 only with
     # +0x540 bit 0x40, which controlUpdateWeapon sets for weaponTable byte 6
     # == -2. The pistol's is 0, so the ported list never holds them.
@@ -318,10 +344,10 @@ def convert_physics(assets, rom_path):
             "Original control mode tables differ")
     # mainSetDefaultCharacter: a new character holds one weapon, the pistol
     # (+0x6F count 1, +0x70 current 0, +0xA owned mask 1 << 0).
-    for address, word in ((0x80047B80, 0x300900FF), (0x80047B84, 0x240A0001), (0x80047B88, 0x24080001), (0x80047B8C, 0x012A5804),
-                          (0x80047B90, 0xA268006F), (0x80047B94, 0xA2600070), (0x80047B98, 0xA66B000A)):
-        require(struct.unpack(">I", main_bytes(assets, address, 4))[0] == word, "Default character weapons differ")
-    out = bytearray(struct.pack("<8sII", b"JFGPHY5\0", len(spheres), len(constants)))
+    for address, expected in ((0x80047B80, 0x300900FF), (0x80047B84, 0x240A0001), (0x80047B88, 0x24080001), (0x80047B8C, 0x012A5804),
+                              (0x80047B90, 0xA268006F), (0x80047B94, 0xA2600070), (0x80047B98, 0xA66B000A)):
+        require(struct.unpack(">I", main_bytes(assets, address, 4))[0] == expected, "Default character weapons differ")
+    out = bytearray(struct.pack("<8sII", b"JFGPHY6\0", len(spheres), len(constants)))
     for sphere in spheres:
         out.extend(struct.pack("<4fBBxx", *sphere))
     out.extend(masks)
@@ -348,6 +374,17 @@ def convert_physics(assets, rom_path):
         out.extend(struct.pack("<12f", *curve))
     out.extend(struct.pack("<20f", *aim_turn))
     out.extend(bytes(blend_steps))
+    out.extend(bytes(-len(out) % 4))
+    out.extend(struct.pack("<II", len(streams), 21))
+    out.extend(channel_maps[:52 * 21])
+    out.extend(bytes(-len(out) % 4))
+    for i in range(21):
+        entry = bone_entries[i * 16:(i + 1) * 16]
+        out.extend(entry[:4] + struct.pack("<3f", *struct.unpack(">3f", entry[4:16])))
+    for animation_id, raw in streams:
+        out.extend(struct.pack("<HxxI", animation_id, len(raw)))
+        out.extend(raw)
+        out.extend(bytes(-len(out) % 4))
     report = {"status": "prepared", "spheres": [list(s) for s in spheres], "masks": list(masks),
               "exclude_mask": "0xCE002000", "include_mask": "0x02000000",
               "gravity_character": gravity_character, "gravity_state": gravity_state,
@@ -358,6 +395,8 @@ def convert_physics(assets, rom_path):
               "collision_profiles": [{"skip": p[0], "feet": p[1], "mask6": p[2], "mask7": p[3], "frames": p[4],
                                       "spheres": [list(s) for s in p[5]]} for p in profiles],
               "roll_curves": roll_curves, "manual_aim_turn": aim_turn, "clip_blend_steps": blend_steps,
+              "animation_streams": {"moves": len(streams), "bytes": sum(len(r) for _, r in streams),
+                                    "sha256": hashlib.sha256(b"".join(r for _, r in streams)).hexdigest()},
               "routine_audits": audits, "emulation_used": False, "sha256": hashlib.sha256(out).hexdigest(),
               "limits": ["Juno walking/air subset; object hit models, water, weapons and other states not converted",
                          "Forest First has no ledge-pairing faces, so the track never reports a ledge to controlHangOK/controlGrabOK",

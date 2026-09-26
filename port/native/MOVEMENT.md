@@ -3,7 +3,8 @@
 O Juno agora anda, corre, pula, agacha, anda agachado, rola, desliza, mira
 em pé e agachado, cai, sobe rampas e para em paredes dentro de
 Forest First pelo código original portado para C++, sem emulação. A física,
-a colisão com o cenário e a escolha de animações seguem as rotinas do jogo.
+a colisão com o cenário, a escolha de animações e a pose do modelo seguem as
+rotinas do jogo.
 A câmera livre do jogo também foi portada e define a direção do controle,
 como no N64. A entrada chega como no console: botões e analógico brutos do
 N64, lidos por `joyRead` e `controlReadJoypad`. Só as mãos do jogador ainda
@@ -12,7 +13,7 @@ são um roteiro: veja [Limites](#limites).
 ## Rotinas recuperadas
 
 A leitura foi estática, sobre as listagens ASM do repositório. O conversor
-confere 59 rotinas, 71.280 bytes, contra a ROM US antes de gerar os dados.
+confere 68 rotinas, 80.112 bytes, contra a ROM US antes de gerar os dados.
 
 | Original | Port | Papel |
 | --- | --- | --- |
@@ -33,7 +34,8 @@ confere 59 rotinas, 71.280 bytes, contra a ROM US antes de gerar os dados.
 | Estado `0x3F30` | `JunoBody::aimCrouch` | Mira agachada |
 | `0x6290`, `0x3DB0`, `0x4840`, `controlPlayerTiltList`, `gen_anim_data` | `followAim`, `torsoTurns`, `strafeTwist`, `applyJointTurns` | Rotações de juntas: tronco, cabeça e braço na mira; torção do tronco |
 | `controlFadePlayer`, `func_80015CB8`, `objPrintModelObject` | `fadePlayer`, `opacity`, passe translúcido do renderer | Juno translúcido na mira |
-| `objAnimSetMove`, `modGenAnimMatrices`, `objResetAnimModels` | `startBlend` e o fim de `tick` | Contador de mistura de clipes do modelo (`+0x5E`) |
+| `objAnimSetMove`, `modGenAnimMatrices`, `objResetAnimModels`, `func_8003CB50`, `func_8003CD70` | `AnimationInstance` e o fim de `tick` | Slots de clipe da instância do modelo, carga dos fluxos e contador de mistura (`+0x5E`) |
+| `gen_anim_data`, `matrix_SCL_RPY_XYZ` | `OriginalPose`, `objectMatrix` | Pose do modelo: fluxos decodificados, rotações de juntas, mistura e hierarquia |
 | `func_8002C078` | `JunoCamera::aimCamera` | Câmera de mira sobre o ombro |
 | `joyRead`, `controlReadJoypad`, `controlPlayer`, `frontGetTargetControl` | `JoypadReader`, `controlReadJoypad`, `ControlModeKeys` | Leitura do controle e tabelas dos modos Normal e Expert |
 | `controlUpdatePlayerAim`, `controlUpdateWeapon`, `boyCanFire` | `aimWithoutTargets`, `canFire` | Contador de tiro `+0x1F4` e decisão de disparo da pistola |
@@ -176,11 +178,11 @@ Cada movimento traz seu perfil de colisão: agachado são três esferas baixas
 de apoio (perfil 1, máscara de pés 7).
 
 Agachado, mira e tiro só valem nos movimentos 0xE e 0x21 e depois do fim da
-mistura de clipes do modelo (`+0x5E`). Cada troca de movimento põe esse
-contador em 1023, e cada quadro desconta 1023 dividido pelos passos do clipe
-(nibble baixo do byte 1 do cabeçalho), como fazem `objAnimSetMove` e
-`modGenAnimMatrices`. Por isso, logo depois de agachar, R espera alguns
-quadros. O tiro agachado para a sessão.
+mistura de clipes do modelo (`+0x5E`). Quando o `modGenAnimMatrices` carrega o
+fluxo de um clipe novo, esse contador vai a 1023, e cada quadro desconta 1023
+dividido pelos passos do clipe (nibble baixo do byte 1 do cabeçalho). Por
+isso, logo depois de agachar, R espera alguns quadros. O tiro agachado para a
+sessão.
 
 ## Mira em pé
 
@@ -226,12 +228,54 @@ cada quadro (`applyJointTurns`).
   e no passo lateral correndo.
 
 Os 52 clipes do Juno ligam o osso *i* ao trio de canais *i*, conferido pelo
-conversor. Por isso o canal *c* gira o osso *c*/3, no eixo *c* mod 3. A
-mesma lista vale para os dois clipes de uma mistura, e somá-la à pose já
-misturada dá o mesmo ângulo. O recuo (`+0x1F5` a `+0x1F7`) e os comandos que
+conversor. Por isso o canal *c* gira o osso *c*/3, no eixo *c* mod 3. A lista
+é somada aos canais decodificados dos dois clipes da mistura, como no
+`gen_anim_data` (seção seguinte). O recuo (`+0x1F5` a `+0x1F7`) e os comandos que
 escondem ossos da arma (bit 0x40 de `+0x540`) dependem de tiros ou de outras
 armas. Com a pistola e sem tiro, eles não acontecem; o conversor confere o
 byte da tabela de armas que os liga.
+
+## Pose original do modelo
+
+A pose do Juno é a do `gen_anim_data`, portado a partir do assembly de
+`src/hasm/gen_anim_data.s`. O conversor copia da ROM os 52 fluxos de
+animação compactados do modelo (36.896 bytes), os mapas de canais e as
+entradas de osso. O port decodifica os fluxos a cada quadro, como o jogo.
+
+- **Instância do modelo.** Dois slots de clipe (atual e anterior), como em
+  `func_8003CB50`, `objAnimSetMove` e `modGenAnimMatrices`. O Juno usa o cache
+  de fluxos sob demanda (`func_8003CD70`): a troca de movimento só leva o slot
+  atual ao anterior, e o fluxo novo carrega no desenho seguinte, reiniciando
+  o contador. Até lá, o `objAnimDframe` usa a flag de laço do clipe antigo, e
+  o quadro do primeiro desenho é a escala do clipe antigo vezes o progresso
+  novo.
+- **Decodificação** (`func_80074B50`): bits de cada pacote, interpolação
+  inteira entre dois quadros (fração × 1024, diferença de 11 bits com sinal),
+  raiz em 1/1024 e a lista de rotações de juntas somada aos canais.
+- **Sem mistura:** matriz de Euler com a tabela de seno da ROM, índice pelos
+  bits 4 a 13 do ângulo.
+- **Com mistura:** quatérnios de meio ângulo dos dois clipes, somados com
+  pesos 1 − c/1024 e c/1024 e **sem normalizar**, como no original. O clipe
+  anterior fica parado no quadro em que saiu. As escalas de canal seguem o
+  código, inclusive o registrador que não avança; para o Juno, dão 1,0 ou
+  1,00003.
+- **Hierarquia:** a raiz passa pela matriz do objeto
+  (`matrix_SCL_RPY_XYZ`, com a escala 0,26 da definição), e cada osso é
+  multiplicado pelo pai, na ordem de operações do assembly.
+
+Dois pontos não podem ser copiados, porque o jogo lê memória que o port não
+tem:
+
+- No primeiro desenho depois de algumas trocas, a escala do clipe antigo
+  aponta além do fim do clipe novo. O jogo lê então o heap depois do buffer
+  do fluxo. O port lê bytes zero nesse trecho, conta cada ocorrência e
+  registra a contagem no resumo de cada sessão. No roteiro, isso acontece uma
+  vez, ao entrar na mira vindo do repouso armado: o quadro 6 num clipe de 5,
+  com peso 1/4 na mistura.
+- O osso 20 lê o trio de canais 20, fora dos 60 canais decodificados. O jogo
+  usa o que ficou no buffer global, inclusive de outros modelos. O port usa o
+  mesmo buffer, só com o que o Juno deixou. O osso 20 não tem vértices, filhos
+  nem anexos, e não aparece.
 
 ## Juno translúcido na mira
 
@@ -254,10 +298,14 @@ alfa, e mantém a ordem dos lotes do modelo. O caminho opaco não muda.
 ## Verificação
 
 - Linux com ASAN/UBSAN e Windows na RTX: 6 casos de matemática, 4 de entrada,
-  11 de colisão sintética, 16 de movimento e câmera com dados reais, 4 paradas
-  tipadas e 23 rejeições. O resumo do cenário, que inclui a posição da câmera
-  a cada tique, e o resumo da pose (listas de juntas e opacidade) são iguais
-  nas duas plataformas.
+  11 de colisão sintética, 18 de movimento e câmera com dados reais, 4 paradas
+  tipadas e 20 rejeições. O resumo do cenário, que inclui a posição da câmera
+  a cada tique, e o resumo da pose (listas de juntas, opacidade e as 21
+  matrizes de osso de cada tique) são iguais bit a bit nas duas plataformas.
+- A pose original é testada contra a composição anterior num quadro exato
+  (diferença abaixo de 0,002), na mistura de dois slots iguais, na primeira
+  carga dos slots, nas rotações de juntas sobre os canais e na leitura além
+  do fluxo.
 - Os testes cobrem o passo lateral de 0,2 por quadro até 2,5, o pulo correndo
   durante o passo lateral, o modo Expert, os botões inertes e a trava de pouso.
 - Também cobrem agachar, andar agachado, os rolamentos, levantar, deslizar, os
@@ -327,8 +375,8 @@ Métricas e hashes estão em [movement-validation.json](movement-validation.json
 - O modelo da pistola não é desenhado: a pose das variantes com arma
   aparece com as mãos vazias.
 - As rotações de recuo do tiro não existem, porque o tiro não foi portado.
-- A mistura entre clipes é nativa. A parte de colisão de `controlSetTransition`
-  foi portada; a interpolação visual entre clipes continua própria do port.
+- Onde o jogo lê o heap além de um fluxo de animação, o port lê zeros (veja
+  [Pose original do modelo](#pose-original-do-modelo)).
 - Não há inimigos, áudio nem `levelInit` completo.
 
 ## Reprodução

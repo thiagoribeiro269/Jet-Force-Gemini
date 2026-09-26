@@ -2,6 +2,7 @@
 #include "track_collision.h"
 #include "juno_selection.h"
 #include "original_input.h"
+#include "original_pose.h"
 #include <optional>
 
 namespace jfg_native {
@@ -46,6 +47,7 @@ struct JunoPhysicsData {
     std::array<std::array<float, 12>, 2> rollCurves{};  // data +0x78C (crouch-walk rolls), +0x7BC (crouch rolls)
     std::array<float, 20> aimTurn{};  // D_800A2E60: controlGetManualAim turn per stick step past 45
     std::array<uint8_t, 52> blendSteps{};  // clip header byte 1 low nibble, per move row
+    JunoAnimationData animation;           // model 220: packed clip streams, channel maps, bone entries
 };
 
 inline std::shared_ptr<const JunoPhysicsData> readJunoPhysics(const char *path) {
@@ -60,7 +62,7 @@ inline std::shared_ptr<const JunoPhysicsData> readJunoPhysics(const char *path) 
         if (!std::isfinite(value)) throw std::runtime_error("Nonfinite Juno physics value");
         return value;
     };
-    if (bytes.size() < 16 || std::memcmp(take(8), "JFGPHY5\0", 8)) throw std::runtime_error("Wrong Juno physics format");
+    if (bytes.size() < 16 || std::memcmp(take(8), "JFGPHY6\0", 8)) throw std::runtime_error("Wrong Juno physics format");
     if (u32() != 5 || u32() != 44) throw std::runtime_error("Unsupported Juno physics profile");
     auto data = std::make_shared<JunoPhysicsData>();
     auto sphereFrom = [&](JunoSphere &sphere) {
@@ -107,6 +109,37 @@ inline std::shared_ptr<const JunoPhysicsData> readJunoPhysics(const char *path) 
     for (auto &value : data->aimTurn) value = f32();
     std::memcpy(data->blendSteps.data(), take(52), 52);
     while (at % 4) if (*take(1)) throw std::runtime_error("Nonzero Juno physics padding");
+    auto &animation = data->animation;
+    if (u32() != 52 || u32() != 21) throw std::runtime_error("Unsupported Juno animation layout");
+    for (auto &map : animation.maps) {
+        std::memcpy(map.data(), take(21), 21);
+        for (auto triple : map) if (triple > 20) throw std::runtime_error("Juno channel map outside the clip");
+    }
+    while (at % 4) if (*take(1)) throw std::runtime_error("Nonzero Juno physics padding");
+    for (size_t i = 0; i < animation.bones.size(); ++i) {
+        const auto *entry = take(4);
+        auto &bone = animation.bones[i];
+        bone.parent = int8_t(entry[0]); bone.slot = entry[1];
+        for (auto &value : bone.offset) value = f32();
+        if (bone.slot != i || entry[2] != i || entry[3] != i || (i == 0 ? bone.parent != -1 : (bone.parent < 0 || size_t(bone.parent) >= i)))
+            throw std::runtime_error("Invalid Juno bone entry");
+    }
+    for (size_t move = 0; move < 52; ++move) {
+        AnimationStream stream;
+        const auto *id = take(4);
+        stream.animation = uint16_t(id[0] | id[1] << 8);
+        const uint32_t length = u32();
+        if (id[2] | id[3] || length < 142 || length > 0x10000) throw std::runtime_error("Invalid Juno clip stream");
+        const auto *raw = take(length);
+        stream.raw.assign(raw, raw + length);
+        if (stream.packets() != 142 || stream.raw[9] != 21 || stream.frames() == 0 ||
+            length < 142u + uint32_t(stream.stride()) * stream.frames() || (stream.flags() & 0xF) != data->blendSteps[move])
+            throw std::runtime_error("Juno clip stream layout differs");
+        for (size_t channel = 0; channel < 60; ++channel)
+            if (stream.descriptor(channel) & 0x10) throw std::runtime_error("Scale channels are outside Juno's clips");
+        animation.moves.push_back(std::move(stream));
+        while (at % 4) if (*take(1)) throw std::runtime_error("Nonzero Juno physics padding");
+    }
     if (at != bytes.size()) throw std::runtime_error("Trailing Juno physics payload");
     data->math = OriginalMath(sine, arctan);
     const auto &normal = data->controlModes[0], &expert = data->controlModes[1];
@@ -132,15 +165,6 @@ struct JunoControl {
     uint8_t controlMode = 0;
     int16_t cameraOffset10A = 0;  // the free camera's C-button offset (a player field in the original)
 };
-
-// One entry of the player's joint-turn list (controlPlayerTiltList, player
-// +0x240), in the command format of gen_anim_data (func_80074D60). Command 0,
-// the only one the ported states write, adds `value` to the s16 channel at
-// byte offset `offset` of the decoded animation channels.
-struct JointTurn { uint16_t offset = 0; int16_t value = 0; };
-// MIPS sra on a 32-bit value (floor division by 2^n), without relying on
-// implementation-defined signed shifts.
-inline int32_t shiftRight(int32_t value, unsigned n) { return value >= 0 ? value >> n : ~(~value >> n); }
 
 // mathRnd: 64-bit shift generator on a 32-bit seed (DKR lineage).
 class OriginalRandom {
@@ -196,9 +220,8 @@ public:
     // orbit): applied by the caller to the camera before it runs.
     bool clearCameraOffset = false, setCameraOrbit = false;
     int16_t cameraOrbit104 = 0;
-    // Model instance +0x5E/+0x5C: clip blend counter, set by objAnimSetMove
-    // and run down once per frame by modGenAnimMatrices.
-    int16_t blend5E = 0, blendStep5C = 0;
+    // Object scale (+0x8): the definition's 0.26 for Juno, part of the object matrix.
+    float scale08 = 1;
     float push6C = 0, push70 = 0, fallStart57C = 0;
     uint8_t floor532 = 0, wall533 = 0, ceiling534 = 0, skip531 = 0;
     uint32_t surfaceFlags520 = 0;
@@ -217,8 +240,8 @@ public:
     uint32_t lastCollisionMask = 0, frames = 0;
 
     JunoBody(std::shared_ptr<const JunoPhysicsData> data, std::shared_ptr<const TrackCollision> track, const JunoSelectionData &selection,
-             const std::vector<Clip> &clips, Vec3f spawn, int16_t yaw)
-        : data_(std::move(data)), query_(track), selector_(selection), clips_(&clips), random_(data_ ? data_->rngSeed : 0) {
+             const std::vector<Clip> & /* converted clips: the host's clip metadata only */, Vec3f spawn, int16_t yaw)
+        : data_(std::move(data)), query_(track), selector_(selection), random_(data_ ? data_->rngSeed : 0) {
         if (!data_) throw std::runtime_error("Missing Juno physics data");
         for (float value : {spawn.x, spawn.y, spawn.z})
             if (!std::isfinite(value) || std::abs(value) > 100000) throw std::runtime_error("Invalid Juno spawn");
@@ -232,14 +255,30 @@ public:
         placeSpheres(0);
         spherePrevious484 = sphereCurrent3C4;
         previous3C = safe524 = position;
-        move3B = 16;  // objAnimSetMove(arg0, 0x10, 0) for types 0/1: no remap, no profile change
-        startBlend(16);
+        // func_8003CB50 when the model loads, then controlPlayerInit's
+        // objAnimSetMove(arg0, 0x10, 0) for types 0/1: no remap, no profile change.
+        anim_.init(data_->animation);
+        move3B = uint32_t(anim_.setMove(16, data_->animation));
     }
     const TrackQuery &query() const { return query_; }
     // objMoveXYZ(player, dx, 0, dz) issued by the free camera (func_8002CF78).
     void pushByCamera(float dx, float dz) { objMove({dx, 0.0f, dz}); }
     const JunoPhysicsData &data() const { return *data_; }
     uint32_t clipId() const { return selector_.local(move3B).clip; }
+    // The model instance and the bone matrices gen_anim_data left this frame
+    // (object matrix included). Before the first frame the host shows the
+    // pose the first frame would compute, without changing the instance.
+    const AnimationInstance &animation() const { return anim_; }
+    int16_t blend5E() const { return anim_.counter5E; }
+    uint32_t outsideStreamReads() const { return pose_.outsideReads; }
+    std::array<Matrix, 21> bones() const {
+        if (posed_) return pose_.world();
+        AnimationInstance instance = anim_;
+        OriginalPose preview;
+        instance.prepare(progress28, data_->animation);
+        return preview.compute(instance, data_->animation, data_->math, objectMatrix(data_->math, orientation, scale08, position),
+                               jointTurns.data(), jointTurnCount);
+    }
     // func_80015CB8 in single player, with the camera on this player: the
     // opacity the draw list writes to the object (+0x39) before the model is
     // drawn. (+0x5C0 would force 255; the ported subset never sets it.)
@@ -330,11 +369,13 @@ public:
         if (state568 != 5 && state568 != 0xB && state568 != 3 && state568 != 8) followAim(frames);
         strafeTwist(frames);
         // modGenAnimMatrices at the end of boyControl (objResetAnimModels marks
-        // the model every frame): the clip blend runs down one step.
-        if (blend5E != 0) {
-            blend5E = int16_t(blend5E - blendStep5C);
-            if (blend5E < 0) blend5E = 0;
-        }
+        // the model every frame): slot frames, stream loads and the clip blend
+        // step, then gen_anim_data with this frame's joint-turn list under the
+        // object matrix (the squash factor +0x48 stays 1 in the ported subset).
+        anim_.prepare(progress28, data_->animation);
+        pose_.compute(anim_, data_->animation, data_->math, objectMatrix(data_->math, orientation, scale08, position),
+                      jointTurns.data(), jointTurnCount);
+        posed_ = true;
         // controlUpdateWeapon, end of boyControl: with the pistol, a held fire
         // key starts a shot whenever boyCanFire allows it. Shots are not ported.
         if ((controlKeys & mode.fire()) && canFire())
@@ -351,7 +392,9 @@ private:
     std::shared_ptr<const JunoPhysicsData> data_;
     TrackQuery query_;
     JunoSelector selector_;
-    const std::vector<Clip> *clips_;
+    AnimationInstance anim_;  // the model instance's clip slots (+0x24..+0x8A)
+    OriginalPose pose_;
+    bool posed_ = false;
     OriginalRandom random_;
     int32_t forcedMove_ = -1;
     int16_t cameraOffsetIn_ = 0;
@@ -390,17 +433,13 @@ private:
             move3B = selected.local;
             progress28 = fraction;
             ++moveChanges;
-            startBlend(selected.local);
+            anim_.setMove(int32_t(selected.local), data_->animation);  // objAnimSetMove, streamed path
         }
         forcedMove_ = -1;
         transitionProfile = selected.transitionProfile;
         setTransition(selected.transitionProfile);
     }
     // objAnimSetMove: a clip with blend steps restarts the model's blend.
-    void startBlend(uint32_t move) {
-        const uint8_t steps = data_->blendSteps.at(move);
-        if (steps) { blend5E = 0x3FF; blendStep5C = int16_t(0x3FF / steps); }
-    }
     // controlSetTransition: a new profile sets the skip mask and moves the
     // sphere offsets toward its spheres over its frame count.
     void setTransition(uint32_t index) {
@@ -417,11 +456,10 @@ private:
                            (target.z - sphereBase364[i].z) / frames};
         }
     }
-    bool clipLoops() const {
-        const auto id = clipId();
-        for (const auto &clip : *clips_) if (clip.id == id) return clip.loop;
-        throw std::runtime_error("Juno move without a converted clip");
-    }
+    // objAnimDframe reads the loop flag of the instance's slot 0 (+0x8). With
+    // streamed clips it changes when modGenAnimMatrices loads the new stream,
+    // so the frame of a move change still uses the previous clip's flag.
+    bool clipLoops() const { return anim_.slots[0].flags != 0; }
     void becomeAirborne(int32_t frames) {
         airborne185 = int8_t(airborne185 + frames);
         if (airborne185 >= 0x10) {
@@ -838,7 +876,7 @@ private:
         if (skid576 != 0 || halfTurn13E != 0 || move3B == 8) return false;
         const unsigned state = state568 & ~0x20u;
         if (state == 0 || state == 5 || state == 0xB || state == 0xA || (state == 3 && hover14A != 0)) return true;
-        return (move3B == 0xE || move3B == 0x21) && blend5E == 0;
+        return (move3B == 0xE || move3B == 0x21) && anim_.counter5E == 0;
     }
     // Walking state 0: func_overlay_16_01002708.
     void walk(float speed, int16_t direction, int32_t frames, bool jumpPressed, int32_t stickX, int32_t stickY, float scale,
@@ -1222,21 +1260,4 @@ private:
         orientation[1] = OriginalMath::dAngle(orientation[1], pitch, fraction);
     }
 };
-
-// gen_anim_data (func_80074D60) with the player's list: each command-0 entry
-// adds its value to one decoded s16 channel before the bone matrices. The
-// channels are 3 per animated bone (60 for Juno's 20), and all 52 of Juno's
-// clips map bone i to channel triple i (checked by movement_assets.py), so
-// byte offset o turns bone o/6 about axis (o/2)%3. The same list applies to
-// both clips of a blend, so adding it to the blended pose gives the same angle.
-inline void applyJointTurns(Keyframe &pose, const JunoBody &body) {
-    if (body.jointTurnCount > body.jointTurns.size()) throw std::runtime_error("Invalid Juno joint-turn list");
-    for (size_t i = 0; i < body.jointTurnCount; ++i) {
-        const auto &turn = body.jointTurns[i];
-        if ((turn.offset & 0xF000) != 0 || (turn.offset & 1) || turn.offset >= 120 || size_t(turn.offset / 6) >= pose.angles.size())
-            throw std::runtime_error("Juno joint turn outside the animated channels");
-        if (turn.value == 0) continue;
-        pose.angles[turn.offset / 6][(turn.offset / 2) % 3] += float(turn.value) * (2 * Pi / 65536);
-    }
-}
 }

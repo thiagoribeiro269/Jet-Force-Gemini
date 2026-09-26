@@ -153,7 +153,7 @@ def main():
                          "Joint turns of the aim (0x3DB0, 0x3F30, 0x6290) and the torso twist (0x4840) are drawn; recoil turns need shots, which are not ported",
                          "controlFadePlayer's aim fade is drawn with the translucent render mode (Z compare, no Z update, texel alpha times opacity); the port renderer interprets materials, not display lists",
                          "A scripted controller stands in for a physical controller; raw N64 pad values pass through the original joyRead and controlReadJoypad",
-                         "Native animation blend between clips; move selection, clip positions and collision profiles follow the original machine",
+                         "Juno's pose is gen_anim_data's: packed streams decoded at run time, joint turns on the channels, Euler matrices from the sine table, quaternion blends driven by the +0x5E counter and the object matrix of matrix_SCL_RPY_XYZ; where the first frame of a move change reads past a stream (heap memory in the original) the port reads zero bytes",
                          "No enemies, weapons, audio or full levelInit; no emulation; ROM and derived assets remain private"]}
     (ROOT / "port/native/movement-validation.json").write_text(json.dumps(report, indent=2) + "\n")
     print(json.dumps({k: report[k] for k in ("status", "frames", "unique_frames", "highest_y", "wall_contact_ticks",

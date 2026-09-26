@@ -213,6 +213,7 @@ int main(int argc, char **argv) {
 
         bool actual = false;
         uint64_t digest = 0, poseDigest = 0;
+        uint32_t streamOutside = 0;
         // Camera queries on the synthetic block.
         {
             Vec3f s0{-150, 50, 0}, e0{150, 50, 0};
@@ -428,19 +429,57 @@ int main(int argc, char **argv) {
                 // Sideways faster than forward: the twist returns to zero.
                 drive(b, r, {Pad::CLeft, 0, 0}, 120);
                 check(std::abs(b.lateral10) >= std::abs(b.speed04) && std::abs(b.twist580) < 16, "Strafe twist release differs");
-                // gen_anim_data: channel o/2 is bone o/6, axis (o/2)%3, in binary angle units.
-                Keyframe pose{{0, 0, 0}, std::vector<Vec3>(21, Vec3{0.25f, 0.5f, 0.75f})};
-                JunoBody list = body;
-                list.jointTurns = {{{6, 0x4000}, {8, -0x2000}, {0x12, 0x1000}, {0x3C, 0}, {0x3E, 0x800}, {0x44, -0x100}}};
-                list.jointTurnCount = 6;
-                applyJointTurns(pose, list);
-                near(pose.angles[1][0], 0.25 + Pi / 2, 1e-6); near(pose.angles[1][1], 0.5 - Pi / 4, 1e-6); near(pose.angles[3][0], 0.25 + Pi / 8, 1e-6);
-                near(pose.angles[10][0], 0.25, 0); near(pose.angles[10][1], 0.5 + Pi / 16, 1e-6); near(pose.angles[11][1], 0.5 - Pi / 128, 1e-6);
-                near(pose.angles[0][0], 0.25, 0); near(pose.angles[11][2], 0.75, 0);
-                for (uint16_t offset : {uint16_t(0x1006), uint16_t(7), uint16_t(120)})
-                    reject([&] { JunoBody bad = body; bad.jointTurns[0] = {offset, 1}; bad.jointTurnCount = 1; Keyframe k = pose; applyJointTurns(k, bad); });
-                reject([&] { JunoBody bad = body; bad.jointTurnCount = 9; Keyframe k = pose; applyJointTurns(k, bad); });
-                reject([&] { Keyframe small{{0, 0, 0}, std::vector<Vec3>(10)}; applyJointTurns(small, list); });
+                movementCases += 2;
+            }
+            {   // The original pose: model instance slots, gen_anim_data's decode, Euler and blend paths.
+                const auto &anim = physics->animation;
+                const auto &math = physics->math;
+                // func_8003CB50 caches move 0 under its animation id; objAnimSetMove moves it to slot 1;
+                // the first modGenAnimMatrices reloads both slots, each stream with steps restarting the blend.
+                AnimationInstance instance; instance.init(anim);
+                check(instance.slots[0].loaded == anim.moves[0].animation && instance.slots[1].stream == 0, "Instance init differs");
+                instance.setMove(16, anim);
+                check(instance.slots[0].move == 16 && instance.slots[0].stream == -1 && instance.slots[1].move == 0 &&
+                      instance.slots[1].loaded == anim.moves[0].animation, "objAnimSetMove slots differ");
+                const int steps0 = anim.moves[0].flags() & 15, steps16 = anim.moves[16].flags() & 15;
+                const int16_t step = int16_t(0x3FF / (steps0 ? steps0 : steps16));
+                check(instance.prepare(0, anim) && instance.step5C == step && instance.counter5E == 0x3FF - step &&
+                      instance.slots[0].loaded == 16 && instance.slots[1].loaded == 0 && instance.slots[0].scale == 49.0f, "First load differs");
+                // Euler path at an exact frame against the converted keyframes composed as before.
+                AnimationInstance still; still.init(anim); still.setMove(45, anim); still.prepare(0, anim);
+                still.counter5E = 0;
+                check(!still.prepare(0.5f, anim) && still.slots[0].frame == 27.0f && still.slots[0].next == 0, "Exact frame differs");
+                const Vec3f where{10, 20, 30};
+                const std::array<int16_t, 3> facing{0x1234, 0, 0};
+                OriginalPose pose;
+                const auto single = pose.compute(still, anim, math, objectMatrix(math, facing, 0.26f, where), nullptr, 0);
+                const Clip *clip = nullptr;
+                for (const auto &c : character->clips) if (c.id == 1024) clip = &c;
+                check(clip != nullptr, "Converted idle clip missing");
+                auto composed = composePose(character->skeleton, sampleClip(clip, 21, 27.0f));
+                const auto unscaled = objectMatrix(math, facing, 1.0f, where);
+                for (size_t bone = 0; bone < 21; ++bone) {
+                    const auto expected = multiply(multiply(composed[bone], uniformScale(0.26f)), unscaled);
+                    for (size_t k = 0; k < 16; ++k) near(single[bone][k], expected[k], 2e-3);
+                }
+                // Blend path: the same clip and frame in both slots at counter 256 (weight 1/4, scale
+                // 0x8000) gives the Euler pose through the half-angle quaternions.
+                AnimationInstance twin = still; twin.slots[1] = twin.slots[0]; twin.counter5E = 256;
+                OriginalPose blended;
+                const auto mixed = blended.compute(twin, anim, math, objectMatrix(math, facing, 0.26f, where), nullptr, 0);
+                for (size_t bone = 0; bone < 21; ++bone) for (size_t k = 0; k < 16; ++k) near(mixed[bone][k], single[bone][k], 2e-3);
+                // A turn adds to the decoded s16 channel of both slots before the matrices.
+                const JointTurn turn[1] = {{8, 0x2000}};
+                OriginalPose turned;
+                turned.compute(still, anim, math, objectMatrix(math, facing, 0.26f, where), turn, 1);
+                check(turned.channel(4) == uint16_t(pose.channel(4) + 0x2000) && turned.channel(3) == pose.channel(3), "Joint turn on channels differs");
+                // A frame past the stream (the previous clip's scale on the first draw) reads outside it.
+                AnimationInstance beyond = still; beyond.slots[0].packet = int32_t(anim.moves[45].raw.size()) + 4;
+                OriginalPose past;
+                past.compute(beyond, anim, math, objectMatrix(math, facing, 0.26f, where), nullptr, 0);
+                check(past.outsideReads == 1 && pose.outsideReads == 0, "Reads past a stream are not reported");
+                reject([&] { const JointTurn bad[1] = {{7, 1}}; OriginalPose p2; p2.compute(still, anim, math, unscaled, bad, 1); });
+                reject([&] { const JointTurn bad[1] = {{0x1006, 1}}; OriginalPose p2; p2.compute(still, anim, math, unscaled, bad, 1); });
                 movementCases += 2;
             }
             {   // Crouch states: 0x2EB4 (1) and 0x321C (2) with their collision profiles.
@@ -456,7 +495,7 @@ int main(int argc, char **argv) {
                 }
                 {   // Crouched aim, state 5 (0x3F30), once the clip blend (+0x5E) has ended.
                     JunoBody c = b; JunoCamera k(cameraData, c); JoypadReader q = r;
-                    check(c.blend5E == 0, "Crouched blend did not end");
+                    check(c.blend5E() == 0, "Crouched blend did not end");
                     stepJuno(c, &k, q.read({Pad::R, 0, 0}), 0);
                     check(c.state568 == 5, "Crouched aim did not start");
                     for (int t = 0; t < 30; ++t) stepJuno(c, &k, q.read({Pad::R, 0, 80}), 0);
@@ -501,7 +540,7 @@ int main(int argc, char **argv) {
                 // Right after the slide the crouched clip is still blending: R waits.
                 {
                     JunoBody c = b; JoypadReader q = r;
-                    check(c.move3B == 14 && c.blend5E > 0, "Crouched clip blend did not start");
+                    check(c.move3B == 14 && c.blend5E() > 0, "Crouched clip blend did not start");
                     int waited = 0;
                     while (c.state568 == 1 && waited < 20) { drive(c, q, {Pad::R, 0, 0}, 1); ++waited; }
                     check(c.state568 == 5 && waited > 1 && waited <= 6, "Crouched aim did not wait for the clip blend");
@@ -575,6 +614,9 @@ int main(int argc, char **argv) {
                     twisted += juno.twist580 != 0;
                     for (const auto &entry : list) jointHash = (jointHash ^ uint32_t(entry.first << 16 | uint16_t(entry.second))) * 1099511628211ull;
                     jointHash = (jointHash ^ juno.opacity()) * 1099511628211ull;
+                    for (const auto &bone : juno.bones()) for (float v : bone) {
+                        uint32_t word = 0; std::memcpy(&word, &v, 4); jointHash = (jointHash ^ word) * 1099511628211ull;
+                    }
                     faded += juno.opacity() < 255; fullFade += juno.opacity() == 95;
                     check((juno.state568 == 0xB || juno.state568 == 5 || juno.fade19C == 0 || juno.fade19C % 16 == 8) && juno.fade19C <= 0x28,
                           "Fade outside the aim states");
@@ -592,6 +634,7 @@ int main(int argc, char **argv) {
                 check(aimTurns == aiming - 1 && crouchAimTurns == crouchAim - 1 && aimExits == 2 && twisted > 150, "Scenario joint turns differ");
                 // Every aim frame but the entries fades Juno; each aim lasts long enough to reach 0x28.
                 check(faded >= aiming + crouchAim - 2 && fullFade > 60, "Scenario fade differs");
+                streamOutside = juno.outsideStreamReads();
             };
             uint64_t first = 1469598103934665603ull, second = first, joints = first, jointsTwo = first;
             JunoBody one(physics, collision, selection, character->clips, {40, 19, 841}, 0), two = one;
@@ -673,7 +716,7 @@ int main(int argc, char **argv) {
         std::cout << "{\"status\":\"passed\",\"math_cases\":" << mathCases << ",\"input_cases\":" << inputCases
                   << ",\"collision_cases\":" << collisionCases << ",\"movement_cases\":" << movementCases
                   << ",\"not_ported_stops\":" << stops << ",\"rejected_cases\":" << rejected
-                  << ",\"original_region\":" << (actual ? "true" : "false") << ",\"scenario_digest\":\"" << std::hex << digest << "\",\"pose_digest\":\"" << poseDigest << "\"}\n";
+                  << ",\"original_region\":" << (actual ? "true" : "false") << ",\"scenario_digest\":\"" << std::hex << digest << "\",\"pose_digest\":\"" << poseDigest << "\",\"outside_stream_reads\":" << std::dec << streamOutside << "}\n";
         return 0;
     } catch (const std::exception &error) { std::cerr << error.what() << '\n'; return 1; }
 }

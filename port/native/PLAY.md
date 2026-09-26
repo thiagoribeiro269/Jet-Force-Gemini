@@ -59,7 +59,9 @@ Cada sessão grava `gravacoes/sessao-DATA-HORA.jfgpad` e um resumo `.txt`.
 O arquivo guarda o resumo dos dados convertidos, o modo de controle e, para
 cada tentativa de tique, os valores brutos do N64 e os comandos do host
 (reinício e pausa). Uma tentativa que parou é repetida pelo registro
-seguinte no mesmo tique.
+seguinte no mesmo tique. O resumo `.txt` também conta os quadros em que a
+animação leu além do fim de um clipe: o jogo lê o heap nesse ponto, e o port
+lê zeros ([detalhes](MOVEMENT.md#pose-original-do-modelo)).
 
 `jfg_native_replay.exe PASTA GRAVACAO` reproduz a gravação sem janela, no
 Windows ou no Linux, pelo mesmo `PlayRun` do jogo. As paradas acontecem na

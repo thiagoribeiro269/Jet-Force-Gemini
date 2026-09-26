@@ -375,8 +375,24 @@ int main(int argc, char **argv) {
                 check(b.state568 == 1 && b.move3B == 13 && b.profile360 == 2 && b.skip531 == 0x1C, "Crouch down differs");
                 drive(b, r, {}, 60);
                 check(b.state568 == 1 && b.move3B == 14 && b.clipId() == 1030, "Crouched idle differs");
-                stop([&] { JunoBody c = b; JoypadReader q = r; drive(c, q, {Pad::Z, 0, 0}, 1); }, "Crouched shot did not stop");
-                stop([&] { JunoBody c = b; JoypadReader q = r; drive(c, q, {Pad::R, 0, 0}, 1); }, "Crouched aim did not stop");
+                {   // Z crouched: +0x1F4 remaps 14 to 33, whose 2-step blend delays the shot.
+                    JunoBody c = b; JoypadReader q = r; int ticks = 0;
+                    stop([&] { for (; ticks < 10; ++ticks) drive(c, q, {Pad::Z, 0, 0}, 1); }, "Crouched shot did not stop");
+                    check(ticks >= 1 && ticks <= 3 && c.move3B == 33, "Crouched shot timing differs");
+                }
+                {   // Crouched aim, state 5 (0x3F30), once the clip blend (+0x5E) has ended.
+                    JunoBody c = b; JunoCamera k(cameraData, c); JoypadReader q = r;
+                    check(c.blend5E == 0, "Crouched blend did not end");
+                    stepJuno(c, &k, q.read({Pad::R, 0, 0}), 0);
+                    check(c.state568 == 5, "Crouched aim did not start");
+                    for (int t = 0; t < 30; ++t) stepJuno(c, &k, q.read({Pad::R, 0, 80}), 0);
+                    check(c.state568 == 5 && c.aimPitch1E2 == -0xA80 && k.fov > 55.0f, "Crouched aim limits or camera differ");
+                    JunoBody up = c; JunoCamera ku = k; JoypadReader qu = q;
+                    stepJuno(up, &ku, qu.read({uint16_t(Pad::R | Pad::A), 0, 0}), 0);
+                    check(up.state568 == 0xB, "A in crouched aim did not stand into the aim");
+                    stepJuno(c, &k, q.read({}), 0);
+                    check(c.state568 == 1 && k.orbit104 == int16_t(0x8000 - c.orientation[0]), "Crouched aim exit differs");
+                }
                 drive(b, r, {0, 0, 70}, 40);
                 check(b.state568 == 2 && b.move3B == 4 && b.profile360 == 1 && b.profileMask(1) == 7 && std::abs(b.speed04) <= 1.25f &&
                       std::abs(b.speed04) > 0.5f, "Crouch-walk differs");
@@ -403,6 +419,14 @@ int main(int argc, char **argv) {
                 check(b.state568 == 1 && b.skid576 == 1, "Slide timer differs");
                 drive(b, r, {}, 1);
                 check(b.state568 == 1 && b.skid576 == 0 && b.move3B == 14 && b.speed04 == 0.0f, "Slide end differs");
+                // Right after the slide the crouched clip is still blending: R waits.
+                {
+                    JunoBody c = b; JoypadReader q = r;
+                    check(c.move3B == 14 && c.blend5E > 0, "Crouched clip blend did not start");
+                    int waited = 0;
+                    while (c.state568 == 1 && waited < 20) { drive(c, q, {Pad::R, 0, 0}, 1); ++waited; }
+                    check(c.state568 == 5 && waited > 1 && waited <= 6, "Crouched aim did not wait for the clip blend");
+                }
                 // Crouched roll with C-right: +0x584 = 2, move 0xB; A during the roll does not stand.
                 drive(b, r, {Pad::CRight, 0, 0}, 1);
                 check(b.roll584 == 2 && b.move3B == 11 && b.lateral10 > 0.0f, "Crouched roll differs");
@@ -443,7 +467,7 @@ int main(int argc, char **argv) {
             }
             ++movementCases;
             auto run = [&](uint64_t &hash, JunoBody &juno, JunoCamera &cam) {
-                uint32_t jumps = 0, walls = 0, strafeTicks = 0, crouched = 0, crouchWalk = 0, rolls = 0, slides = 0, aiming = 0; float top = -1e9f;
+                uint32_t jumps = 0, walls = 0, strafeTicks = 0, crouched = 0, crouchWalk = 0, rolls = 0, slides = 0, aiming = 0, crouchAim = 0; float top = -1e9f;
                 JoypadReader reader;
                 for (uint64_t t = 0; t < MovementTicks; ++t) {
                     stepJuno(juno, &cam, reader.read(movementPad(t)), 0);
@@ -453,6 +477,7 @@ int main(int argc, char **argv) {
                     rolls += juno.roll584 != 0;
                     slides += juno.state568 == 1 && juno.move3B == 15;
                     aiming += juno.state568 == 0xB;
+                    crouchAim += juno.state568 == 5;
                     const float dx = juno.position.x - cam.position.x, dz = juno.position.z - cam.position.z;
                     check((dx * dx) + (dz * dz) >= 1023.0f, "Camera left Juno inside its 32-unit push radius");
                     check(cam.position.y >= float(collision->extents[2]) - 100.0f - 1e-3f, "Camera below the track floor limit");
@@ -467,7 +492,7 @@ int main(int argc, char **argv) {
                 check(jumps > 20 && walls > 10 && top > 50, "Scenario did not jump or reach a wall");
                 check(strafeTicks > 20, "Scenario did not strafe with C-left");
                 check(crouched > 10 && crouchWalk > 40 && rolls > 20 && slides == 40, "Scenario did not crouch, roll or slide");
-                check(aiming == 90 && juno.state568 == 0, "Scenario did not aim");
+                check(aiming >= 105 && crouchAim >= 35 && juno.state568 == 0, "Scenario did not aim or crouch-aim");
             };
             uint64_t first = 1469598103934665603ull, second = first;
             JunoBody one(physics, collision, selection, character->clips, {40, 19, 841}, 0), two = one;
@@ -506,7 +531,9 @@ int main(int argc, char **argv) {
             // Gun-held variants: idle 45, walk 36, run 35/34, strafe 47; running jump 6.
             for (uint32_t id : {1024u, 1061u, 1062u, 1063u, 1064u, 1040u, 1029u, 1030u, 1033u, 1037u, 1038u, 1044u, 1053u, 1059u})
                 check(clips.count(id), "Expected original clip was not played");
-            for (uint32_t id : {1019u, 1026u, 1027u, 1028u, 1042u}) check(!clips.count(id), "Clip without the pistol remap was played");
+            // Walk, run and strafe never lose the gun-held remap. (Idle 1019 can
+            // appear for one frame: leaving the aim, row 27 remaps to 16, then 45.)
+            for (uint32_t id : {1026u, 1027u, 1028u, 1042u}) check(!clips.count(id), "Clip without the pistol remap was played");
             ++movementCases;
             reject([&] {  // Controller bits outside the standard N64 buttons.
                 TickInput input; ActorInput actor; actor.pad = PadState{0x0080, 0, 0};

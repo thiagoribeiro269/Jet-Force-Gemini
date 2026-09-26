@@ -29,7 +29,9 @@ struct JunoPhysicsData {
           slopeLimit = 0, lockedDamping = 0, jumpAnimFloor = 0, airSpeedScale = 0, airSpeedBase = 0, airTurnScale = 0, airTurnBase = 0,
           strafeLeftRate = 0, strafeRightRate = 0, slideLateralDecay = 0, crouchSpeedDecay = 0, crouchStickScale = 0,
           crouchSpeedRate = 0, crouchTurnRate = 0, rollRate3 = 0, rollRate4 = 0, rollRate1 = 0, rollRate2 = 0,
-          aimForwardRate = 0, aimBackRate = 0, aimSpeedDecay = 0, aimZeroLow = 0, aimZeroHigh = 0, aimSmoothing = 0;
+          aimForwardRate = 0, aimBackRate = 0, aimSpeedDecay = 0, aimZeroLow = 0, aimZeroHigh = 0, aimSmoothing = 0,
+          crouchAimSideDecay = 0, crouchAimSideLow = 0, crouchAimSideHigh = 0, crouchAimSpeedDecay = 0, crouchAimSpeedLow = 0,
+          crouchAimSpeedHigh = 0, crouchAimSmoothing = 0;
     uint32_t rngSeed = 0;
     std::array<float, 52> rates{};
     std::array<float, 14> thresholds{};  // data +0xA44..+0xA78
@@ -42,6 +44,7 @@ struct JunoPhysicsData {
     std::array<CollisionProfile, 7> profiles{};
     std::array<std::array<float, 12>, 2> rollCurves{};  // data +0x78C (crouch-walk rolls), +0x7BC (crouch rolls)
     std::array<float, 20> aimTurn{};  // D_800A2E60: controlGetManualAim turn per stick step past 45
+    std::array<uint8_t, 52> blendSteps{};  // clip header byte 1 low nibble, per move row
 };
 
 inline std::shared_ptr<const JunoPhysicsData> readJunoPhysics(const char *path) {
@@ -56,8 +59,8 @@ inline std::shared_ptr<const JunoPhysicsData> readJunoPhysics(const char *path) 
         if (!std::isfinite(value)) throw std::runtime_error("Nonfinite Juno physics value");
         return value;
     };
-    if (bytes.size() < 16 || std::memcmp(take(8), "JFGPHY4\0", 8)) throw std::runtime_error("Wrong Juno physics format");
-    if (u32() != 5 || u32() != 37) throw std::runtime_error("Unsupported Juno physics profile");
+    if (bytes.size() < 16 || std::memcmp(take(8), "JFGPHY5\0", 8)) throw std::runtime_error("Wrong Juno physics format");
+    if (u32() != 5 || u32() != 44) throw std::runtime_error("Unsupported Juno physics profile");
     auto data = std::make_shared<JunoPhysicsData>();
     auto sphereFrom = [&](JunoSphere &sphere) {
         sphere.offset = {f32(), f32(), f32()}; sphere.radius = f32();
@@ -77,7 +80,9 @@ inline std::shared_ptr<const JunoPhysicsData> readJunoPhysics(const char *path) 
                          &data->strafeLeftRate, &data->strafeRightRate, &data->slideLateralDecay, &data->crouchSpeedDecay,
                          &data->crouchStickScale, &data->crouchSpeedRate, &data->crouchTurnRate, &data->rollRate3, &data->rollRate4,
                          &data->rollRate1, &data->rollRate2, &data->aimForwardRate, &data->aimBackRate, &data->aimSpeedDecay,
-                         &data->aimZeroLow, &data->aimZeroHigh, &data->aimSmoothing})
+                         &data->aimZeroLow, &data->aimZeroHigh, &data->aimSmoothing, &data->crouchAimSideDecay,
+                         &data->crouchAimSideLow, &data->crouchAimSideHigh, &data->crouchAimSpeedDecay, &data->crouchAimSpeedLow,
+                         &data->crouchAimSpeedHigh, &data->crouchAimSmoothing})
         *value = f32();
     data->rngSeed = u32();
     for (auto &value : data->rates) value = f32();
@@ -99,6 +104,8 @@ inline std::shared_ptr<const JunoPhysicsData> readJunoPhysics(const char *path) 
     }
     for (auto &curve : data->rollCurves) for (auto &value : curve) value = f32();
     for (auto &value : data->aimTurn) value = f32();
+    std::memcpy(data->blendSteps.data(), take(52), 52);
+    while (at % 4) if (*take(1)) throw std::runtime_error("Nonzero Juno physics padding");
     if (at != bytes.size()) throw std::runtime_error("Trailing Juno physics payload");
     data->math = OriginalMath(sine, arctan);
     const auto &normal = data->controlModes[0], &expert = data->controlModes[1];
@@ -106,7 +113,8 @@ inline std::shared_ptr<const JunoPhysicsData> readJunoPhysics(const char *path) 
         normal.strafeRight() != Pad::CRight || expert.jump() != Pad::CUp || expert.crouch() != Pad::CDown ||
         data->weaponCount != 1 || data->currentWeapon != 0 || data->weaponMask != 1 || data->strafeLeftRate != 0.2f ||
         data->gunWeight != 1 || data->profiles[0].spheres[0].radius != 15.0f || data->profiles[1].feet != 7 ||
-        data->rollCurves[0][11] != 32.0f || data->rollCurves[1][11] != 44.0f || data->aimTurn[19] != 380.0f || data->aimSpeedDecay != 0.95f)
+        data->rollCurves[0][11] != 32.0f || data->rollCurves[1][11] != 44.0f || data->aimTurn[19] != 380.0f || data->aimSpeedDecay != 0.95f ||
+        data->blendSteps[16] != 10 || data->blendSteps[33] != 2 || data->crouchAimSideDecay != 0.85f)
         throw std::runtime_error("Juno control data differ from the inspected profile");
     if (data->exclude != 0xCE002000u || data->include != 0x02000000u || data->masks != std::array<uint8_t, 4>{0x18, 0x01, 0x08, 0x16} ||
         data->gravityCharacter[0] != 0.45f || data->gravityState[0] != 1.0f || data->speedRate != 0.95f || data->rates[0] != 0.015f)
@@ -169,6 +177,9 @@ public:
     // orbit): applied by the caller to the camera before it runs.
     bool clearCameraOffset = false, setCameraOrbit = false;
     int16_t cameraOrbit104 = 0;
+    // Model instance +0x5E/+0x5C: clip blend counter, set by objAnimSetMove
+    // and run down once per frame by modGenAnimMatrices.
+    int16_t blend5E = 0, blendStep5C = 0;
     float push6C = 0, push70 = 0, fallStart57C = 0;
     uint8_t floor532 = 0, wall533 = 0, ceiling534 = 0, skip531 = 0;
     uint32_t surfaceFlags520 = 0;
@@ -203,6 +214,7 @@ public:
         spherePrevious484 = sphereCurrent3C4;
         previous3C = safe524 = position;
         move3B = 16;  // objAnimSetMove(arg0, 0x10, 0) for types 0/1: no remap, no profile change
+        startBlend(16);
     }
     const TrackQuery &query() const { return query_; }
     // objMoveXYZ(player, dx, 0, dz) issued by the free camera (func_8002CF78).
@@ -278,9 +290,16 @@ public:
         else if (state568 == 2) crouchWalk(speed, direction, frames, jumpPressed, stickX, stickY, mode);
         else if (state568 == 3) air(speed, direction, frames, jumpHeld);
         else if (state568 == 0xB) aimStand(frames, mode);
+        else if (state568 == 5) aimCrouch(frames, mode);
         else throw NotPortedError("Juno state outside the ported walking/air subset", "Este estado do Juno ainda não foi portado.");
         animate(dt);
         move(gravity, frames, dt, disabled);
+        // modGenAnimMatrices at the end of boyControl (objResetAnimModels marks
+        // the model every frame): the clip blend runs down one step.
+        if (blend5E != 0) {
+            blend5E = int16_t(blend5E - blendStep5C);
+            if (blend5E < 0) blend5E = 0;
+        }
         // controlUpdateWeapon, end of boyControl: with the pistol, a held fire
         // key starts a shot whenever boyCanFire allows it. Shots are not ported.
         if ((controlKeys & mode.fire()) && canFire())
@@ -336,10 +355,16 @@ private:
             move3B = selected.local;
             progress28 = fraction;
             ++moveChanges;
+            startBlend(selected.local);
         }
         forcedMove_ = -1;
         transitionProfile = selected.transitionProfile;
         setTransition(selected.transitionProfile);
+    }
+    // objAnimSetMove: a clip with blend steps restarts the model's blend.
+    void startBlend(uint32_t move) {
+        const uint8_t steps = data_->blendSteps.at(move);
+        if (steps) { blend5E = 0x3FF; blendStep5C = int16_t(0x3FF / steps); }
     }
     // controlSetTransition: a new profile sets the skip mask and moves the
     // sphere offsets toward its spheres over its frame count.
@@ -520,10 +545,10 @@ private:
             }
         }
         if (state568 == 1 && skid576 == 0) {
-            // Crouched aim (state 5) waits for the model's clip blend (+0x5E),
-            // which the port does not model: stop instead of guessing the frame.
-            if ((controlKeys & Pad::R) && canFire())
-                throw NotPortedError("Crouched aim state 5 (controlKeys 0x10) is not ported", "Mira agachado (estado 5) ainda não foi portada.");
+            if ((controlKeys & Pad::R) && canFire()) {  // crouched aim
+                beginAim(5);
+                return;
+            }
             strafe(1, frames, mode);
             if (move3B != 0xB && move3B != 0x31) {
                 if (controlKeys & mode.fire()) firing1F4 = 0xF;
@@ -611,6 +636,48 @@ private:
         if (pitchHigh < aimPitch1E2) aimPitch1E2 = pitchHigh;
         return false;
     }
+    // Aim smoothing shared by both aim states: joint-turn targets and the aim
+    // direction follow the manual aim.
+    void smoothAim(int16_t yaw, int16_t pitch, float rate) {
+        joint1E0 = OriginalMath::dAngle(joint1E0, pitch, rate);
+        pitch = int16_t(pitch + aimPitch1E2);
+        joint1DC = OriginalMath::dAngle(joint1DC, yaw, rate);
+        joint1DE = OriginalMath::dAngle(joint1DE, pitch, rate);
+        joint1CE = OriginalMath::dAngle(joint1CE, yaw, rate);
+        joint1D0 = OriginalMath::dAngle(joint1D0, pitch, rate);
+        aimYaw1C6 = int16_t(joint1CE + orientation[0]);
+        aimYaw1CA = aimYaw1C6;
+        aimPitch1C8 = int16_t(joint1D0 + orientation[1]);
+        aimPitch1CC = aimPitch1C8;
+    }
+    // Crouched aim state 5: func_overlay_16_01003F30. R released returns to
+    // crouching; A (or Expert's walk keys) stands into the standing aim. Deep
+    // water would also stand; Forest First has none.
+    void aimCrouch(int32_t frames, const ControlModeKeys &mode) {
+        const auto &d = *data_;
+        skid576 = 0;
+        halfTurn13E = 0;
+        if (!(controlKeys & Pad::R)) {  // and no throw lock (+0x577)
+            state568 = 1;
+            setCameraOrbit = true;
+            cameraOrbit104 = int16_t(0x8000 - orientation[0]);
+            return;
+        }
+        lateral10 = lateral10 * OriginalMath::powerf(d.crouchAimSideDecay, frames);
+        if (d.crouchAimSideLow < lateral10 && lateral10 < d.crouchAimSideHigh) lateral10 = 0.0f;
+        speed04 = speed04 * OriginalMath::powerf(d.crouchAimSpeedDecay, frames);
+        if (d.crouchAimSpeedLow < speed04 && speed04 < d.crouchAimSpeedHigh) speed04 = 0.0f;
+        int16_t yaw = 0, pitch = 0;
+        manualAim(0xE38, 0xE38, -0x2AAA, 0x2AAA, yaw, pitch, frames);
+        const float rate = 1.0f - OriginalMath::powerf(d.crouchAimSmoothing, frames);
+        if (aimPitch1E2 < -0xA80) aimPitch1E2 = -0xA80;
+        if (aimPitch1E2 >= 0x1556) aimPitch1E2 = 0x1555;
+        smoothAim(yaw, pitch, rate);
+        if ((controlMode != 0 && ((mode.word[7] | mode.word[8]) & controlKeys)) || (controlDkeys & mode.jump())) {
+            state568 = 0xB;
+            requestMove(chooseMove(), 0.0f);
+        }
+    }
     // Standing aim state 0xB: func_overlay_16_01004440. R released returns to
     // walking and points the free camera's orbit behind Juno. The joint turns
     // of 0x3DB0 (torso, head and arm toward the aim) are not ported.
@@ -640,28 +707,16 @@ private:
         strafe(0, frames, mode);
         int16_t yaw = 0, pitch = 0;
         manualAim(0xE38, 0xE38, -0x2AAA, 0x2AAA, yaw, pitch, frames);  // no zoom: camSetZoom is not called
-        const float rate = 1.0f - OriginalMath::powerf(d.aimSmoothing, frames);
-        joint1E0 = OriginalMath::dAngle(joint1E0, pitch, rate);
-        pitch = int16_t(pitch + aimPitch1E2);
-        joint1DC = OriginalMath::dAngle(joint1DC, yaw, rate);
-        joint1DE = OriginalMath::dAngle(joint1DE, pitch, rate);
-        joint1CE = OriginalMath::dAngle(joint1CE, yaw, rate);
-        joint1D0 = OriginalMath::dAngle(joint1D0, pitch, rate);
-        aimYaw1C6 = int16_t(joint1CE + orientation[0]);
-        aimYaw1CA = aimYaw1C6;
-        aimPitch1C8 = int16_t(joint1D0 + orientation[1]);
-        aimPitch1CC = aimPitch1C8;
+        smoothAim(yaw, pitch, 1.0f - OriginalMath::powerf(d.aimSmoothing, frames));
     }
     // boyCanFire (overlay 16) for the ported moves: no skid, no half-turn,
     // not move 8, and a state that holds the weapon out, or crouched on moves
-    // 0xE/0x21 once the model's clip blend (+0x5E) has ended. The port blends
-    // natively, so the crouched case is taken as allowed from the first frame:
-    // the session may stop a few frames before the original would.
+    // 0xE/0x21 once the model's clip blend (+0x5E) has ended.
     bool canFire() const {
         if (skid576 != 0 || halfTurn13E != 0 || move3B == 8) return false;
         const unsigned state = state568 & ~0x20u;
         if (state == 0 || state == 5 || state == 0xB || state == 0xA || (state == 3 && hover14A != 0)) return true;
-        return move3B == 0xE || move3B == 0x21;
+        return (move3B == 0xE || move3B == 0x21) && blend5E == 0;
     }
     // Walking state 0: func_overlay_16_01002708.
     void walk(float speed, int16_t direction, int32_t frames, bool jumpPressed, int32_t stickX, int32_t stickY, float scale,

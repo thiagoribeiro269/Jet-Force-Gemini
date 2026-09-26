@@ -19,13 +19,13 @@ A                    pular; parado, segure para carregar o pulo;
 B ou X               agachar; correndo, desliza; com o analógico, anda agachado
 Analógico direito    esquerda/direita: passo lateral e giro da câmera;
                      agachado, rola para o lado
-LT ou RB (R)         mira em pé: segure; o analógico move a mira e, no fim do
-                     curso, gira o Juno; o analógico direito dá passo lateral
+LT ou RB (R)         mira: segure; o analógico move a mira e, no fim do curso,
+                     gira o Juno; em pé, o analógico direito dá passo lateral;
+                     agachado, A levanta para a mira em pé
 Start                pausa (o menu de pausa original ainda não foi portado)
 Back                 recomeça no ponto de entrada (função do port)
 
 Ainda não portados. Ao usar, a sessão para e explica o motivo:
-R agachado          mira agachado
 RT (Z)               tiro; no ar e andando agachado o Juno não atira,
                      como no original
 

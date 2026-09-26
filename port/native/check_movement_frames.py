@@ -9,7 +9,7 @@ from check_animation_frames import png_rgb, require
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "build/port-native/movement"
 SIZE = 640 * 480 * 4
-FRAMES = 510
+FRAMES = 580
 
 
 def digest(data):
@@ -27,7 +27,7 @@ def main():
     require(result["ok"] and windows == linux and windows["status"] == "passed" and windows["original_region"],
             "Movement checks failed or differ between Linux and Windows")
     require((meta["api"], meta["vendor"], meta["region"], meta["geometry"], meta["frame_count"], meta["ticks"]) ==
-            ("D3D11", 0x10DE, 21, 17, FRAMES, 1020), "Wrong movement render profile")
+            ("D3D11", 0x10DE, 21, 17, FRAMES, 1160), "Wrong movement render profile")
     require(meta["perspective"] and not meta["emulator_dependencies"] and not meta["display_list_interpreter"], "Wrong graphics path")
     require(trace["stopped"] and trace["original_movement"] and trace["original_camera"] and not trace["object_collision"] and not trace["emulation"],
             "Wrong scope or cleanup")
@@ -82,9 +82,11 @@ def main():
     aim = next(i for i, f in enumerate(frames) if f["state"] == 11) + 15
     aim_up = next(i for i, f in enumerate(frames) if f["tick"] > 960 and f["state"] == 11)
     require(frames[aim]["state"] == 11 and frames[aim_up]["state"] == 11, "Aim key frames left the aim state")
+    crouch_aim = next(i for i, f in enumerate(frames) if f["state"] == 5) + 10
+    require(frames[crouch_aim]["state"] == 5, "Crouched aim key frame left state 5")
     keys = {"landing": first_ground, "running": 60, "slope": 130, "jump": jump, "peak": peak, "turned": turned,
             "return": 215, "c-left": orbit, "crouch": crouch, "crouch-walk": crouch_walk + 10, "roll": roll, "stand": stand,
-            "slide": slide, "aim": aim, "aim-up": aim_up, "settled": FRAMES - 1}
+            "slide": slide, "aim": aim, "aim-up": aim_up, "crouch-aim": crouch_aim, "settled": FRAMES - 1}
     for frame in range(FRAMES):
         pixels = raw[frame * SIZE:(frame + 1) * SIZE]; hashes.append(digest(pixels))
         covered = sum(pixels[p:p + 3] != background[p:p + 3] for p in range(0, SIZE, 4))
@@ -92,14 +94,14 @@ def main():
         coverage.append(covered)
     for name, frame in keys.items():
         (OUT / f"movement-{frame:03}-{name}.png").write_bytes(png_rgb(raw[frame * SIZE:(frame + 1) * SIZE]))
-    require(len(set(hashes)) > 460, "Movement sequence did not evolve")
+    require(len(set(hashes)) > 500, "Movement sequence did not evolve")
     subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "rawvideo", "-pixel_format", "rgba", "-video_size", "640x480",
                     "-framerate", "30", "-i", str(OUT / "frame.rgba"), "-an", "-c:v", "libx264", "-preset", "fast",
                     "-crf", "18", "-pix_fmt", "yuv420p", "-movflags", "+faststart", str(OUT / "forest-first-movement.mp4")], check=True)
     assets = json.loads((OUT / "movement-assets-report.json").read_text())
     camera = json.loads((OUT / "camera-assets-report.json").read_text())
     distances = [((f["x"] - f["camera_x"]) ** 2 + (f["z"] - f["camera_z"]) ** 2) ** 0.5 for f in frames]
-    report = {"status": "passed", "level": 21, "geometry": 17, "frames": FRAMES, "original_frames": 1020, "unique_frames": len(set(hashes)),
+    report = {"status": "passed", "level": 21, "geometry": 17, "frames": FRAMES, "original_frames": 1160, "unique_frames": len(set(hashes)),
               "linux_windows_checks": windows, "scenario_digest_equal_on_linux_and_windows": True,
               "final_position": trace["final"], "lowest_y": trace["lowest_y"], "highest_y": trace["highest_y"],
               "wall_contact_ticks": trace["wall_ticks"], "airborne_ticks": trace["airborne_ticks"], "move_changes": trace["move_changes"],
@@ -119,7 +121,7 @@ def main():
                          "yaw_at_start": frames[0]["camera_yaw"], "yaw_at_end": frames[-1]["camera_yaw"]},
               "raw_sha256": digest(raw), "video_sha256": digest((OUT / "forest-first-movement.mp4").read_bytes()),
               "fps_output": 30, "duration_seconds": FRAMES / 30,
-              "limits": ["Juno walking, crouch (1/2), standing aim (0xB) and air states with original track collision and collision profiles; crouched aim, shots, water and object hit models not ported",
+              "limits": ["Juno walking, crouch (1/2), standing and crouched aim (0xB, 5) and air states with original track collision and collision profiles; shots, water and object hit models not ported; crouched aim (5) waits for the model clip blend as the original",
                          "Original free and aim cameras (player type 0, collision mode 1); zone, spline, static and cutscene cameras not ported",
                          "Aim joint turns (0x3DB0/0x6290) not drawn: the aim changes the camera, heading and stance, not the arm pose",
                          "A scripted controller stands in for a physical controller; raw N64 pad values pass through the original joyRead and controlReadJoypad",

@@ -79,6 +79,10 @@ SOURCE_LISTINGS = [
     ("asm/nonmatchings/overlays/o16/overlay_16/func_overlay_16_01003DB0_1F21DC8.s", "func_overlay_16_01003DB0_1F21DC8"),
     ("asm/nonmatchings/charControl/controlGetManualAim.s", "controlGetManualAim"),
     ("asm/nonmatchings/camera/camSetZoom.s", "camSetZoom"),
+    # Crouched aim state 5 and the model's clip blend counter (+0x5E).
+    ("asm/nonmatchings/overlays/o16/overlay_16/func_overlay_16_01003F30_1F21F48.s", "func_overlay_16_01003F30_1F21F48"),
+    ("asm/nonmatchings/models/modGenAnimMatrices.s", "modGenAnimMatrices"),
+    ("asm/nonmatchings/objects/objResetAnimModels.s", "objResetAnimModels"),
 ]
 
 # Overlay 16 data constants used by the ported walking/air/movement code, in
@@ -97,6 +101,10 @@ OVERLAY16_CONSTANTS = [
     # zero band, and the aim smoothing rate.
     ("aimForwardRate", 0x938), ("aimBackRate", 0x93C), ("aimSpeedDecay", 0x940), ("aimZeroLow", 0x944), ("aimZeroHigh", 0x948),
     ("aimSmoothing", 0x94C),
+    # Crouched aim state 5 (0x3F30): sideways and forward decay with their
+    # zero bands, and the aim smoothing rate.
+    ("crouchAimSideDecay", 0x91C), ("crouchAimSideLow", 0x920), ("crouchAimSideHigh", 0x924), ("crouchAimSpeedDecay", 0x928),
+    ("crouchAimSpeedLow", 0x92C), ("crouchAimSpeedHigh", 0x930), ("crouchAimSmoothing", 0x934),
 ]
 
 
@@ -275,6 +283,16 @@ def convert_physics(assets, rom_path):
     # 0x4934 roll distance curves (controlMakeV), 12 floats each.
     roll_curves = [struct.unpack_from(">12f", assets.rom, data_base + offset) for offset in (0x78C, 0x7BC)]
     require(roll_curves[0][0] == 0 and roll_curves[1][0] == 0, "Roll curves differ")
+    # objAnimSetMove/modGenAnimMatrices: a move change sets the model's blend
+    # counter +0x5E to 0x3FF when the clip header's low nibble (steps) is
+    # nonzero; each frame subtracts 0x3FF / steps. Steps per move row.
+    start, end = struct.unpack(">HH", region(assets.section(0x28), 220 * 2, 4))
+    model_clips = struct.unpack(">" + str((end - start) // 2) + "H", region(assets.section(0x29), start, end - start))
+    blend_steps = []
+    for move in range(52):
+        clip_start, clip_end = struct.unpack(">II", region(assets.section(0x2A), model_clips[move] * 4, 8))
+        blend_steps.append(region(assets.section(0x2B), clip_start, clip_end - clip_start)[1] & 0xF)
+    require(blend_steps[14] != 0 and blend_steps[33] == 2 and blend_steps[16] == 10, "Clip blend steps differ")
     # controlGetManualAim: turn speed per stick step past 45 (D_800A2E60).
     aim_turn = struct.unpack(">20f", main_bytes(assets, 0x800A2E60, 80))
     f32 = lambda value: struct.unpack("<f", struct.pack("<f", value))[0]
@@ -291,7 +309,7 @@ def convert_physics(assets, rom_path):
     for address, word in ((0x80047B80, 0x300900FF), (0x80047B84, 0x240A0001), (0x80047B88, 0x24080001), (0x80047B8C, 0x012A5804),
                           (0x80047B90, 0xA268006F), (0x80047B94, 0xA2600070), (0x80047B98, 0xA66B000A)):
         require(struct.unpack(">I", main_bytes(assets, address, 4))[0] == word, "Default character weapons differ")
-    out = bytearray(struct.pack("<8sII", b"JFGPHY4\0", len(spheres), len(constants)))
+    out = bytearray(struct.pack("<8sII", b"JFGPHY5\0", len(spheres), len(constants)))
     for sphere in spheres:
         out.extend(struct.pack("<4fBBxx", *sphere))
     out.extend(masks)
@@ -317,6 +335,7 @@ def convert_physics(assets, rom_path):
     for curve in roll_curves:
         out.extend(struct.pack("<12f", *curve))
     out.extend(struct.pack("<20f", *aim_turn))
+    out.extend(bytes(blend_steps))
     report = {"status": "prepared", "spheres": [list(s) for s in spheres], "masks": list(masks),
               "exclude_mask": "0xCE002000", "include_mask": "0x02000000",
               "gravity_character": gravity_character, "gravity_state": gravity_state,
@@ -326,7 +345,7 @@ def convert_physics(assets, rom_path):
               "default_weapons": {"count": 1, "current": 0, "owned_mask": 1, "pistol_gun_weight": gun_weight},
               "collision_profiles": [{"skip": p[0], "feet": p[1], "mask6": p[2], "mask7": p[3], "frames": p[4],
                                       "spheres": [list(s) for s in p[5]]} for p in profiles],
-              "roll_curves": roll_curves, "manual_aim_turn": aim_turn,
+              "roll_curves": roll_curves, "manual_aim_turn": aim_turn, "clip_blend_steps": blend_steps,
               "routine_audits": audits, "emulation_used": False, "sha256": hashlib.sha256(out).hexdigest(),
               "limits": ["Juno walking/air subset; object hit models, water, weapons and other states not converted",
                          "Forest First has no ledge-pairing faces, so the track never reports a ledge to controlHangOK/controlGrabOK",

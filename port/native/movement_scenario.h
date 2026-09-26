@@ -9,8 +9,8 @@ namespace jfg_native {
 // session runs joyRead on it; the camera is the original free camera, whose
 // yaw the session feeds back as *controlcam.
 struct MovementPhase { uint32_t from, to; int8_t stickX, stickY; uint16_t buttons; const char *name; };
-inline const std::array<MovementPhase, 23> &movementScript() {
-    static const std::array<MovementPhase, 23> script{{
+inline const std::array<MovementPhase, 29> &movementScript() {
+    static const std::array<MovementPhase, 29> script{{
         {0, 30, 0, 0, 0, "land from the original entry point"},
         {30, 330, 0, 70, 0, "run along the path and up the slope"},
         {330, 340, 0, 70, Pad::A, "running jump at the top"},
@@ -34,10 +34,16 @@ inline const std::array<MovementPhase, 23> &movementScript() {
         {940, 970, 0, 80, Pad::R, "aim up"},
         {970, 990, 0, 0, uint16_t(Pad::R | Pad::CRight), "strafe right while aiming"},
         {990, 1020, 0, 0, 0, "release R: back to walking, camera behind"},
+        {1020, 1021, 0, 0, Pad::B, "B: crouch"},
+        {1021, 1080, 0, 0, 0, "crouch down fully; the clip blend ends"},
+        {1080, 1120, 80, 0, Pad::R, "R: crouched aim (state 5), turning"},
+        {1120, 1121, 0, 0, uint16_t(Pad::R | Pad::A), "A: stand into the standing aim"},
+        {1121, 1140, 0, 0, Pad::R, "standing aim"},
+        {1140, 1160, 0, 0, 0, "release R"},
     }};
     return script;
 }
-constexpr uint32_t MovementTicks = 1020;
+constexpr uint32_t MovementTicks = 1160;
 
 inline PadState movementPad(uint64_t tick) {
     PadState pad;

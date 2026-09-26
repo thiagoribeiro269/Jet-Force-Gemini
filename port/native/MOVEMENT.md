@@ -1,7 +1,7 @@
 # Movimento, colisão e câmera originais em Forest First
 
 O Juno agora anda, corre, pula, agacha, anda agachado, rola, desliza, mira
-em pé, cai, sobe rampas e para em paredes dentro de
+em pé e agachado, cai, sobe rampas e para em paredes dentro de
 Forest First pelo código original portado para C++, sem emulação. A física,
 a colisão com o cenário e a escolha de animações seguem as rotinas do jogo.
 A câmera livre do jogo também foi portada e define a direção do controle,
@@ -12,7 +12,7 @@ são um roteiro: veja [Limites](#limites).
 ## Rotinas recuperadas
 
 A leitura foi estática, sobre as listagens ASM do repositório. O conversor
-confere 56 rotinas, 66.804 bytes, contra a ROM US antes de gerar os dados.
+confere 59 rotinas, 71.280 bytes, contra a ROM US antes de gerar os dados.
 
 | Original | Port | Papel |
 | --- | --- | --- |
@@ -30,6 +30,8 @@ confere 56 rotinas, 66.804 bytes, contra a ROM US antes de gerar os dados.
 | Estados `0x2EB4` e `0x321C` | `JunoBody::crouch`, `crouchWalk` | Agachado, deslizando e andando agachado |
 | `controlCeiling`, `trackGetIntersect` | `roomToStand`, `TrackQuery::getIntersect` | Espaço acima para levantar |
 | Estado `0x4440`, `controlGetManualAim` | `JunoBody::aimStand`, `manualAim` | Mira em pé: mira pelo analógico e giro na borda |
+| Estado `0x3F30` | `JunoBody::aimCrouch` | Mira agachada |
+| `objAnimSetMove`, `modGenAnimMatrices`, `objResetAnimModels` | `startBlend` e o fim de `tick` | Contador de mistura de clipes do modelo (`+0x5E`) |
 | `func_8002C078` | `JunoCamera::aimCamera` | Câmera de mira sobre o ombro |
 | `joyRead`, `controlReadJoypad`, `controlPlayer`, `frontGetTargetControl` | `JoypadReader`, `controlReadJoypad`, `ControlModeKeys` | Leitura do controle e tabelas dos modos Normal e Expert |
 | `controlUpdatePlayerAim`, `controlUpdateWeapon`, `boyCanFire` | `aimWithoutTargets`, `canFire` | Contador de tiro `+0x1F4` e decisão de disparo da pistola |
@@ -134,7 +136,7 @@ Normal; a Expert também foi convertida.
 | --- | --- | --- |
 | A | pulo; com passo lateral, pulo correndo | segurar carrega o pulo |
 | C-left/C-right | passo lateral e giro da câmera | só a câmera |
-| R | mira em pé (estado 0xB) | a câmera se alinha atrás do Juno |
+| R | mira em pé (0xB); agachado, mira agachada (5) | a câmera se alinha atrás do Juno |
 | B | agachar; correndo, deslizar; com o analógico, andar agachado | ignorado pelo Juno |
 | Z | tiro da pistola: **parada** quando `boyCanFire` permite | ignorado: no ar não há tiro |
 | C-up/C-down, D-pad | trocar arma: inerte com uma arma só | inerte |
@@ -170,9 +172,12 @@ Cada movimento traz seu perfil de colisão: agachado são três esferas baixas
 (perfil 2), e andando agachado, três esferas de raio 15 lado a lado, todas
 de apoio (perfil 1, máscara de pés 7).
 
-Mira e tiro agachados param a sessão. No original, eles esperam o fim da
-mistura entre clipes (`+0x5E` do modelo); a mistura do port é própria, então
-a parada pode vir alguns quadros antes do jogo.
+Agachado, mira e tiro só valem nos movimentos 0xE e 0x21 e depois do fim da
+mistura de clipes do modelo (`+0x5E`). Cada troca de movimento põe esse
+contador em 1023, e cada quadro desconta 1023 dividido pelos passos do clipe
+(nibble baixo do byte 1 do cabeçalho), como fazem `objAnimSetMove` e
+`modGenAnimMatrices`. Por isso, logo depois de agachar, R espera alguns
+quadros. O tiro agachado para a sessão.
 
 ## Mira em pé
 
@@ -189,14 +194,15 @@ O analógico bruto move a mira dentro de ±40 (`controlGetManualAim`). Além de
 C-right dão passo lateral; no modo Expert, C-cima e C-baixo andam. Soltar R
 volta ao andar e põe a órbita da câmera livre atrás do Juno.
 
-A mira agachada (estado 5) espera o fim da mistura de clipes do modelo, que
-o port não modela; R agachado continua parando a sessão. As rotações de
-tronco, cabeça e braço em direção à mira (`0x3DB0`) não são desenhadas.
+R agachado leva à mira agachada (estado 5), com o perfil de câmera 2 e a
+inclinação da mira entre −0xA80 e 0x1555. Soltar R volta a agachar; A levanta
+direto para a mira em pé. As rotações de tronco, cabeça e braço em direção à
+mira (`0x3DB0`) não são desenhadas.
 
 ## Verificação
 
 - Linux com ASAN/UBSAN e Windows na RTX: 6 casos de matemática, 4 de entrada,
-  11 de colisão sintética, 14 de movimento e câmera com dados reais, 5 paradas
+  11 de colisão sintética, 14 de movimento e câmera com dados reais, 4 paradas
   tipadas e 18 rejeições. O resumo do cenário, que inclui a posição da câmera
   a cada tique, é igual nas duas plataformas.
 - Os testes cobrem o passo lateral de 0,2 por quadro até 2,5, o pulo correndo
@@ -206,7 +212,9 @@ tronco, cabeça e braço em direção à mira (`0x3DB0`) não são desenhadas.
   mira e tiro agachados.
 - A mira é testada na entrada (rumo e desvio da câmera), na postura, na faixa
   morta de ±40, no giro na borda, no limite de inclinação, na câmera de mira,
-  na saída, no modo Expert e na parada do tiro.
+  na saída, no modo Expert e na parada do tiro. A mira agachada é testada na
+  espera pela mistura de clipes, no limite de inclinação, na saída e na
+  passagem para a mira em pé.
 - Na carga de Forest First surgem 5.759 planos e 1.759 arestas expostas. Todos
   os planos são normalizados e todas as referências são válidas.
 - O Juno nasce no ponto original, 21 unidades acima do caminho, e pousa em
@@ -215,7 +223,7 @@ tronco, cabeça e braço em direção à mira (`0x3DB0`) não são desenhadas.
   bit, após o roteiro inteiro. Pausa, retomada e rejeições preservam o mundo.
 - Em todo tique, a câmera fica a pelo menos 32 unidades do Juno e acima do
   limite do cenário.
-- A RTX produziu 510 quadros em 640 × 480, dezessete segundos a 30 fps.
+- A RTX produziu 580 quadros em 640 × 480, dezenove segundos a 30 fps.
   As sete provas gráficas anteriores, incluindo a da região, ficaram idênticas
   byte a byte. A ROM matching continua com SHA-1
   `493ced9008dbe932d6e91179b68e8630cf23a023`.
@@ -240,6 +248,8 @@ Métricas e hashes estão em [movement-validation.json](movement-validation.json
 | 821–900 | A em 870–900 | termina o deslize agachado e levanta |
 | 900–990 | R; analógico à direita, depois para cima; C-right em 970 | mira, gira, inclina a mira e dá passo lateral |
 | 990–1020 | nenhum | solta R e volta a andar |
+| 1020–1080 | B | agacha por completo |
+| 1080–1160 | R com o analógico à direita; A em 1120 | mira agachado girando, levanta para a mira em pé e solta R |
 
 ## Limites
 
@@ -248,8 +258,8 @@ Métricas e hashes estão em [movement-validation.json](movement-validation.json
   existe roteiro original equivalente.
 - Da câmera, a câmera livre no modo de colisão 1 e a câmera de mira. Câmeras
   de zona, estáticas, de spline e de cena de corte ficam fora.
-- Estados portados: andar, ar, agachado, andando agachado e mira em pé.
-  Mira agachada, tiro, água, lava e os demais estados param de forma explícita
+- Estados portados: andar, ar, agachado, andando agachado e mira em pé e
+  agachada. Tiro, água, lava e os demais estados param de forma explícita
   quando alcançados. Objetos com
   modelos de colisão e os outros personagens ainda não existem.
 - O modelo da pistola não é desenhado: a pose das variantes com arma

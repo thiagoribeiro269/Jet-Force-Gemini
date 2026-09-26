@@ -30,7 +30,7 @@ N64.
 | A | A | pulo; parado, segurar carrega o pulo; agachado, levanta |
 | Analógico direito | C-buttons | esquerda/direita: passo lateral e câmera; agachado, rolar |
 | B, X | B | agachar; correndo, deslizar; com o analógico, andar agachado |
-| LT, RB | R | mira em pé: o analógico mira e gira na borda; agachado: **parada** |
+| LT, RB | R | mira em pé ou agachado: o analógico mira e gira na borda |
 | RT | Z | tiro: **parada** quando `boyCanFire` permite |
 | LB | L | sem leitura no personagem |
 | D-pad | D-pad | trocar arma: inerte com uma arma só |
@@ -85,7 +85,7 @@ Resultados em [movement-validation.json](movement-validation.json).
 
 - Só Forest First e só o Juno. Sem inimigos, objetos, portas, itens, sons,
   céu, menus ou salvamento.
-- Mira agachada, tiro, água, lava e os demais estados param a sessão.
+- Tiro, água, lava e os demais estados param a sessão.
 - As rotações de juntas do tronco e da cabeça não foram portadas.
 - O teste remoto não abre a janela; ela só foi verificada no PC de Thiago.
 

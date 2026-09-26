@@ -154,7 +154,7 @@ int main(int argc, char **argv) {
             PlayRun run(data, 0);
             for (int t = 0; t < 40; ++t) check(run.step({}), "Idle tick stopped");
             const auto landed = run.body()->position;
-            check(!run.step({{Pad::R, 0, 0}, 0}), "Aim did not stop");
+            check(!run.step({{Pad::Z, 0, 0}, 0}), "Standing shot did not stop");
             check(run.failures.size() == 1 && run.failures[0].notPorted && run.failures[0].attempt == 41 &&
                   run.failures[0].hostTick == 40 && !run.failures[0].explanation.empty(), "Stop record differs");
             check(run.body()->position == landed && run.session().hostTick() == 40, "Stop changed the world");

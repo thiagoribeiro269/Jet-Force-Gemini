@@ -337,7 +337,38 @@ int main(int argc, char **argv) {
                 check(blocked && firingProfile, "boyCanFire or the firing profile differs during the skid");
             }
             stop([&] { JunoBody b = body; JoypadReader r; drive(b, r, {Pad::Z, 0, 0}, 1); }, "Standing shot did not stop");
-            stop([&] { JunoBody b = body; JoypadReader r; drive(b, r, {Pad::R, 0, 0}, 1); }, "Aim state did not stop");
+            {   // Standing aim, state 0xB (0x4440) with controlGetManualAim and the aim camera.
+                JunoBody b = body; JunoCamera cam(cameraData, b); JoypadReader r;
+                cam.offset10A = 0x0400;  // a C-button offset left by the free camera
+                const int16_t before = b.heading11C;
+                stepJuno(b, &cam, r.read({Pad::R, 0, 0}), 0);
+                check(b.state568 == 0xB && b.heading11C == int16_t(before - 0x0400) && cam.offset10A == 0, "Aim entry differs");
+                for (int t = 0; t < 30; ++t) stepJuno(b, &cam, r.read({Pad::R, 0, 0}), 0);
+                check(b.firing1F4 == 1 && b.move3B == 27 && b.profile360 == 3 && cam.fov > 55.0f && cam.fov < 56.0f,
+                      "Aim stance or aim camera blend differs");
+                // Stick past 45 turns Juno; within 40 it only moves the aim.
+                const int16_t steady = b.heading11C;
+                for (int t = 0; t < 5; ++t) stepJuno(b, &cam, r.read({Pad::R, 40, 0}), 0);
+                check(b.heading11C == steady && b.joint1CE != 0, "Aim within the dead band turned Juno");
+                for (int t = 0; t < 20; ++t) stepJuno(b, &cam, r.read({Pad::R, 80, 0}), 0);
+                check(b.heading11C != steady && b.turn1E4 < 0.0f, "Aim at the edge did not turn Juno");
+                for (int t = 0; t < 120; ++t) stepJuno(b, &cam, r.read({Pad::R, 0, 80}), 0);
+                check(b.aimPitch1E2 == -0x2AAA, "Aim pitch limit differs");
+                // After 175 frames +0x18 is near 1: field of view near 60 and the camera at the aim distance.
+                const float dx = cam.position.x - b.position.x, dz = cam.position.z - b.position.z;
+                check(cam.fov > 59.7f && std::sqrt(dx * dx + dz * dz) < 70.0f, "Aim camera differs");
+                stop([&] { JunoBody c = b; JunoCamera k = cam; JoypadReader q = r; stepJuno(c, &k, q.read({uint16_t(Pad::R | Pad::Z), 0, 0}), 0); },
+                     "Shot while aiming did not stop");
+                // Releasing R: walking again, the free camera's orbit behind Juno.
+                stepJuno(b, &cam, r.read({}), 0);
+                check(b.state568 == 0 && cam.orbit104 == int16_t(0x8000 - b.orientation[0]), "Aim exit differs");
+                // Expert: C-up walks forward while aiming.
+                JunoBody e = body; JoypadReader q;
+                drive(e, q, {Pad::R, 0, 0}, 5, 1);
+                drive(e, q, {uint16_t(Pad::R | Pad::CUp), 0, 0}, 10, 1);
+                check(e.state568 == 0xB && e.speed04 < -1.0f, "Expert aim walk differs");
+                ++movementCases;
+            }
             {   // Crouch states: 0x2EB4 (1) and 0x321C (2) with their collision profiles.
                 JunoBody b = body; JoypadReader r;
                 drive(b, r, {Pad::B, 0, 0}, 1);
@@ -412,17 +443,16 @@ int main(int argc, char **argv) {
             }
             ++movementCases;
             auto run = [&](uint64_t &hash, JunoBody &juno, JunoCamera &cam) {
-                uint32_t jumps = 0, walls = 0, strafeTicks = 0, crouched = 0, crouchWalk = 0, rolls = 0, slides = 0; float top = -1e9f;
+                uint32_t jumps = 0, walls = 0, strafeTicks = 0, crouched = 0, crouchWalk = 0, rolls = 0, slides = 0, aiming = 0; float top = -1e9f;
                 JoypadReader reader;
                 for (uint64_t t = 0; t < MovementTicks; ++t) {
-                    JunoControl control{reader.read(movementPad(t)), cam.yaw(), 0};
-                    juno.tick(control);
-                    cam.tick(juno, cameraKeys(juno.controlKeys), 1);
+                    stepJuno(juno, &cam, reader.read(movementPad(t)), 0);
                     strafeTicks += juno.move3B == 47 && juno.lateral10 < -2.0f;
                     crouched += juno.state568 == 1 && juno.move3B == 14;
                     crouchWalk += juno.state568 == 2 && juno.move3B == 4;
                     rolls += juno.roll584 != 0;
                     slides += juno.state568 == 1 && juno.move3B == 15;
+                    aiming += juno.state568 == 0xB;
                     const float dx = juno.position.x - cam.position.x, dz = juno.position.z - cam.position.z;
                     check((dx * dx) + (dz * dz) >= 1023.0f, "Camera left Juno inside its 32-unit push radius");
                     check(cam.position.y >= float(collision->extents[2]) - 100.0f - 1e-3f, "Camera below the track floor limit");
@@ -437,6 +467,7 @@ int main(int argc, char **argv) {
                 check(jumps > 20 && walls > 10 && top > 50, "Scenario did not jump or reach a wall");
                 check(strafeTicks > 20, "Scenario did not strafe with C-left");
                 check(crouched > 10 && crouchWalk > 40 && rolls > 20 && slides == 40, "Scenario did not crouch, roll or slide");
+                check(aiming == 90 && juno.state568 == 0, "Scenario did not aim");
             };
             uint64_t first = 1469598103934665603ull, second = first;
             JunoBody one(physics, collision, selection, character->clips, {40, 19, 841}, 0), two = one;
@@ -473,7 +504,7 @@ int main(int argc, char **argv) {
             check(session.body(juno)->position == one.position && session.camera(juno)->position == cameraOne.position,
                   "Session and bare body/camera diverged");
             // Gun-held variants: idle 45, walk 36, run 35/34, strafe 47; running jump 6.
-            for (uint32_t id : {1024u, 1061u, 1062u, 1063u, 1064u, 1040u, 1029u, 1030u, 1033u, 1037u, 1038u, 1044u})
+            for (uint32_t id : {1024u, 1061u, 1062u, 1063u, 1064u, 1040u, 1029u, 1030u, 1033u, 1037u, 1038u, 1044u, 1053u, 1059u})
                 check(clips.count(id), "Expected original clip was not played");
             for (uint32_t id : {1019u, 1026u, 1027u, 1028u, 1042u}) check(!clips.count(id), "Clip without the pistol remap was played");
             ++movementCases;

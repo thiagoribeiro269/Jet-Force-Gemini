@@ -37,7 +37,7 @@ Thiago no PC; os testes remotos não abrem a janela. [Como jogar](native/PLAY.md
 | Movimento na região | Deslocamento, gravidade, piso/obstáculos e câmera coerentes | Concluído para andar e ar do Juno com colisão original |
 | Câmera original | Câmera do jogo seguindo o Juno, com os mesmos modos e limites | Concluído para a câmera livre no modo de colisão 1, o de Forest First; zonas, câmeras estáticas, splines, cenas de corte e mira pendentes |
 | Entrada física | Controle lido no Windows, valores brutos pelo `joyClamp` original, executável jogável | Implementado: XInput, janela D3D11, parada estrita, gravação e reprodução; janela e controle aguardam o teste de Thiago |
-| Estados do Juno em Forest First | Agachar, rolar, deslizar, mira sem tiro, com perfis de colisão originais | Agachar, andar agachado, deslizar e rolar portados; mira (0xB e 5) é o próximo |
+| Estados do Juno em Forest First | Agachar, rolar, deslizar, mira sem tiro, com perfis de colisão originais | Agachar, andar agachado, deslizar, rolar e mira em pé portados; mira agachada depende da mistura de clipes do modelo |
 | Interação de gameplay | Arma, projétil, alvo/inimigo, dano e ciclo de criação/remoção | Selecionar um encontro simples da mesma região e ampliar comportamentos/recursos necessários |
 | Sessão utilizável | Áudio, interface, troca de região e save/load, sobre a entrada física | Integrar serviços nativos, mantendo métodos de acesso ao PC autorizados; nenhum dispositivo virtual de N64 |
 | Cobertura e fidelidade | Mais regiões/personagens/efeitos, estabilidade e desempenho medidos | Expandir sobre os mesmos contratos e regressões; aprimoramentos visuais/voz ficam posteriores |
@@ -46,9 +46,10 @@ Thiago no PC; os testes remotos não abrem a janela. [Como jogar](native/PLAY.md
 
 1. Teste de Thiago com `jfg_native_play.exe` no PC: janela, controle,
    paradas e gravações. As gravações dele definem a ordem dos estados.
-2. Estados 0xB e 5: mira com R, ainda sem tiro, com o perfil de câmera e as
-   rotações de juntas da mira. Agachar, andar agachado, deslizar e rolar
-   (estados 1 e 2) já estão portados.
+2. Mistura de clipes do modelo (`+0x5E`) e rotações de juntas (`0x3DB0`,
+   `0x6290`, `0x4840`): liberam a mira agachada (estado 5) e desenham o tronco
+   e os braços mirando. Agachar, rolar, deslizar e a mira em pé já estão
+   portados.
 3. Depois, interação de gameplay na mesma região: tiro, projéteis, objetos e
    inimigos.
 

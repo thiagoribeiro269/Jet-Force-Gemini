@@ -1,14 +1,14 @@
 {
   "status": "passed",
   "recorded_date": "2026-09-26",
-  "previous_checkpoint": "89a1a7a",
+  "previous_checkpoint": "165150f",
   "architecture": "Native C++ host with recovered Juno control/physics, original controller reading, track collision and free camera; Direct3D 11 renderer with window presentation; XInput adapter to raw N64 pad values; no emulation",
   "build": {
-    "native_movement_executable_sha256": "1893a4c0f437084947f0325e875e8edae95b6d208228a2f334e1376a2661a5f3",
-    "native_movement_check_sha256": "4a231bf8622a3b0327ec4ba0dd05b1a0f1816f1cd7a4239e367543b1b62525e4",
-    "native_play_executable_sha256": "d0c6e57a975970e288275eeee3c116fb912798f32048fa9fa776cce2c67cddfe",
-    "native_replay_executable_sha256": "27402e794fa558eb3c2e0c652d73b827513d263c426bb6639507b43cbcd2adc4",
-    "native_play_check_sha256": "bf809c306289a83544796b7967f02849ee550b2ca264d57dafd970d3bccb6d27"
+    "native_movement_executable_sha256": "71e295110b168f72e3b8c2100ebc724f0bb6b23559161529f6e9cdd1c9581165",
+    "native_movement_check_sha256": "77218c046cceaea986992ec3609f34a390904982c5710c57d5391a28562d0de3",
+    "native_play_executable_sha256": "9458cc5cbfdb1fa4f8284d68d98ed82638033de98830fd20b7e4d9cbada7597a",
+    "native_replay_executable_sha256": "7c686333ef42a6f388ea7ecd82657694b1196db86c3f3c0c3c074b344188c895",
+    "native_play_check_sha256": "a01d58a8e6257da0da1889acf787baabd5acdb44e958be70bd2300e2fb31f394"
   },
   "imports": {
     "jfg_native_movement.exe": [
@@ -36,8 +36,8 @@
     ],
     "plus_windows_ucrt_api_sets_only": true
   },
-  "private_package_sha256": "50c18f90eabbb0fd0413c02842bb9e9f844526b10ed4156b7dd8d24c10080248",
-  "play_package_sha256": "9d12f8f5632cb3b54ceca28cc6a23580ad6ac94a3d417da3e24dae8a81dfd9b8",
+  "private_package_sha256": "5b1f55aa58d398865e6ef441b3f83a0d6da1dc5d02d40a77dc978f75a4984d41",
+  "play_package_sha256": "802087a63c837cbc7891af7b1cbbd581e1333bb34730e5bb94c8217c27e643f4",
   "windows": "Windows-11-10.0.26200-SP0",
   "tests": {
     "windows": {
@@ -87,11 +87,11 @@
         "math_cases": 6,
         "input_cases": 4,
         "collision_cases": 11,
-        "movement_cases": 13,
+        "movement_cases": 14,
         "not_ported_stops": 5,
         "rejected_cases": 18,
         "original_region": true,
-        "scenario_digest": "1a221c192489daf"
+        "scenario_digest": "c3434eb74a8baf11"
       },
       "play_test": {
         "status": "passed",
@@ -101,7 +101,7 @@
         "replay_cases": 5,
         "rejected_cases": 11,
         "original_data": true,
-        "replay_digest": "8872aedaa4915dc6"
+        "replay_digest": "4147041da2871520"
       }
     },
     "linux_asan_ubsan": {
@@ -151,11 +151,11 @@
         "math_cases": 6,
         "input_cases": 4,
         "collision_cases": 11,
-        "movement_cases": 13,
+        "movement_cases": 14,
         "not_ported_stops": 5,
         "rejected_cases": 18,
         "original_region": true,
-        "scenario_digest": "1a221c192489daf"
+        "scenario_digest": "c3434eb74a8baf11"
       },
       "check_play": {
         "status": "passed",
@@ -165,7 +165,7 @@
         "replay_cases": 5,
         "rejected_cases": 11,
         "original_data": true,
-        "replay_digest": "8872aedaa4915dc6"
+        "replay_digest": "4147041da2871520"
       }
     }
   },
@@ -175,10 +175,10 @@
       "window": false,
       "swap_chain": "unavailable",
       "swap_chain_error": "Native swap chain HRESULT=2289696802",
-      "frames": 900,
-      "host_ticks": 900,
+      "frames": 1020,
+      "host_ticks": 1020,
       "scene_equals_offscreen_640x480": true,
-      "base_coverage": 1,
+      "base_coverage": 0.9973,
       "fitted_sizes": [
         {
           "client": [
@@ -189,7 +189,7 @@
             1440,
             1080
           ],
-          "coverage": 1
+          "coverage": 0.9974
         },
         {
           "client": [
@@ -200,7 +200,7 @@
             1280,
             960
           ],
-          "coverage": 1
+          "coverage": 0.9974
         },
         {
           "client": [
@@ -211,27 +211,27 @@
             932,
             700
           ],
-          "coverage": 1
+          "coverage": 0.9973
         }
       ],
-      "state_digest": "8872aedaa4915dc6",
-      "stop": "Aim state 0xB (controlKeys 0x10) is not ported",
+      "state_digest": "4147041da2871520",
+      "stop": "Pistol shot (controlUpdateWeapon) is not ported",
       "restart": true
     },
     "replay_of_script": {
       "status": "replayed",
-      "records": 900,
-      "host_ticks": 900,
+      "records": 1020,
+      "host_ticks": 1020,
       "control_mode": 0,
       "paused": false,
       "failures": [],
       "final": {
-        "x": -122.020828,
-        "y": -1.71957684,
-        "z": 582.80426,
+        "x": -113.421379,
+        "y": -0.833567619,
+        "z": 531.92627,
         "state": 0
       },
-      "state_digest": "8872aedaa4915dc6"
+      "state_digest": "4147041da2871520"
     },
     "replay_digest_equal_on_linux_and_windows": true,
     "window_and_physical_controller": "not verifiable over SSH (no desktop); pending Thiago's test on his PC"
@@ -243,35 +243,36 @@
     "status": "passed",
     "level": 21,
     "geometry": 17,
-    "frames": 450,
-    "original_frames": 900,
-    "unique_frames": 450,
+    "frames": 510,
+    "original_frames": 1020,
+    "unique_frames": 510,
     "linux_windows_checks": {
       "status": "passed",
       "math_cases": 6,
       "input_cases": 4,
       "collision_cases": 11,
-      "movement_cases": 13,
+      "movement_cases": 14,
       "not_ported_stops": 5,
       "rejected_cases": 18,
       "original_region": true,
-      "scenario_digest": "1a221c192489daf"
+      "scenario_digest": "c3434eb74a8baf11"
     },
     "scenario_digest_equal_on_linux_and_windows": true,
     "final_position": {
-      "x": -122.020828,
-      "y": -1.71957684,
-      "z": 582.80426
+      "x": -113.421379,
+      "y": -0.833567619,
+      "z": 531.92627
     },
     "lowest_y": -1.98999786,
     "highest_y": 163.337021,
     "wall_contact_ticks": 62,
     "airborne_ticks": 45,
-    "move_changes": 27,
+    "move_changes": 31,
     "strafe_frames_at_full_speed": 14,
     "clips_played": [
       1021,
       1022,
+      1023,
       1024,
       1029,
       1030,
@@ -281,10 +282,13 @@
       1038,
       1040,
       1044,
+      1053,
+      1059,
       1061,
       1062,
       1063,
-      1064
+      1064,
+      1065
     ],
     "key_frames": {
       "landing": 4,
@@ -300,7 +304,9 @@
       "roll": 338,
       "stand": 360,
       "slide": 415,
-      "settled": 449
+      "aim": 465,
+      "aim-up": 480,
+      "settled": 509
     },
     "region_coverage_range": [
       295764,
@@ -319,46 +325,47 @@
       "edge_capacity": 80,
       "sha256": "9f5491d1ba050a88125ff7091f8e3fe213f892e5c54503d46e290dd5be05b5cd"
     },
-    "physics_sha256": "b141dcad5c33478869501b75b83448340882508ee96f73e4ed28574960ff8b20",
-    "routine_audits": 52,
-    "audited_bytes": 63732,
+    "physics_sha256": "296e6a6ebcd4964c84c9b4e1e5fb68c1830ceec178173295efda8b5bd0c83d0d",
+    "routine_audits": 56,
+    "audited_bytes": 66804,
     "camera": {
       "sha256": "d634db125c653457f3eecb9523a651898bcce5bcda898717367fd3966e391c8b",
       "mode": 1,
       "profiles": 6,
-      "routine_audits": 18,
+      "routine_audits": 19,
       "level_camera_objects": {
         "override": 0,
         "static": 0,
         "cutscene": 2
       },
-      "audited_bytes": 19616,
+      "audited_bytes": 21648,
       "horizontal_distance_range": [
-        99.0,
+        49.46,
         208.72
       ],
       "yaw_at_start": -32768,
-      "yaw_at_end": 6751
+      "yaw_at_end": 23355
     },
-    "raw_sha256": "6eade7ade2a29bbc2bfbf60ed57001006905f79949a3721ba660992b46b92556",
-    "video_sha256": "18ed5734ddece13b1d8e4c889a14f555d4ebf442feae8d5b058341c2daf9d404",
+    "raw_sha256": "ef7d97d40abed5346c55f95f2478134c475e14cfdf5215c6ac2a38d3fecae936",
+    "video_sha256": "ac4e473a7fc9b9b246e2b9dd7b4db5c7840007c906fd3b4b9ae54c1202825841",
     "fps_output": 30,
-    "duration_seconds": 15.0,
+    "duration_seconds": 17.0,
     "limits": [
-      "Juno walking, crouch (1/2) and air states with original track collision and collision profiles; aim, water and object hit models not ported",
-      "Original free camera (player type 0, collision mode 1); zone, spline, static and cutscene cameras not ported",
+      "Juno walking, crouch (1/2), standing aim (0xB) and air states with original track collision and collision profiles; crouched aim, shots, water and object hit models not ported",
+      "Original free and aim cameras (player type 0, collision mode 1); zone, spline, static and cutscene cameras not ported",
+      "Aim joint turns (0x3DB0/0x6290) not drawn: the aim changes the camera, heading and stance, not the arm pose",
       "A scripted controller stands in for a physical controller; raw N64 pad values pass through the original joyRead and controlReadJoypad",
       "Native animation blend between clips; move selection, clip positions and collision profiles follow the original machine",
       "No enemies, weapons, audio or full levelInit; no emulation; ROM and derived assets remain private"
     ]
   },
   "not_ported_stops": [
-    "R aim states 0xB and 5",
+    "R crouched aim state 5",
     "Z pistol shot when boyCanFire allows it (crouched: from the first frame of moves 0xE/0x21)",
     "water/lava",
     "other Juno states and moves",
     "track bounds restart"
   ],
-  "next_milestone": "Aim states 0xB/5 without firing; then weapons, objects and enemies",
+  "next_milestone": "Model clip blend (+0x5E) and joint turns for crouched aim and the aiming pose; then weapons, objects and enemies",
   "ai_assistance": "Claude Code (Anthropic); reviewed changes and recorded evidence"
 }

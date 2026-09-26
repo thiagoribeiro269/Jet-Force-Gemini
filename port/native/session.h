@@ -144,10 +144,7 @@ class NativeSession {
         void advance(double seconds) {
             if (body) {
                 // joyRead once per world tick; the controller keeps its last state.
-                JunoControl control{joypad.read(held.pad.value_or(PadState{})), 0, controlMode};
-                if (camera) control.cameraYaw = camera->yaw();  // boyControl reads *controlcam
-                body->tick(control);
-                if (camera) camera->tick(*body, cameraKeys(body->controlKeys), 1);  // controlPlayer, after the character
+                stepJuno(*body, camera ? &*camera : nullptr, joypad.read(held.pad.value_or(PadState{})), controlMode);
                 followBody(seconds);
                 return;
             }

@@ -5,7 +5,8 @@
 namespace jfg_native {
 
 // Original free camera for player type 0, ported from charControl:
-// func_8002B378 (dispatcher, default path), func_8002CF78 (free camera),
+// func_8002B378 (dispatcher: free camera, aim camera in states 0xB/5),
+// func_8002CF78 (free camera), func_8002C078 (aim camera),
 // func_8002CBD0 (camera collision, mode 1), func_8002F0E8/func_8002F2BC
 // (camera zones, registered only by OverrideCamera objects; Forest First has
 // none, as the converter checks), func_8002F45C
@@ -80,9 +81,11 @@ public:
     }
     int16_t yaw() const { return angles[0]; }
 
-    // func_8002B378 for a free-camera player (no cutscene, static, lobby or spline camera).
+    // func_8002B378 for Juno without cutscene, static, lobby or spline
+    // cameras: the aim camera in the aim states, otherwise the free camera.
     void tick(JunoBody &body, const CameraKeys &keys, int32_t frames) {
-        freeCamera(body, keys, frames);
+        if (body.state568 == 0xB || body.state568 == 5) aimCamera(body, frames);
+        else freeCamera(body, keys, frames);
         const auto &extents = body.query().track().extents;
         const float floor = float(extents[2]) - 100.0f;
         if (position.y < floor) position.y = position.y + ((floor - position.y) * 0.175f);
@@ -118,6 +121,50 @@ private:
     }
     static void blend(std::array<float, 9> &out, const std::array<float, 9> &profile, float k) {
         for (size_t i = 0; i < 9; ++i) out[i] = out[i] + ((profile[i] - out[i]) * k);
+    }
+
+    // func_8002C078: over-the-shoulder camera. The profile blends from the
+    // base profile toward the aim profile (crouched: profile 2) as +0x18
+    // rises; the camera sits behind the aim point at the profile distance,
+    // pitched by the aim (+0x1E2), and stops short of the scenery.
+    void aimCamera(JunoBody &body, int32_t frames) {
+        math_ = &body.data().math;
+        const auto &math = *math_;
+        const auto &d = *data_;
+        offset10A = 0;
+        // func_8002F45C(type 0, 1.0): character entries at scale 1.
+        auto base = d.profiles[0], target = body.state568 == 5 ? d.profiles[2] : d.profiles[1];
+        base[1] = d.characters[4][0]; base[4] = d.characters[0][0];
+        if (body.state568 != 5) { target[1] = d.characters[5][0]; target[4] = d.characters[1][0]; }
+        hover1C = 0.0f;
+        aim18 = aim18 + ((1.0f - aim18) * (1.0f - OriginalMath::powerf(0.98f, frames)));
+        std::array<float, 9> p{};
+        for (size_t i = 0; i < 9; ++i) p[i] = ((target[i] - base[i]) * aim18) + base[i];
+        fov = (aim18 * 8.0f) + 52.0f;
+        const int16_t yaw = body.orientation[0];
+        auto pitch = int16_t(-body.orientation[1]);
+        pitch = int16_t(pitch - ((int32_t(body.aimPitch1E2) * 0x120) >> 8));  // weapon without zoom (not 7)
+        pitch = int16_t(-pitch);
+        const std::array<int16_t, 3> aim{yaw, pitch, 0};
+        const auto behind = math.rotateRPY(aim, {0.0f, 0.0f, p[3]});
+        const auto look = math.rotateRPY(body.orientation, {p[0], p[1], p[2]});
+        const Vec3f from{look.x + body.position.x, look.y + body.position.y, look.z + body.position.z};
+        Vec3f goal{from.x + behind.x, from.y + behind.y, from.z + behind.z};
+        TrackQuery::NearestHit hit;
+        if (body.query().nearestIntersection(from, goal, hit, 0x2000, 0)) {
+            const float dx = from.x - hit.point.x, dy = from.y - hit.point.y, dz = from.z - hit.point.z;
+            if (((dx * dx) + (dy * dy) + (dz * dz)) > 1024.0f) goal = hit.point;
+            else {
+                const auto near = math.rotateRPY(aim, {0.0f, 0.0f, 32.0f});
+                goal = {near.x + from.x, near.y + from.y, near.z + from.z};
+            }
+        }
+        const float rate = ready574 ? 1.0f - OriginalMath::powerf(0.875f, frames) : 1.0f;
+        angles[0] = OriginalMath::dAngle(angles[0], int16_t(0x8000 - yaw), rate);
+        angles[1] = OriginalMath::dAngle(angles[1], int16_t(-pitch), rate);
+        angles[2] = OriginalMath::dAngle(angles[2], 0, rate);
+        position = {((goal.x - position.x) * rate) + position.x, ((goal.y - position.y) * rate) + position.y,
+                    ((goal.z - position.z) * rate) + position.z};
     }
 
     void freeCamera(JunoBody &body, const CameraKeys &keys, int32_t frames) {
@@ -301,4 +348,17 @@ private:
         if (outcome == 1 && goal.y < requestedY) goal.y = requestedY;
     }
 };
+
+// One original frame of Juno with his camera, in controlPlayer's order: the
+// character routine reads *controlcam and the camera's C offset; the camera
+// then runs with the keys and the camera fields the character left
+// (+0x10A cleared on entering aim, +0x104 set on leaving it).
+inline void stepJuno(JunoBody &body, JunoCamera *camera, const JoypadFrame &frame, uint8_t controlMode) {
+    JunoControl control{frame, camera ? camera->yaw() : int16_t(0), controlMode, camera ? camera->offset10A : int16_t(0)};
+    body.tick(control);
+    if (!camera) return;
+    if (body.clearCameraOffset) camera->offset10A = 0;
+    if (body.setCameraOrbit) camera->orbit104 = body.cameraOrbit104;
+    camera->tick(body, cameraKeys(body.controlKeys), 1);
+}
 }

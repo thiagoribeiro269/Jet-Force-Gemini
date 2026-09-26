@@ -28,7 +28,8 @@ struct JunoPhysicsData {
           brakeTrigger = 0, leanFactor = 0, lateralDecay = 0, lateralZeroLow = 0, lateralZeroHigh = 0, slopeBias = 0,
           slopeLimit = 0, lockedDamping = 0, jumpAnimFloor = 0, airSpeedScale = 0, airSpeedBase = 0, airTurnScale = 0, airTurnBase = 0,
           strafeLeftRate = 0, strafeRightRate = 0, slideLateralDecay = 0, crouchSpeedDecay = 0, crouchStickScale = 0,
-          crouchSpeedRate = 0, crouchTurnRate = 0, rollRate3 = 0, rollRate4 = 0, rollRate1 = 0, rollRate2 = 0;
+          crouchSpeedRate = 0, crouchTurnRate = 0, rollRate3 = 0, rollRate4 = 0, rollRate1 = 0, rollRate2 = 0,
+          aimForwardRate = 0, aimBackRate = 0, aimSpeedDecay = 0, aimZeroLow = 0, aimZeroHigh = 0, aimSmoothing = 0;
     uint32_t rngSeed = 0;
     std::array<float, 52> rates{};
     std::array<float, 14> thresholds{};  // data +0xA44..+0xA78
@@ -40,6 +41,7 @@ struct JunoPhysicsData {
     struct CollisionProfile { uint8_t skip = 0, feet = 0, mask6 = 0, mask7 = 0; int32_t frames = 0; std::array<JunoSphere, 5> spheres{}; };
     std::array<CollisionProfile, 7> profiles{};
     std::array<std::array<float, 12>, 2> rollCurves{};  // data +0x78C (crouch-walk rolls), +0x7BC (crouch rolls)
+    std::array<float, 20> aimTurn{};  // D_800A2E60: controlGetManualAim turn per stick step past 45
 };
 
 inline std::shared_ptr<const JunoPhysicsData> readJunoPhysics(const char *path) {
@@ -54,8 +56,8 @@ inline std::shared_ptr<const JunoPhysicsData> readJunoPhysics(const char *path) 
         if (!std::isfinite(value)) throw std::runtime_error("Nonfinite Juno physics value");
         return value;
     };
-    if (bytes.size() < 16 || std::memcmp(take(8), "JFGPHY3\0", 8)) throw std::runtime_error("Wrong Juno physics format");
-    if (u32() != 5 || u32() != 31) throw std::runtime_error("Unsupported Juno physics profile");
+    if (bytes.size() < 16 || std::memcmp(take(8), "JFGPHY4\0", 8)) throw std::runtime_error("Wrong Juno physics format");
+    if (u32() != 5 || u32() != 37) throw std::runtime_error("Unsupported Juno physics profile");
     auto data = std::make_shared<JunoPhysicsData>();
     auto sphereFrom = [&](JunoSphere &sphere) {
         sphere.offset = {f32(), f32(), f32()}; sphere.radius = f32();
@@ -74,7 +76,8 @@ inline std::shared_ptr<const JunoPhysicsData> readJunoPhysics(const char *path) 
                          &data->jumpAnimFloor, &data->airSpeedScale, &data->airSpeedBase, &data->airTurnScale, &data->airTurnBase,
                          &data->strafeLeftRate, &data->strafeRightRate, &data->slideLateralDecay, &data->crouchSpeedDecay,
                          &data->crouchStickScale, &data->crouchSpeedRate, &data->crouchTurnRate, &data->rollRate3, &data->rollRate4,
-                         &data->rollRate1, &data->rollRate2})
+                         &data->rollRate1, &data->rollRate2, &data->aimForwardRate, &data->aimBackRate, &data->aimSpeedDecay,
+                         &data->aimZeroLow, &data->aimZeroHigh, &data->aimSmoothing})
         *value = f32();
     data->rngSeed = u32();
     for (auto &value : data->rates) value = f32();
@@ -95,6 +98,7 @@ inline std::shared_ptr<const JunoPhysicsData> readJunoPhysics(const char *path) 
         for (auto &sphere : profile.spheres) sphereFrom(sphere);
     }
     for (auto &curve : data->rollCurves) for (auto &value : curve) value = f32();
+    for (auto &value : data->aimTurn) value = f32();
     if (at != bytes.size()) throw std::runtime_error("Trailing Juno physics payload");
     data->math = OriginalMath(sine, arctan);
     const auto &normal = data->controlModes[0], &expert = data->controlModes[1];
@@ -102,7 +106,7 @@ inline std::shared_ptr<const JunoPhysicsData> readJunoPhysics(const char *path) 
         normal.strafeRight() != Pad::CRight || expert.jump() != Pad::CUp || expert.crouch() != Pad::CDown ||
         data->weaponCount != 1 || data->currentWeapon != 0 || data->weaponMask != 1 || data->strafeLeftRate != 0.2f ||
         data->gunWeight != 1 || data->profiles[0].spheres[0].radius != 15.0f || data->profiles[1].feet != 7 ||
-        data->rollCurves[0][11] != 32.0f || data->rollCurves[1][11] != 44.0f)
+        data->rollCurves[0][11] != 32.0f || data->rollCurves[1][11] != 44.0f || data->aimTurn[19] != 380.0f || data->aimSpeedDecay != 0.95f)
         throw std::runtime_error("Juno control data differ from the inspected profile");
     if (data->exclude != 0xCE002000u || data->include != 0x02000000u || data->masks != std::array<uint8_t, 4>{0x18, 0x01, 0x08, 0x16} ||
         data->gravityCharacter[0] != 0.45f || data->gravityState[0] != 1.0f || data->speedRate != 0.95f || data->rates[0] != 0.015f)
@@ -117,6 +121,7 @@ struct JunoControl {
     JoypadFrame joypad;
     int16_t cameraYaw = 0;
     uint8_t controlMode = 0;
+    int16_t cameraOffset10A = 0;  // the free camera's C-button offset (a player field in the original)
 };
 
 // mathRnd: 64-bit shift generator on a 32-bit seed (DKR lineage).
@@ -153,8 +158,17 @@ public:
     // Values left by controlReadJoypad this frame (disablejoy zeroes them);
     // the free camera reads controlKeys after the character routine.
     uint16_t controlKeys = 0, controlDkeys = 0;
-    int32_t controlXjoy = 0, controlYjoy = 0;
+    int32_t controlXjoy = 0, controlYjoy = 0, controlAbsX = 0, controlAbsY = 0;
     uint8_t controlMode = 0;
+    // Aim fields (+0x1C6..+0x1E8): aim direction, joint-turn targets and the
+    // manual-aim turn speeds.
+    int16_t aimYaw1C6 = 0, aimPitch1C8 = 0, aimYaw1CA = 0, aimPitch1CC = 0, joint1CE = 0, joint1D0 = 0, joint1DC = 0, joint1DE = 0,
+            joint1E0 = 0, aimPitch1E2 = 0;
+    float turn1E4 = 0, turn1E8 = 0;
+    // Camera fields the character routine writes (+0x10A offset, +0x104
+    // orbit): applied by the caller to the camera before it runs.
+    bool clearCameraOffset = false, setCameraOrbit = false;
+    int16_t cameraOrbit104 = 0;
     float push6C = 0, push70 = 0, fallStart57C = 0;
     uint8_t floor532 = 0, wall533 = 0, ceiling534 = 0, skip531 = 0;
     uint32_t surfaceFlags520 = 0;
@@ -218,6 +232,8 @@ public:
         lean11E = 0; lean120 = 0;
         // controlPlayer: controlModeKeys from frontGetTargetControl.
         controlMode = control.controlMode;
+        cameraOffsetIn_ = control.cameraOffset10A;
+        clearCameraOffset = setCameraOrbit = false;
         const auto &mode = data_->controlModes[controlMode];
         // boyControl: legitimate-ROM joystick scale; unk189 variants inactive.
         const float scale = 0.0625f;
@@ -229,6 +245,7 @@ public:
         // controlReadJoypad, after the locks above set disablejoy.
         const auto input = controlReadJoypad(control.joypad, disabled);
         controlKeys = input.keys; controlDkeys = input.dkeys; controlXjoy = input.xjoy; controlYjoy = input.yjoy;
+        controlAbsX = input.absX; controlAbsY = input.absY;
         const int32_t stickX = input.xjoy, stickY = input.yjoy;
         const bool jumpHeld = input.keys & mode.jump(), jumpPressed = input.dkeys & mode.jump();
         // controlMakeGravity: table1[type & 3] * table2[+0x575]; +0x194 is 0.
@@ -260,6 +277,7 @@ public:
         else if (state568 == 1) crouch(speed, frames, mode);
         else if (state568 == 2) crouchWalk(speed, direction, frames, jumpPressed, stickX, stickY, mode);
         else if (state568 == 3) air(speed, direction, frames, jumpHeld);
+        else if (state568 == 0xB) aimStand(frames, mode);
         else throw NotPortedError("Juno state outside the ported walking/air subset", "Este estado do Juno ainda não foi portado.");
         animate(dt);
         move(gravity, frames, dt, disabled);
@@ -282,6 +300,7 @@ private:
     const std::vector<Clip> *clips_;
     OriginalRandom random_;
     int32_t forcedMove_ = -1;
+    int16_t cameraOffsetIn_ = 0;
 
     static void clamp50(float &value) {
         if (value < -50.0f) value = -50.0f;
@@ -501,6 +520,8 @@ private:
             }
         }
         if (state568 == 1 && skid576 == 0) {
+            // Crouched aim (state 5) waits for the model's clip blend (+0x5E),
+            // which the port does not model: stop instead of guessing the frame.
             if ((controlKeys & Pad::R) && canFire())
                 throw NotPortedError("Crouched aim state 5 (controlKeys 0x10) is not ported", "Mira agachado (estado 5) ainda não foi portada.");
             strafe(1, frames, mode);
@@ -530,11 +551,106 @@ private:
         heading11C = OriginalMath::dAngle(heading11C, direction, 1.0f - OriginalMath::powerf(d.crouchTurnRate, frames));
     }
     // controlUpdatePlayerAim for states other than 5/0xB/0xA. No objects are
-    // instantiated, so there is no target, aim lock or mathRnd call: only the
-    // firing counter +0x1F4 runs down. The aim angles (+0x1C6..+0x1CC) follow
-    // the body and feed only the joint turns of 0x6290, which are not ported.
+    // instantiated, so there is no target, aim lock or mathRnd call: the
+    // firing counter +0x1F4 runs down and the aim follows the body. In the aim
+    // states boyControl holds +0x1F4 at 1 instead.
     void aimWithoutTargets() {
+        if (state568 == 5 || state568 == 0xB || state568 == 0xA) { firing1F4 = 1; return; }
         if (firing1F4 != 0) firing1F4 = int8_t(firing1F4 - 1);
+        aimPitch1C8 = aimPitch1CC = orientation[1];
+        aimYaw1C6 = aimYaw1CA = orientation[0];
+    }
+    // Entering an aim state from walking (0x2708): the heading absorbs the
+    // camera's C offset, which is cleared, and the aim fields restart.
+    void beginAim(uint8_t state) {
+        heading11C = int16_t(heading11C - cameraOffsetIn_);
+        clearCameraOffset = true;
+        aimPitch1E2 = 0; joint1E0 = 0; state568 = state; joint1CE = 0; joint1D0 = 0; turn1E4 = 0.0f; turn1E8 = 0.0f;
+        aimYaw1C6 = orientation[0]; aimPitch1C8 = orientation[1];
+        joint1DC = joint1CE; aimYaw1CA = aimYaw1C6; aimPitch1CC = aimPitch1C8; joint1DE = joint1D0;
+    }
+    // controlGetManualAim for a weapon without zoom (the pistol): the raw
+    // stick moves the aim within +-40; past 45 the table turns the body
+    // (+0x11C) or the aim pitch (+0x1E2). Returns the zoom flag (false).
+    bool manualAim(int16_t yawRange, int16_t pitchRange, int16_t pitchLow, int16_t pitchHigh, int16_t &yawOut, int16_t &pitchOut,
+                   int32_t frames) {
+        const auto &table = data_->aimTurn;
+        const float zoom = 1.0f;  // +0x1EC stays 1 without the zoom weapon; +0x1F0 is 0
+        int32_t x = -controlAbsX, y = -controlAbsY;
+        float turnYaw = 0.0f, turnPitch = 0.0f;
+        const float inverse = 1.0f / zoom;
+        const float scale = 1.0f / (((zoom - 1.0f) * (zoom * 0.5f)) + 1.0f);
+        const auto yawLimit = int16_t(int32_t(float(yawRange) * scale)), pitchLimit = int16_t(int32_t(float(pitchRange) * scale));
+        auto step = [&](int32_t index) { return table[size_t(index >= 0x14 ? 0x13 : index)]; };
+        if (x < -0x28) {
+            if (x < -0x2D && joint1CE < (0x2D8 - yawLimit)) turnYaw = -step(-0x2D - x) * inverse;
+            x = -0x28;
+        }
+        if (x >= 0x29) {
+            if (x >= 0x2E && (yawLimit - 0x2D8) < joint1CE) turnYaw = step(x - 0x2D) * inverse;
+            x = 0x28;
+        }
+        if (y < -0x28) {
+            if (y < -0x2D && joint1E0 < (0x2D8 - pitchLimit)) turnPitch = -step(-0x2D - y) * inverse;
+            y = -0x28;
+        }
+        if (y >= 0x29) {
+            if (y >= 0x2E && (pitchLimit - 0x2D8) < joint1E0) turnPitch = step(y - 0x2D) * inverse;
+            y = 0x28;
+        }
+        const float rate = 1.0f - OriginalMath::powerf(0.8334f, frames);
+        turn1E4 = turn1E4 + ((turnYaw - turn1E4) * rate);
+        turn1E8 = turn1E8 + ((turnPitch - turn1E8) * rate);
+        if (turnYaw == 0.0f && turn1E4 > -1.0f && turn1E4 < 1.0f) turn1E4 = 0.0f;
+        if (turnPitch == 0.0f && turn1E8 > -1.0f && turn1E8 < 1.0f) turn1E8 = 0.0f;
+        yawOut = int16_t((yawLimit * x) / 40);
+        pitchOut = int16_t((pitchLimit * y) / 40);
+        heading11C = int16_t(heading11C + int32_t(turn1E4 * float(frames)));
+        aimPitch1E2 = int16_t(aimPitch1E2 + int32_t(turn1E8 * float(frames)));
+        if (aimPitch1E2 < pitchLow) aimPitch1E2 = pitchLow;
+        if (pitchHigh < aimPitch1E2) aimPitch1E2 = pitchHigh;
+        return false;
+    }
+    // Standing aim state 0xB: func_overlay_16_01004440. R released returns to
+    // walking and points the free camera's orbit behind Juno. The joint turns
+    // of 0x3DB0 (torso, head and arm toward the aim) are not ported.
+    void aimStand(int32_t frames, const ControlModeKeys &mode) {
+        const auto &d = *data_;
+        skid576 = 0;
+        halfTurn13E = 0;
+        if (!(controlKeys & Pad::R)) {  // and no throw lock (+0x577), which needs weapons
+            state568 = 0;
+            setCameraOrbit = true;
+            cameraOrbit104 = int16_t(0x8000 - orientation[0]);
+            return;
+        }
+        if (controlMode != 0 && ((mode.word[7] | mode.word[8]) & controlKeys)) {  // Expert: walk while aiming
+            if (mode.word[7] & controlKeys) {
+                speed04 = speed04 - (d.aimForwardRate * float(frames));
+                const float limit = -(65.0f * 0.0625f);
+                if (speed04 < limit) speed04 = limit;
+            } else {
+                speed04 = speed04 + (d.aimBackRate * float(frames));
+                if (speed04 > 3.0f) speed04 = 3.0f;
+            }
+        } else {
+            speed04 = speed04 * OriginalMath::powerf(d.aimSpeedDecay, frames);
+            if (d.aimZeroLow < speed04 && speed04 < d.aimZeroHigh) speed04 = 0.0f;
+        }
+        strafe(0, frames, mode);
+        int16_t yaw = 0, pitch = 0;
+        manualAim(0xE38, 0xE38, -0x2AAA, 0x2AAA, yaw, pitch, frames);  // no zoom: camSetZoom is not called
+        const float rate = 1.0f - OriginalMath::powerf(d.aimSmoothing, frames);
+        joint1E0 = OriginalMath::dAngle(joint1E0, pitch, rate);
+        pitch = int16_t(pitch + aimPitch1E2);
+        joint1DC = OriginalMath::dAngle(joint1DC, yaw, rate);
+        joint1DE = OriginalMath::dAngle(joint1DE, pitch, rate);
+        joint1CE = OriginalMath::dAngle(joint1CE, yaw, rate);
+        joint1D0 = OriginalMath::dAngle(joint1D0, pitch, rate);
+        aimYaw1C6 = int16_t(joint1CE + orientation[0]);
+        aimYaw1CA = aimYaw1C6;
+        aimPitch1C8 = int16_t(joint1D0 + orientation[1]);
+        aimPitch1CC = aimPitch1C8;
     }
     // boyCanFire (overlay 16) for the ported moves: no skid, no half-turn,
     // not move 8, and a state that holds the weapon out, or crouched on moves
@@ -557,8 +673,10 @@ private:
             if (skid576 < 0) skid576 = 0;
         }
         if (move3B == 0x19 && landingLock56B == 0) requestMove(chooseMove(), 0.0f);
-        if (controlKeys & Pad::R)
-            throw NotPortedError("Aim state 0xB (controlKeys 0x10) is not ported", "Mira com R (estado 0xB) ainda não foi portada.");
+        if (controlKeys & Pad::R) {  // standing aim
+            beginAim(0xB);
+            return;
+        }
         if (5.0f < speed) speed = 5.0f;  // controlWalkingBack without aim locks
         strafe(0, frames, mode);
         if (jumpPressed && ceiling534 == 0) {

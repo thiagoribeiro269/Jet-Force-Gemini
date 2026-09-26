@@ -1,7 +1,7 @@
 # Movimento, colisão e câmera originais em Forest First
 
-O Juno agora anda, corre, pula, agacha, anda agachado, rola, desliza, cai,
-sobe rampas e para em paredes dentro de
+O Juno agora anda, corre, pula, agacha, anda agachado, rola, desliza, mira
+em pé, cai, sobe rampas e para em paredes dentro de
 Forest First pelo código original portado para C++, sem emulação. A física,
 a colisão com o cenário e a escolha de animações seguem as rotinas do jogo.
 A câmera livre do jogo também foi portada e define a direção do controle,
@@ -12,7 +12,7 @@ são um roteiro: veja [Limites](#limites).
 ## Rotinas recuperadas
 
 A leitura foi estática, sobre as listagens ASM do repositório. O conversor
-confere 52 rotinas, 63.732 bytes, contra a ROM US antes de gerar os dados.
+confere 56 rotinas, 66.804 bytes, contra a ROM US antes de gerar os dados.
 
 | Original | Port | Papel |
 | --- | --- | --- |
@@ -29,6 +29,8 @@ confere 52 rotinas, 63.732 bytes, contra a ROM US antes de gerar os dados.
 | `0x4934`, `controlMakeV` | `JunoBody::strafe`, `controlMakeV` | Passo lateral, rolamentos com curva de distância e decaimento |
 | Estados `0x2EB4` e `0x321C` | `JunoBody::crouch`, `crouchWalk` | Agachado, deslizando e andando agachado |
 | `controlCeiling`, `trackGetIntersect` | `roomToStand`, `TrackQuery::getIntersect` | Espaço acima para levantar |
+| Estado `0x4440`, `controlGetManualAim` | `JunoBody::aimStand`, `manualAim` | Mira em pé: mira pelo analógico e giro na borda |
+| `func_8002C078` | `JunoCamera::aimCamera` | Câmera de mira sobre o ombro |
 | `joyRead`, `controlReadJoypad`, `controlPlayer`, `frontGetTargetControl` | `JoypadReader`, `controlReadJoypad`, `ControlModeKeys` | Leitura do controle e tabelas dos modos Normal e Expert |
 | `controlUpdatePlayerAim`, `controlUpdateWeapon`, `boyCanFire` | `aimWithoutTargets`, `canFire` | Contador de tiro `+0x1F4` e decisão de disparo da pistola |
 | `0x5BB8`, `objMoveXYZ`, `controlPlatform` | `JunoBody::move`, `objMove` | Gravidade, deslocamento, colisão e velocidade real |
@@ -81,7 +83,7 @@ como no jogo.
 
 ## Câmera original
 
-O conversor confere mais 18 rotinas, 19.616 bytes, contra a ROM US. A câmera
+O conversor confere mais 19 rotinas, 21.648 bytes, contra a ROM US. A câmera
 do Juno é a câmera livre do jogador, com colisão de câmera no modo 1, o modo
 que o cabeçalho de Forest First indica.
 
@@ -132,7 +134,7 @@ Normal; a Expert também foi convertida.
 | --- | --- | --- |
 | A | pulo; com passo lateral, pulo correndo | segurar carrega o pulo |
 | C-left/C-right | passo lateral e giro da câmera | só a câmera |
-| R | mira, estado 0xB: **parada** | a câmera se alinha atrás do Juno |
+| R | mira em pé (estado 0xB) | a câmera se alinha atrás do Juno |
 | B | agachar; correndo, deslizar; com o analógico, andar agachado | ignorado pelo Juno |
 | Z | tiro da pistola: **parada** quando `boyCanFire` permite | ignorado: no ar não há tiro |
 | C-up/C-down, D-pad | trocar arma: inerte com uma arma só | inerte |
@@ -172,10 +174,29 @@ Mira e tiro agachados param a sessão. No original, eles esperam o fim da
 mistura entre clipes (`+0x5E` do modelo); a mistura do port é própria, então
 a parada pode vir alguns quadros antes do jogo.
 
+## Mira em pé
+
+Segurar R no chão leva ao estado 0xB. O rumo absorve o desvio da câmera por
+C-buttons, que zera, e o jogo passa à câmera de mira (`func_8002C078`): o
+perfil de câmera vai do comum ao de mira em `+0x18`, o campo de visão vai de
+52° a 60° e a câmera fica atrás do ponto de mira, a cerca de 50 unidades.
+Nesse estado o contador de tiro fica em 1, então os movimentos usam a coluna
+de tiro: a postura de mira (movimento 27) e o perfil de colisão 3.
+
+O analógico bruto move a mira dentro de ±40 (`controlGetManualAim`). Além de
+45, uma tabela da ROM gira o Juno para os lados ou inclina a mira, até
+±0x2AAA. Com o analógico para cima, a mira desce, como no código. C-left e
+C-right dão passo lateral; no modo Expert, C-cima e C-baixo andam. Soltar R
+volta ao andar e põe a órbita da câmera livre atrás do Juno.
+
+A mira agachada (estado 5) espera o fim da mistura de clipes do modelo, que
+o port não modela; R agachado continua parando a sessão. As rotações de
+tronco, cabeça e braço em direção à mira (`0x3DB0`) não são desenhadas.
+
 ## Verificação
 
 - Linux com ASAN/UBSAN e Windows na RTX: 6 casos de matemática, 4 de entrada,
-  11 de colisão sintética, 13 de movimento e câmera com dados reais, 5 paradas
+  11 de colisão sintética, 14 de movimento e câmera com dados reais, 5 paradas
   tipadas e 18 rejeições. O resumo do cenário, que inclui a posição da câmera
   a cada tique, é igual nas duas plataformas.
 - Os testes cobrem o passo lateral de 0,2 por quadro até 2,5, o pulo correndo
@@ -183,6 +204,9 @@ a parada pode vir alguns quadros antes do jogo.
 - Também cobrem agachar, andar agachado, os rolamentos, levantar, deslizar, os
   perfis de colisão, a checagem de teto sob um teto sintético e as paradas de
   mira e tiro agachados.
+- A mira é testada na entrada (rumo e desvio da câmera), na postura, na faixa
+  morta de ±40, no giro na borda, no limite de inclinação, na câmera de mira,
+  na saída, no modo Expert e na parada do tiro.
 - Na carga de Forest First surgem 5.759 planos e 1.759 arestas expostas. Todos
   os planos são normalizados e todas as referências são válidas.
 - O Juno nasce no ponto original, 21 unidades acima do caminho, e pousa em
@@ -191,7 +215,7 @@ a parada pode vir alguns quadros antes do jogo.
   bit, após o roteiro inteiro. Pausa, retomada e rejeições preservam o mundo.
 - Em todo tique, a câmera fica a pelo menos 32 unidades do Juno e acima do
   limite do cenário.
-- A RTX produziu 450 quadros em 640 × 480, quinze segundos a 30 fps.
+- A RTX produziu 510 quadros em 640 × 480, dezessete segundos a 30 fps.
   As sete provas gráficas anteriores, incluindo a da região, ficaram idênticas
   byte a byte. A ROM matching continua com SHA-1
   `493ced9008dbe932d6e91179b68e8630cf23a023`.
@@ -214,17 +238,19 @@ Métricas e hashes estão em [movement-validation.json](movement-validation.json
 | 700–770 | A em 720–730 | para agachado e levanta |
 | 770–821 | analógico para frente; B em 820 | corre e desliza |
 | 821–900 | A em 870–900 | termina o deslize agachado e levanta |
+| 900–990 | R; analógico à direita, depois para cima; C-right em 970 | mira, gira, inclina a mira e dá passo lateral |
+| 990–1020 | nenhum | solta R e volta a andar |
 
 ## Limites
 
 - O roteiro substitui as mãos do jogador para que o teste seja reproduzível.
   Ele entrega valores brutos do N64 ao mesmo caminho de leitura do jogo. Não
   existe roteiro original equivalente.
-- Da câmera, só a câmera livre do jogador no modo de colisão 1. Câmeras de
-  zona, estáticas, de spline, de cena de corte e de mira falham ou ficam fora.
-  O botão de mira, que leva ao estado 0xB, falha de forma explícita.
-- Estados portados: andar, ar, agachado e andando agachado. Mira, tiro,
-  água, lava e os demais estados param de forma explícita quando alcançados. Objetos com
+- Da câmera, a câmera livre no modo de colisão 1 e a câmera de mira. Câmeras
+  de zona, estáticas, de spline e de cena de corte ficam fora.
+- Estados portados: andar, ar, agachado, andando agachado e mira em pé.
+  Mira agachada, tiro, água, lava e os demais estados param de forma explícita
+  quando alcançados. Objetos com
   modelos de colisão e os outros personagens ainda não existem.
 - O modelo da pistola não é desenhado: a pose das variantes com arma
   aparece com as mãos vazias.

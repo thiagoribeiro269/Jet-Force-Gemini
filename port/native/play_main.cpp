@@ -216,7 +216,7 @@ int selfTest(HINSTANCE instance, const std::filesystem::path &folder, const std:
         }
         const auto digest = run.stateDigest();
         // A stop keeps the world; a restart record resumes the same host tick.
-        const bool stopped = !run.advance(NativeSession::ClockScale / 60 + 1, [] { return PadRecord{{Pad::R, 0, 0}, 0}; }, nullptr);
+        const bool stopped = !run.advance(NativeSession::ClockScale / 60 + 1, [] { return PadRecord{{Pad::Z, 0, 0}, 0}; }, nullptr);
         const auto hostTick = run.session().hostTick();
         // The failed tick is still in the accumulator: zero new time retries exactly it.
         const bool restarted = run.advance(0, [] { return PadRecord{{}, RecordRestart}; }, nullptr) &&

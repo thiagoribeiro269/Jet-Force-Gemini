@@ -74,6 +74,11 @@ SOURCE_LISTINGS = [
     ("asm/nonmatchings/charControl/controlCeiling.s", "controlCeiling"),
     ("asm/nonmatchings/charControl/controlMakeV.s", "controlMakeV"),
     ("asm/nonmatchings/track/trackGetIntersect.s", "trackGetIntersect"),
+    # Standing aim state 0xB and manual aim.
+    ("asm/nonmatchings/overlays/o16/overlay_16/func_overlay_16_01004440_1F22458.s", "func_overlay_16_01004440_1F22458"),
+    ("asm/nonmatchings/overlays/o16/overlay_16/func_overlay_16_01003DB0_1F21DC8.s", "func_overlay_16_01003DB0_1F21DC8"),
+    ("asm/nonmatchings/charControl/controlGetManualAim.s", "controlGetManualAim"),
+    ("asm/nonmatchings/camera/camSetZoom.s", "camSetZoom"),
 ]
 
 # Overlay 16 data constants used by the ported walking/air/movement code, in
@@ -88,6 +93,10 @@ OVERLAY16_CONSTANTS = [
     # Crouch states 1/2 (0x2EB4, 0x321C) and the rolls of 0x4934.
     ("slideLateralDecay", 0x8D4), ("crouchSpeedDecay", 0x8D8), ("crouchStickScale", 0x8DC), ("crouchSpeedRate", 0x8E0),
     ("crouchTurnRate", 0x8E4), ("rollRate3", 0x958), ("rollRate4", 0x95C), ("rollRate1", 0x960), ("rollRate2", 0x964),
+    # Standing aim state 0xB (0x4440): Expert walk rates, speed decay and its
+    # zero band, and the aim smoothing rate.
+    ("aimForwardRate", 0x938), ("aimBackRate", 0x93C), ("aimSpeedDecay", 0x940), ("aimZeroLow", 0x944), ("aimZeroHigh", 0x948),
+    ("aimSmoothing", 0x94C),
 ]
 
 
@@ -266,6 +275,12 @@ def convert_physics(assets, rom_path):
     # 0x4934 roll distance curves (controlMakeV), 12 floats each.
     roll_curves = [struct.unpack_from(">12f", assets.rom, data_base + offset) for offset in (0x78C, 0x7BC)]
     require(roll_curves[0][0] == 0 and roll_curves[1][0] == 0, "Roll curves differ")
+    # controlGetManualAim: turn speed per stick step past 45 (D_800A2E60).
+    aim_turn = struct.unpack(">20f", main_bytes(assets, 0x800A2E60, 80))
+    f32 = lambda value: struct.unpack("<f", struct.pack("<f", value))[0]
+    require(aim_turn[0] == 0 and aim_turn[19] == 380 and
+            tuple(constants[31:37]) == tuple(f32(v) for v in (0.2, 0.2, 0.95, -0.1, 0.1, 0.8333)),
+            "Manual aim table or standing aim constants differ")
     # ControlModeNormal/ControlModeExpert (charControl .data), selected by
     # controlPlayer through frontGetTargetControl (menu bss, zero at boot).
     modes = [struct.unpack(">9I", main_bytes(assets, address, 36)) for address in (0x800A18B4, 0x800A18D8)]
@@ -276,7 +291,7 @@ def convert_physics(assets, rom_path):
     for address, word in ((0x80047B80, 0x300900FF), (0x80047B84, 0x240A0001), (0x80047B88, 0x24080001), (0x80047B8C, 0x012A5804),
                           (0x80047B90, 0xA268006F), (0x80047B94, 0xA2600070), (0x80047B98, 0xA66B000A)):
         require(struct.unpack(">I", main_bytes(assets, address, 4))[0] == word, "Default character weapons differ")
-    out = bytearray(struct.pack("<8sII", b"JFGPHY3\0", len(spheres), len(constants)))
+    out = bytearray(struct.pack("<8sII", b"JFGPHY4\0", len(spheres), len(constants)))
     for sphere in spheres:
         out.extend(struct.pack("<4fBBxx", *sphere))
     out.extend(masks)
@@ -301,6 +316,7 @@ def convert_physics(assets, rom_path):
             out.extend(struct.pack("<4fBBxx", *sphere))
     for curve in roll_curves:
         out.extend(struct.pack("<12f", *curve))
+    out.extend(struct.pack("<20f", *aim_turn))
     report = {"status": "prepared", "spheres": [list(s) for s in spheres], "masks": list(masks),
               "exclude_mask": "0xCE002000", "include_mask": "0x02000000",
               "gravity_character": gravity_character, "gravity_state": gravity_state,
@@ -310,7 +326,7 @@ def convert_physics(assets, rom_path):
               "default_weapons": {"count": 1, "current": 0, "owned_mask": 1, "pistol_gun_weight": gun_weight},
               "collision_profiles": [{"skip": p[0], "feet": p[1], "mask6": p[2], "mask7": p[3], "frames": p[4],
                                       "spheres": [list(s) for s in p[5]]} for p in profiles],
-              "roll_curves": roll_curves,
+              "roll_curves": roll_curves, "manual_aim_turn": aim_turn,
               "routine_audits": audits, "emulation_used": False, "sha256": hashlib.sha256(out).hexdigest(),
               "limits": ["Juno walking/air subset; object hit models, water, weapons and other states not converted",
                          "Forest First has no ledge-pairing faces, so the track never reports a ledge to controlHangOK/controlGrabOK",
@@ -323,6 +339,7 @@ CAMERA_LISTINGS = [
     ("asm/nonmatchings/charControl/func_8002CBD0.s", "func_8002CBD0"), ("asm/nonmatchings/charControl/func_8002F2BC.s", "func_8002F2BC"),
     ("asm/nonmatchings/charControl/func_8002F45C.s", "func_8002F45C"), ("asm/nonmatchings/charControl/func_8002F0E8.s", "func_8002F0E8"),
     ("asm/nonmatchings/charControl/func_8002EDA0.s", "func_8002EDA0"), ("asm/nonmatchings/camera/func_8003F66C.s", "func_8003F66C"),
+    ("asm/nonmatchings/charControl/func_8002C078.s", "func_8002C078"),
     ("asm/nonmatchings/camera/camSetProjMtx.s", "camSetProjMtx"), ("asm/nonmatchings/camera/camSetFOV.s", "camSetFOV"),
     ("asm/nonmatchings/camera/camInit.s", "camInit"), ("asm/nonmatchings/level/levelGetCamera.s", "levelGetCamera"),
     ("asm/nonmatchings/track/trackNearestIntersection.s", "trackNearestIntersection"),

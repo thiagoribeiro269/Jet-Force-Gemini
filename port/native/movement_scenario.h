@@ -9,8 +9,8 @@ namespace jfg_native {
 // session runs joyRead on it; the camera is the original free camera, whose
 // yaw the session feeds back as *controlcam.
 struct MovementPhase { uint32_t from, to; int8_t stickX, stickY; uint16_t buttons; const char *name; };
-inline const std::array<MovementPhase, 19> &movementScript() {
-    static const std::array<MovementPhase, 19> script{{
+inline const std::array<MovementPhase, 23> &movementScript() {
+    static const std::array<MovementPhase, 23> script{{
         {0, 30, 0, 0, 0, "land from the original entry point"},
         {30, 330, 0, 70, 0, "run along the path and up the slope"},
         {330, 340, 0, 70, Pad::A, "running jump at the top"},
@@ -30,10 +30,14 @@ inline const std::array<MovementPhase, 19> &movementScript() {
         {820, 821, 0, 70, Pad::B, "B while running: slide"},
         {821, 870, 0, 0, 0, "slide, then crouched"},
         {870, 900, 0, 0, Pad::A, "A: stand up"},
+        {900, 940, 80, 0, Pad::R, "R: aim (state 0xB); stick at the right edge turns Juno"},
+        {940, 970, 0, 80, Pad::R, "aim up"},
+        {970, 990, 0, 0, uint16_t(Pad::R | Pad::CRight), "strafe right while aiming"},
+        {990, 1020, 0, 0, 0, "release R: back to walking, camera behind"},
     }};
     return script;
 }
-constexpr uint32_t MovementTicks = 900;
+constexpr uint32_t MovementTicks = 1020;
 
 inline PadState movementPad(uint64_t tick) {
     PadState pad;

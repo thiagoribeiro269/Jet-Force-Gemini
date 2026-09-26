@@ -71,6 +71,8 @@ def main():
     jump = airborne[0]
     turned = next(i for i, f in enumerate(frames) if f["tick"] > 340 and f["speed04"] < -3)
     orbit = next(i for i, f in enumerate(frames) if f["tick"] > 480 and (f["camera_yaw"] - frames[239]["camera_yaw"]) % 65536 > 0x2000)
+    strafe = [i for i, f in enumerate(frames) if 480 < f["tick"] <= 520 and f["lateral10"] <= -2.5 and f["keys"] == 2]
+    require(len(strafe) >= 10, "C-left did not strafe Juno as the original walking state does")
     keys = {"landing": first_ground, "running": 60, "slope": 130, "jump": jump, "peak": peak, "turned": turned,
             "return": 215, "c-left": orbit, "settled": FRAMES - 1}
     for frame in range(FRAMES):
@@ -91,6 +93,7 @@ def main():
               "linux_windows_checks": windows, "scenario_digest_equal_on_linux_and_windows": True,
               "final_position": trace["final"], "lowest_y": trace["lowest_y"], "highest_y": trace["highest_y"],
               "wall_contact_ticks": trace["wall_ticks"], "airborne_ticks": trace["airborne_ticks"], "move_changes": trace["move_changes"],
+              "strafe_frames_at_full_speed": len(strafe),
               "clips_played": sorted(set(clips)), "key_frames": keys, "region_coverage_range": [min(coverage), max(coverage)],
               "terrain_pixels_first_frame": len(terrain_pixels), "character_pixels_in_isolation": len(actor_pixels),
               "all_seven_previous_gpu_proofs_byte_equal": True,
@@ -108,7 +111,7 @@ def main():
               "fps_output": 30, "duration_seconds": FRAMES / 30,
               "limits": ["Juno walking and air states with original track collision; other states, water, ledges and object hit models not ported",
                          "Original free camera (player type 0, collision mode 1); zone, spline, static and cutscene cameras not ported",
-                         "A scripted controller stands in for a physical controller; raw values pass through the original joyClamp",
+                         "A scripted controller stands in for a physical controller; raw N64 pad values pass through the original joyRead and controlReadJoypad",
                          "Native animation blend replaces controlSetTransition; move selection and clip positions follow the original machine",
                          "No enemies, weapons, audio or full levelInit; no emulation; ROM and derived assets remain private"]}
     (ROOT / "port/native/movement-validation.json").write_text(json.dumps(report, indent=2) + "\n")

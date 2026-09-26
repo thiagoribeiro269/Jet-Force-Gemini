@@ -51,6 +51,20 @@ SOURCE_LISTINGS = [
     ("asm/nonmatchings/overlays/o16/overlay_16/func_overlay_16_01005BB8_1F23BD0.s", "func_overlay_16_01005BB8_1F23BD0"),
     ("asm/nonmatchings/overlays/o16/overlay_16/func_overlay_16_01005120_1F23138.s", "func_overlay_16_01005120_1F23138"),
     ("asm/nonmatchings/objects/objAnimDframe.s", "objAnimDframe"), ("asm/nonmatchings/objects/objAnimSetMove.s", "objAnimSetMove"),
+    # Controller reading, control modes, weapons and ledges: the ported input
+    # path and the checks that decide what stops the session.
+    ("asm/nonmatchings/charControl/controlPlayer.s", "controlPlayer"),
+    ("asm/nonmatchings/menu/frontGetTargetControl.s", "frontGetTargetControl"),
+    ("asm/nonmatchings/main/mainSetDefaultCharacter.s", "mainSetDefaultCharacter"),
+    ("asm/nonmatchings/charControl/controlUpdatePlayerAim.s", "controlUpdatePlayerAim"),
+    ("asm/nonmatchings/charControl/controlUpdateWeapon.s", "controlUpdateWeapon"),
+    ("asm/nonmatchings/charControl/func_80037428.s", "func_80037428"),
+    ("asm/nonmatchings/charControl/func_80033EE8.s", "func_80033EE8"),
+    ("asm/nonmatchings/overlays/o16/overlay_16/boyCanFire.s", "boyCanFire"),
+    ("asm/nonmatchings/charControl/controlHangOK.s", "controlHangOK"),
+    ("asm/nonmatchings/charControl/controlGrabOK.s", "controlGrabOK"),
+    ("asm/nonmatchings/track/trackGetLedgeCrossed.s", "trackGetLedgeCrossed"),
+    ("asm/nonmatchings/overlays/o156/overlay_156/osRamTest4_6105.s", "osRamTest4_6105"),
 ]
 
 # Overlay 16 data constants used by the ported walking/air/movement code, in
@@ -61,6 +75,7 @@ OVERLAY16_CONSTANTS = [
     ("leanFactor", 0x8D0), ("lateralDecay", 0x968), ("lateralZeroLow", 0x96C), ("lateralZeroHigh", 0x970),
     ("slopeBias", 0xA7C), ("slopeLimit", 0xA80), ("lockedDamping", 0xA84), ("jumpAnimFloor", 0x8E8),
     ("airSpeedScale", 0x908), ("airSpeedBase", 0x90C), ("airTurnScale", 0x910), ("airTurnBase", 0x914),
+    ("strafeLeftRate", 0x950), ("strafeRightRate", 0x954),
 ]
 
 
@@ -199,7 +214,19 @@ def convert_physics(assets, rom_path):
     sine = struct.unpack_from(">1025f", main_bytes(assets, 0x800A7D94, 1025 * 4))
     arctan = struct.unpack_from(">1025h", main_bytes(assets, 0x800A8D98, 1025 * 2))
     require(sine[0] == 0 and sine[1024] == 1 and arctan[0] == 0 and arctan[1024] == 0x2000, "Math tables differ")
-    out = bytearray(struct.pack("<8sII", b"JFGPHY1\0", len(spheres), len(constants)))
+    strafe = struct.unpack("<f", struct.pack("<f", 0.2))[0]
+    require(tuple(constants[-2:]) == (strafe, strafe), "Original strafe acceleration differs")
+    # ControlModeNormal/ControlModeExpert (charControl .data), selected by
+    # controlPlayer through frontGetTargetControl (menu bss, zero at boot).
+    modes = [struct.unpack(">9I", main_bytes(assets, address, 36)) for address in (0x800A18B4, 0x800A18D8)]
+    require(modes == [(0x2000, 8, 4, 0x8000, 0x4000, 2, 1, 0x8000, 0x4000), (0x2000, 0x4000, 0x8000, 8, 4, 2, 1, 8, 4)],
+            "Original control mode tables differ")
+    # mainSetDefaultCharacter: a new character holds one weapon, the pistol
+    # (+0x6F count 1, +0x70 current 0, +0xA owned mask 1 << 0).
+    for address, word in ((0x80047B80, 0x300900FF), (0x80047B84, 0x240A0001), (0x80047B88, 0x24080001), (0x80047B8C, 0x012A5804),
+                          (0x80047B90, 0xA268006F), (0x80047B94, 0xA2600070), (0x80047B98, 0xA66B000A)):
+        require(struct.unpack(">I", main_bytes(assets, address, 4))[0] == word, "Default character weapons differ")
+    out = bytearray(struct.pack("<8sII", b"JFGPHY2\0", len(spheres), len(constants)))
     for sphere in spheres:
         out.extend(struct.pack("<4fBBxx", *sphere))
     out.extend(masks)
@@ -214,13 +241,19 @@ def convert_physics(assets, rom_path):
     out.extend(struct.pack("<1025f", *sine))
     out.extend(struct.pack("<1025h", *arctan))
     out.extend(bytes(-len(out) % 4))
+    for mode in modes:
+        out.extend(struct.pack("<9I", *mode))
+    out.extend(struct.pack("<3I", 1, 0, 1))  # weapon count, current weapon, owned mask
     report = {"status": "prepared", "spheres": [list(s) for s in spheres], "masks": list(masks),
               "exclude_mask": "0xCE002000", "include_mask": "0x02000000",
               "gravity_character": gravity_character, "gravity_state": gravity_state,
               "constants": {name: value for (name, _), value in zip(OVERLAY16_CONSTANTS, constants)},
               "animation_rates": rates, "move_thresholds": thresholds, "initial_rng_seed": hex(rng_seed),
+              "control_modes": {"normal": [hex(w) for w in modes[0]], "expert": [hex(w) for w in modes[1]]},
+              "default_weapons": {"count": 1, "current": 0, "owned_mask": 1},
               "routine_audits": audits, "emulation_used": False, "sha256": hashlib.sha256(out).hexdigest(),
-              "limits": ["Juno walking/air subset; object hit models, water, ledges, weapons and other states not converted",
+              "limits": ["Juno walking/air subset; object hit models, water, weapons and other states not converted",
+                         "Forest First has no ledge-pairing faces, so the track never reports a ledge to controlHangOK/controlGrabOK",
                          "Anti-tamper branch of boyControl (arithmeticSums) follows the legitimate-ROM path"]}
     return bytes(out), report
 

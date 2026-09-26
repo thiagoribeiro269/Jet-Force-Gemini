@@ -4,12 +4,14 @@ O Juno agora anda, corre, pula, cai, sobe rampas e para em paredes dentro de
 Forest First pelo código original portado para C++, sem emulação. A física,
 a colisão com o cenário e a escolha de animações seguem as rotinas do jogo.
 A câmera livre do jogo também foi portada e define a direção do controle,
-como no N64. Só as mãos do jogador ainda são um roteiro: veja [Limites](#limites).
+como no N64. A entrada chega como no console: botões e analógico brutos do
+N64, lidos por `joyRead` e `controlReadJoypad`. Só as mãos do jogador ainda
+são um roteiro: veja [Limites](#limites).
 
 ## Rotinas recuperadas
 
 A leitura foi estática, sobre as listagens ASM do repositório. O conversor
-confere 32 rotinas, 45.116 bytes, contra a ROM US antes de gerar os dados.
+confere 44 rotinas, 60.620 bytes, contra a ROM US antes de gerar os dados.
 
 | Original | Port | Papel |
 | --- | --- | --- |
@@ -22,11 +24,17 @@ confere 32 rotinas, 45.116 bytes, contra a ROM US antes de gerar os dados.
 | `trackGetPlayerIntersect` | `TrackQuery::playerIntersect` | Resolução iterativa das esferas do corpo |
 | `trackPolyHeight`, `mathXZInTri` | `TrackQuery::polyHeight` | Superfícies especiais (água e lava) |
 | `controlGroundHits`, `func_80035628`, `func_800344C8` | `JunoBody::groundHits`, `placeSpheres`, `tilt` | Contatos, travamento e inclinação |
-| `boyControl` e estados `0x2708`, `0x3464`, `0x4934` | `JunoBody::tick`, `walk`, `air`, `lateralDecay` | Controle, andar, ar, pulo e passo lateral |
+| `boyControl` e estados `0x2708`, `0x3464` | `JunoBody::tick`, `walk`, `air` | Controle, andar, ar e pulo |
+| `0x4934` | `JunoBody::strafe` | Passo lateral com C-left/C-right e seu decaimento |
+| `joyRead`, `controlReadJoypad`, `controlPlayer`, `frontGetTargetControl` | `JoypadReader`, `controlReadJoypad`, `ControlModeKeys` | Leitura do controle e tabelas dos modos Normal e Expert |
+| `controlUpdatePlayerAim`, `controlUpdateWeapon`, `boyCanFire` | `aimWithoutTargets`, `canFire` | Contador de tiro `+0x1F4` e decisão de disparo da pistola |
 | `0x5BB8`, `objMoveXYZ`, `controlPlatform` | `JunoBody::move`, `objMove` | Gravidade, deslocamento, colisão e velocidade real |
 | `0x5120`, `objAnimDframe`, `objAnimSetMove`, `0x4F78` | `JunoBody::animate`, `requestMove` | Máquina de movimentos e posição dos clipes |
 | `controlHalfTurn`, `controlWalkingBack`, `dAngle` | `halfTurn` e auxiliares | Meia-volta e limites de velocidade |
 | `joyClamp`, `mathRnd`, `Sinf`, `Arctanf`, `Powerf`, rotações | `joyClamp`, `OriginalRandom`, `OriginalMath` | Primitivas numéricas originais |
+
+As rotinas `joyRead`, `joyClamp` e `controlReadJoypad` são C matching do
+repositório; a igualdade delas com a ROM vem de `make VERSION=us` e `cmp`.
 
 As rotinas de overlay foram lidas com `overlay_listing.py`, que troca os
 endereços provisórios das listagens pelos alvos das realocações da ROM. É uma
@@ -97,12 +105,47 @@ O conversor lê a lista de objetos de Forest First e confirma que ela não tem
 esse objeto nem câmeras estáticas. Os dois objetos `cutcamera` são câmeras de
 cena de corte, fora deste escopo.
 
+## Controle original
+
+O port recebe, a cada tique, o estado do controle do N64: 16 bits de botões e
+o analógico bruto. `joyRead` calcula os botões pressionados e soltos, e
+`controlReadJoypad` aplica o `joyClamp` e zera tudo enquanto o controle está
+desabilitado, como na trava de pouso. A câmera lê as mesmas chaves depois do
+personagem, então também não gira durante essa trava.
+
+O jogo escolhe a tabela de botões pela opção do menu. Em jogo novo ela é a
+Normal; a Expert também foi convertida.
+
+| Botão (Normal) | Estado 0, andar | Estado 3, ar |
+| --- | --- | --- |
+| A | pulo; com passo lateral, pulo correndo | segurar carrega o pulo |
+| C-left/C-right | passo lateral e giro da câmera | só a câmera |
+| R | mira, estado 0xB: **parada** | a câmera se alinha atrás do Juno |
+| B | agachar, estados 1 e 2: **parada** | ignorado pelo Juno |
+| Z | tiro da pistola: **parada** quando `boyCanFire` permite | ignorado: no ar não há tiro |
+| C-up/C-down, D-pad | trocar arma: inerte com uma arma só | inerte |
+| L, Start | sem leitura no personagem | sem leitura |
+
+Uma **parada** interrompe o tique com `NotPortedError` e preserva o último
+mundo confirmado. Z tem um caso sem parada: durante uma derrapagem ou
+meia-volta, `boyCanFire` recusa o tiro, e o contador `+0x1F4` só impede a
+meia-volta e troca o repouso sorteado pelo movimento 0x12, como no original.
+
+Bordas não existem no cenário de Forest First. As marcas de borda
+(`+0x20`, bits 3 a 5) só vêm de faces com os bits 0 ou 1, e nenhuma face da
+fase os tem. O conversor e a carga em C++ exigem isso, então `controlHangOK`
+e `controlGrabOK` não encontrariam borda no cenário. Também ficam inertes sem
+objetos `controlSquashCheckPrior/Post` (caixas e plataformas), `0x2220`
+(acertos no Juno) e `controlFadePlayer` (só age na mira).
+
 ## Verificação
 
-- Linux com ASAN/UBSAN e Windows na RTX: 6 casos de matemática, 10 de colisão
-  sintética, 5 de movimento e câmera com dados reais e 15 rejeições. O resumo
-  do cenário, que inclui a posição da câmera a cada tique, é igual nas duas
-  plataformas.
+- Linux com ASAN/UBSAN e Windows na RTX: 6 casos de matemática, 4 de entrada,
+  10 de colisão sintética, 10 de movimento e câmera com dados reais, 5 paradas
+  tipadas e 18 rejeições. O resumo do cenário, que inclui a posição da câmera
+  a cada tique, é igual nas duas plataformas.
+- Os testes cobrem o passo lateral de 0,2 por quadro até 2,5, o pulo correndo
+  durante o passo lateral, o modo Expert, os botões inertes e a trava de pouso.
 - Na carga de Forest First surgem 5.759 planos e 1.759 arestas expostas. Todos
   os planos são normalizados e todas as referências são válidas.
 - O Juno nasce no ponto original, 21 unidades acima do caminho, e pousa em
@@ -128,21 +171,23 @@ Métricas e hashes estão em [movement-validation.json](movement-validation.json
 | 330–340 | pulo correndo | salto a partir do alto da encosta |
 | 340–460 | analógico para trás | meia-volta original e corrida em direção à câmera |
 | 460–480 | nenhum | desaceleração |
-| 480–520 | C-left | a câmera volta para trás do Juno, com desvio lateral |
+| 480–520 | C-left | passo lateral para a esquerda; a câmera volta para trás do Juno |
 | 520–540 | nenhum | repouso |
 
 ## Limites
 
 - O roteiro substitui as mãos do jogador para que o teste seja reproduzível.
-  No jogo, a entrada vem do controle; o port já aplica o `joyClamp` original
-  aos valores brutos. Não existe roteiro original equivalente.
+  Ele entrega valores brutos do N64 ao mesmo caminho de leitura do jogo. Não
+  existe roteiro original equivalente.
 - Da câmera, só a câmera livre do jogador no modo de colisão 1. Câmeras de
   zona, estáticas, de spline, de cena de corte e de mira falham ou ficam fora.
   O botão de mira, que leva ao estado 0xB, falha de forma explícita.
-- Só os estados de andar e de ar do Juno. Água, lava e os demais estados
-  falham de forma explícita quando alcançados. Agarrar bordas, esmagamento,
-  armas, objetos com modelos de colisão e os outros personagens ainda não são
-  executados.
+- Só os estados de andar e de ar do Juno. Mira, agachar, tiro, água, lava e
+  os demais estados param de forma explícita quando alcançados. Objetos com
+  modelos de colisão e os outros personagens ainda não existem.
+- As rotações de juntas não foram portadas. No original, o tronco do Juno
+  gira durante o passo lateral (`0x4840`) e a cabeça acompanha a mira
+  (`0x6290`); no port, o corpo segue só a animação.
 - A mistura entre clipes é nativa; `controlSetTransition` não foi portado.
 - Não há inimigos, áudio nem `levelInit` completo.
 

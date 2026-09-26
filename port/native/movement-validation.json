@@ -1,11 +1,11 @@
 {
   "status": "passed",
   "recorded_date": "2026-09-26",
-  "previous_checkpoint": "ab2dd70",
-  "architecture": "Native C++ host with recovered Juno control/physics, track collision and free camera; Direct3D 11 renderer; no emulation",
+  "previous_checkpoint": "badd042",
+  "architecture": "Native C++ host with recovered Juno control/physics, original controller reading, track collision and free camera; Direct3D 11 renderer; no emulation",
   "build": {
-    "native_movement_executable_sha256": "fd5f80ca3af1bb3d1c7762c7538643e5aa15e550e2311023eaf936d65ee83f89",
-    "native_movement_check_sha256": "5187cf8064ccd84fa485de049a47bb8d3e99f3882ee45157c81e4065c3405f8e"
+    "native_movement_executable_sha256": "79ee3ccccd5d27b4b9808800c201531965d2fc1fb47cea84ff994056985f4bbb",
+    "native_movement_check_sha256": "90a21c4be80cbcefad813303c8a231fafbf5a6b2aa395a9eb409ceee907a55d0"
   },
   "imports": {
     "jfg_native_movement.exe": [
@@ -19,7 +19,7 @@
     ],
     "plus_windows_ucrt_api_sets_only": true
   },
-  "private_package_sha256": "8c54e0a48c087a4622499c46ff09784db2763d8814a17b9a60039e31c843f30b",
+  "private_package_sha256": "e89207b71bada9dacb3c1b6d5f11dda6e0b9981f4f7585fd314a74fe52b5d8b6",
   "windows": "Windows-11-10.0.26200-SP0",
   "tests": {
     "windows": {
@@ -67,11 +67,13 @@
       "movement_test": {
         "status": "passed",
         "math_cases": 6,
+        "input_cases": 4,
         "collision_cases": 10,
-        "movement_cases": 5,
-        "rejected_cases": 15,
+        "movement_cases": 10,
+        "not_ported_stops": 5,
+        "rejected_cases": 18,
         "original_region": true,
-        "scenario_digest": "ccc115e293dffd5"
+        "scenario_digest": "15e32a2955901859"
       }
     },
     "linux_asan_ubsan": {
@@ -119,11 +121,13 @@
       "check_movement": {
         "status": "passed",
         "math_cases": 6,
+        "input_cases": 4,
         "collision_cases": 10,
-        "movement_cases": 5,
-        "rejected_cases": 15,
+        "movement_cases": 10,
+        "not_ported_stops": 5,
+        "rejected_cases": 18,
         "original_region": true,
-        "scenario_digest": "ccc115e293dffd5"
+        "scenario_digest": "15e32a2955901859"
       }
     }
   },
@@ -140,30 +144,34 @@
     "linux_windows_checks": {
       "status": "passed",
       "math_cases": 6,
+      "input_cases": 4,
       "collision_cases": 10,
-      "movement_cases": 5,
-      "rejected_cases": 15,
+      "movement_cases": 10,
+      "not_ported_stops": 5,
+      "rejected_cases": 18,
       "original_region": true,
-      "scenario_digest": "ccc115e293dffd5"
+      "scenario_digest": "15e32a2955901859"
     },
     "scenario_digest_equal_on_linux_and_windows": true,
     "final_position": {
-      "x": -41.5072021,
-      "y": -0.642019272,
-      "z": 268.211365
+      "x": 49.8339043,
+      "y": -0.899419785,
+      "z": 306.564148
     },
     "lowest_y": -1.98999977,
     "highest_y": 164.136353,
     "wall_contact_ticks": 61,
     "airborne_ticks": 45,
-    "move_changes": 10,
+    "move_changes": 11,
+    "strafe_frames_at_full_speed": 14,
     "clips_played": [
       1019,
       1021,
       1026,
       1027,
       1028,
-      1040
+      1040,
+      1042
     ],
     "key_frames": {
       "landing": 4,
@@ -193,9 +201,9 @@
       "edge_capacity": 80,
       "sha256": "9f5491d1ba050a88125ff7091f8e3fe213f892e5c54503d46e290dd5be05b5cd"
     },
-    "physics_sha256": "2e0756e0113cc4f13c1dccb998fb47c5e3d4c8225ec1b1de65ef58b908e04010",
-    "routine_audits": 32,
-    "audited_bytes": 45116,
+    "physics_sha256": "c7152677aa3fca7ec452a2033f6bd75f65d8c5e1f3b8d1b6792130d1ed347bec",
+    "routine_audits": 44,
+    "audited_bytes": 60620,
     "camera": {
       "sha256": "d634db125c653457f3eecb9523a651898bcce5bcda898717367fd3966e391c8b",
       "mode": 1,
@@ -212,16 +220,16 @@
         208.72
       ],
       "yaw_at_start": -32768,
-      "yaw_at_end": -3595
+      "yaw_at_end": -3801
     },
-    "raw_sha256": "226a0886d98a82f2582ac7db1bc68daaf079565305ed66b1066164382c089d33",
-    "video_sha256": "e69fc798e8f2193a340e604793f79dafa2c6df200cefa48b1af43ef92634f3ce",
+    "raw_sha256": "c073e92b9660757a20243d53981e8e06deb1f11e9a168d77a21ed90d6335bbdb",
+    "video_sha256": "c2d6cabd64d1b8138355b90b7a218bec87fdd88c01f3403da5fd80bba64e89dc",
     "fps_output": 30,
     "duration_seconds": 9.0,
     "limits": [
       "Juno walking and air states with original track collision; other states, water, ledges and object hit models not ported",
       "Original free camera (player type 0, collision mode 1); zone, spline, static and cutscene cameras not ported",
-      "A scripted controller stands in for a physical controller; raw values pass through the original joyClamp",
+      "A scripted controller stands in for a physical controller; raw N64 pad values pass through the original joyRead and controlReadJoypad",
       "Native animation blend replaces controlSetTransition; move selection and clip positions follow the original machine",
       "No enemies, weapons, audio or full levelInit; no emulation; ROM and derived assets remain private"
     ]
@@ -229,15 +237,20 @@
   "visual_review": [
     "Frame 4: Juno lands on the path from the original entry point, seen from behind by the original camera",
     "Frame 60: running along the path with the camera trailing about 207 units behind",
-    "Frame 130: climbing the bank at the south end",
-    "Frame 165: running jump take-off behind a large plant",
     "Frame 175: jump peak; Juno leaves the top of the frame because the original camera aims at the take-off height during jumps under 108 units",
-    "Frame 183: turning in the air toward the camera after the original half-turn",
     "Frame 215: running back toward the camera, which retreats ahead of Juno",
-    "Frame 251: C-left swings the camera back behind Juno with a side offset",
-    "Frame 269: standing on the path, camera behind Juno facing the tunnel"
+    "Frames 242-258: C-left strafes Juno sideways with the strafe clip while the camera swings behind him",
+    "Frame 269: standing on the path after the strafe, camera behind Juno"
   ],
-  "scope": "Juno walking and air states in Forest First with original collision and original free camera (collision mode 1); scripted controller",
-  "next_milestone": "Physical controller on Windows through the original joyClamp, in a playable executable run by Thiago",
+  "scope": "Juno walking and air states in Forest First with original controller reading (Normal/Expert tables), strafe, original collision and free camera; scripted N64 pad values",
+  "not_ported_stops": [
+    "R aim state 0xB",
+    "B crouch states 1/2",
+    "Z pistol shot when boyCanFire allows it",
+    "water/lava",
+    "other Juno states and moves",
+    "track bounds restart"
+  ],
+  "next_milestone": "Playable Windows executable: XInput adapter to N64 pad values, window presentation, strict stops with restart and pad recordings",
   "ai_assistance": "Claude Code (Anthropic); reviewed changes and recorded evidence"
 }

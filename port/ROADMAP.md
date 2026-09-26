@@ -42,7 +42,9 @@ entrada ainda substitui o controle físico. [Resultado](native/MOVEMENT.md).
 ## Ordem do próximo bloco
 
 1. Entrada física: ler um controle no Windows e mapear analógico, botões e
-   C-buttons para os valores brutos do N64, passando pelo `joyClamp` original.
+   C-buttons para os valores brutos do N64. O caminho original de leitura
+   (`joyRead`, `controlReadJoypad`, tabelas de modo) e o passo lateral já
+   estão portados, com paradas explícitas para mira, agachar e tiro.
 2. Executável jogável com janela, apresentação a 60 Hz e encerramento limpo,
    aberto por Thiago no PC. Estados ainda não portados continuam falhando de
    forma explícita, sem substituto silencioso.

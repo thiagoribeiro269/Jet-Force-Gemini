@@ -42,7 +42,7 @@ int main(int argc, char **argv) {
             if (body->wall533) ++wallTicks;
             if (body->state568 == 3) ++airborneTicks;
             TickInput input;
-            ActorInput actor; actor.control = movementControl(tick);
+            ActorInput actor; actor.pad = movementPad(tick);
             input.actors.push_back({juno, actor});
             return input;
         };
@@ -60,7 +60,8 @@ int main(int argc, char **argv) {
             trace << (frame ? "," : "") << "{\"frame\":" << frame << ",\"tick\":" << snapshot.hostTick << ",\"x\":" << body.position.x
                   << ",\"y\":" << body.position.y << ",\"z\":" << body.position.z << ",\"vx\":" << body.velocity.x << ",\"vy\":" << body.velocity.y
                   << ",\"vz\":" << body.velocity.z << ",\"heading\":" << body.heading11C << ",\"roll\":" << body.orientation[2]
-                  << ",\"speed04\":" << body.speed04 << ",\"state\":" << unsigned(body.state568) << ",\"floor\":" << unsigned(body.floor532)
+                  << ",\"speed04\":" << body.speed04 << ",\"lateral10\":" << body.lateral10 << ",\"keys\":" << body.controlKeys
+                  << ",\"state\":" << unsigned(body.state568) << ",\"floor\":" << unsigned(body.floor532)
                   << ",\"wall\":" << unsigned(body.wall533) << ",\"ceiling\":" << unsigned(body.ceiling534) << ",\"move\":" << body.move3B
                   << ",\"clip\":" << snapshot.entities[0].clip << ",\"progress\":" << body.progress28 << ",\"camera_yaw\":" << camera.yaw() << ",\"camera_pitch\":" << camera.angles[1]
                   << ",\"camera_x\":" << camera.position.x << ",\"camera_y\":" << camera.position.y << ",\"camera_z\":" << camera.position.z

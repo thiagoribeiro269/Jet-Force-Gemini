@@ -43,6 +43,11 @@ inline std::shared_ptr<const JunoCameraData> readJunoCamera(const char *path) {
 
 // Buttons read by the camera and aim code (controlKeys bits).
 struct CameraKeys { bool cRight = false, cLeft = false, trigger = false; };
+// func_8002CF78 reads the global controlKeys left by the character routine:
+// 0x1 (C-right), 0x2 (C-left) and 0x10 (R). disablejoy has zeroed them.
+inline CameraKeys cameraKeys(uint16_t controlKeys) {
+    return {bool(controlKeys & Pad::CRight), bool(controlKeys & Pad::CLeft), bool(controlKeys & Pad::R)};
+}
 
 class JunoCamera {
 public:

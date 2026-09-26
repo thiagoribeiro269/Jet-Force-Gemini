@@ -1,6 +1,7 @@
 #pragma once
 #include "track_collision.h"
 #include "juno_selection.h"
+#include "original_input.h"
 #include <optional>
 
 namespace jfg_native {
@@ -8,11 +9,13 @@ namespace jfg_native {
 // Juno movement recovered from the original player code and ported to PC
 // structures. Sources (static reading, bytes audited by movement_assets.py):
 // objObjectsTick (previous position), boyControl (overlay 16), its walking
-// state 0x2708, air state 0x3464, lateral decay 0x4934, move machine 0x5120,
-// movement 0x5BB8, controlPlatform, controlMakeGravity, controlHalfTurn,
-// controlWalkingBack, controlGroundHits, func_80035628, func_800344C8,
-// objMoveXYZ, objAnimDframe/objAnimSetMove and mathRnd. One call is one
-// original 1/60-second frame (frames = 1). Fields keep original offsets.
+// state 0x2708, air state 0x3464, strafe/lateral decay 0x4934, move machine
+// 0x5120, movement 0x5BB8, controlPlatform, controlMakeGravity,
+// controlHalfTurn, controlWalkingBack, controlGroundHits, func_80035628,
+// func_800344C8, objMoveXYZ, objAnimDframe/objAnimSetMove, mathRnd,
+// controlReadJoypad, controlUpdatePlayerAim without targets and the fire
+// decision of controlUpdateWeapon/boyCanFire. One call is one original
+// 1/60-second frame (frames = 1). Fields keep original offsets.
 struct JunoSphere { Vec3f offset; float radius = 0; uint8_t flags = 0, rotate = 0; };
 struct JunoPhysicsData {
     std::array<JunoSphere, 5> spheres{};
@@ -22,11 +25,14 @@ struct JunoPhysicsData {
     std::array<float, 3> gravityState{};
     float turnAimRate = 0, turnAimTarget = 0, turnRate = 0, turnTarget = 0, turnFloor = 0, halfTurnFactor = 0, speedRate = 0,
           brakeTrigger = 0, leanFactor = 0, lateralDecay = 0, lateralZeroLow = 0, lateralZeroHigh = 0, slopeBias = 0,
-          slopeLimit = 0, lockedDamping = 0, jumpAnimFloor = 0, airSpeedScale = 0, airSpeedBase = 0, airTurnScale = 0, airTurnBase = 0;
+          slopeLimit = 0, lockedDamping = 0, jumpAnimFloor = 0, airSpeedScale = 0, airSpeedBase = 0, airTurnScale = 0, airTurnBase = 0,
+          strafeLeftRate = 0, strafeRightRate = 0;
     uint32_t rngSeed = 0;
     std::array<float, 52> rates{};
     std::array<float, 14> thresholds{};  // data +0xA44..+0xA78
     OriginalMath math;
+    std::array<ControlModeKeys, 2> controlModes{};  // Normal, Expert
+    uint32_t weaponCount = 0, currentWeapon = 0, weaponMask = 0;  // mainSetDefaultCharacter
 };
 
 inline std::shared_ptr<const JunoPhysicsData> readJunoPhysics(const char *path) {
@@ -41,8 +47,8 @@ inline std::shared_ptr<const JunoPhysicsData> readJunoPhysics(const char *path) 
         if (!std::isfinite(value)) throw std::runtime_error("Nonfinite Juno physics value");
         return value;
     };
-    if (bytes.size() < 16 || std::memcmp(take(8), "JFGPHY1\0", 8)) throw std::runtime_error("Wrong Juno physics format");
-    if (u32() != 5 || u32() != 20) throw std::runtime_error("Unsupported Juno physics profile");
+    if (bytes.size() < 16 || std::memcmp(take(8), "JFGPHY2\0", 8)) throw std::runtime_error("Wrong Juno physics format");
+    if (u32() != 5 || u32() != 22) throw std::runtime_error("Unsupported Juno physics profile");
     auto data = std::make_shared<JunoPhysicsData>();
     for (auto &sphere : data->spheres) {
         sphere.offset = {f32(), f32(), f32()}; sphere.radius = f32();
@@ -57,7 +63,8 @@ inline std::shared_ptr<const JunoPhysicsData> readJunoPhysics(const char *path) 
     for (float *value : {&data->turnAimRate, &data->turnAimTarget, &data->turnRate, &data->turnTarget, &data->turnFloor,
                          &data->halfTurnFactor, &data->speedRate, &data->brakeTrigger, &data->leanFactor, &data->lateralDecay,
                          &data->lateralZeroLow, &data->lateralZeroHigh, &data->slopeBias, &data->slopeLimit, &data->lockedDamping,
-                         &data->jumpAnimFloor, &data->airSpeedScale, &data->airSpeedBase, &data->airTurnScale, &data->airTurnBase})
+                         &data->jumpAnimFloor, &data->airSpeedScale, &data->airSpeedBase, &data->airTurnScale, &data->airTurnBase,
+                         &data->strafeLeftRate, &data->strafeRightRate})
         *value = f32();
     data->rngSeed = u32();
     for (auto &value : data->rates) value = f32();
@@ -67,31 +74,29 @@ inline std::shared_ptr<const JunoPhysicsData> readJunoPhysics(const char *path) 
     for (auto &value : sine) value = f32();
     for (auto &value : arctan) { const auto *p = take(2); value = int16_t(p[0] | p[1] << 8); }
     while (at % 4) if (*take(1)) throw std::runtime_error("Nonzero Juno physics padding");
+    for (auto &mode : data->controlModes) for (auto &word : mode.word) word = u32();
+    data->weaponCount = u32(); data->currentWeapon = u32(); data->weaponMask = u32();
     if (at != bytes.size()) throw std::runtime_error("Trailing Juno physics payload");
     data->math = OriginalMath(sine, arctan);
+    const auto &normal = data->controlModes[0], &expert = data->controlModes[1];
+    if (normal.fire() != Pad::Z || normal.jump() != Pad::A || normal.crouch() != Pad::B || normal.strafeLeft() != Pad::CLeft ||
+        normal.strafeRight() != Pad::CRight || expert.jump() != Pad::CUp || expert.crouch() != Pad::CDown ||
+        data->weaponCount != 1 || data->currentWeapon != 0 || data->weaponMask != 1 || data->strafeLeftRate != 0.2f)
+        throw std::runtime_error("Juno control data differ from the inspected profile");
     if (data->exclude != 0xCE002000u || data->include != 0x02000000u || data->masks != std::array<uint8_t, 4>{0x18, 0x01, 0x08, 0x16} ||
         data->gravityCharacter[0] != 0.45f || data->gravityState[0] != 1.0f || data->speedRate != 0.95f || data->rates[0] != 0.015f)
         throw std::runtime_error("Juno physics values differ from the inspected profile");
     return data;
 }
 
-// Raw controller values (OSContPad stick_x/stick_y, signed 8-bit), the jump
-// button held/pressed this frame, and the active camera yaw (*controlcam).
+// One original frame of controller input for Juno: the joyRead result for
+// the player's controller, the active camera yaw (*controlcam) and the menu
+// control mode (frontGetTargetControl: 0 Normal, 1 Expert).
 struct JunoControl {
-    int32_t stickX = 0, stickY = 0;
-    bool jumpHeld = false, jumpPressed = false;
-    bool cRight = false, cLeft = false, trigger = false;  // camera and aim buttons (controlKeys 0x1, 0x2, 0x10)
-    int16_t cameraYaw = 0;                                // *controlcam
+    JoypadFrame joypad;
+    int16_t cameraYaw = 0;
+    uint8_t controlMode = 0;
 };
-
-// controller.c joyClamp: dead zone 5, offset by 5, range 65.
-inline int32_t joyClamp(int32_t raw) {
-    auto magnitude = int8_t(raw);
-    if (magnitude < 5 && magnitude > -5) return 0;
-    if (magnitude > 0) { magnitude = int8_t(magnitude - 5); if (magnitude > 65) magnitude = 65; }
-    else { magnitude = int8_t(magnitude + 5); if (magnitude < -65) magnitude = -65; }
-    return magnitude;
-}
 
 // mathRnd: 64-bit shift generator on a 32-bit seed (DKR lineage).
 class OriginalRandom {
@@ -122,7 +127,13 @@ public:
     int16_t heading11C = 0, lean11E = 0, lean120 = 0, heading128 = 0, halfTurnHeading13C = 0;
     uint8_t halfTurn13E = 0, halfTurnSkid13F = 0, state568 = 0, previousState56A = 0, walkingBack569 = 0, hover14A = 0;
     int8_t push149 = 0, airborne185 = 0, jumpDelay57A = 0, landingLock56B = 0, skid576 = 0;
-    uint8_t jumpCharge57B = 0, jumpReleased58E = 0, groundFlag184 = 1, blocked199 = 0;
+    uint8_t jumpCharge57B = 0, jumpReleased58E = 0, groundFlag184 = 1, blocked199 = 0, strafing56C = 0, roll584 = 0;
+    int8_t firing1F4 = 0;                   // set while the fire key is held on the ground
+    // Values left by controlReadJoypad this frame (disablejoy zeroes them);
+    // the free camera reads controlKeys after the character routine.
+    uint16_t controlKeys = 0, controlDkeys = 0;
+    int32_t controlXjoy = 0, controlYjoy = 0;
+    uint8_t controlMode = 0;
     float push6C = 0, push70 = 0, fallStart57C = 0;
     uint8_t floor532 = 0, wall533 = 0, ceiling534 = 0, skip531 = 0;
     uint32_t surfaceFlags520 = 0;
@@ -163,8 +174,8 @@ public:
 
     // One original frame for player type 0.
     void tick(const JunoControl &control) {
-        for (int32_t v : {control.stickX, control.stickY})
-            if (v < -128 || v > 127) throw std::runtime_error("Stick value outside the controller range");
+        validatePad(control.joypad.pad);
+        if (control.controlMode > 1) throw std::runtime_error("Unknown original control mode");
         const auto &math = data_->math;
         constexpr int32_t frames = 1;
         constexpr float dt = 1.0f;
@@ -173,6 +184,9 @@ public:
         bool disabled = false;                  // disablejoy, cleared by controlPlayer each frame
         safe524 = previous3C;                   // controlPlatform without a platform object
         lean11E = 0; lean120 = 0;
+        // controlPlayer: controlModeKeys from frontGetTargetControl.
+        controlMode = control.controlMode;
+        const auto &mode = data_->controlModes[controlMode];
         // boyControl: legitimate-ROM joystick scale; unk189 variants inactive.
         const float scale = 0.0625f;
         if (landingLock56B) {
@@ -180,9 +194,11 @@ public:
             landingLock56B = int8_t(landingLock56B - frames);
             if (landingLock56B < 0) landingLock56B = 0;
         }
-        // controlReadJoypad: joyGetStickX/Y apply joyClamp to the raw pad values.
-        const int32_t stickX = disabled ? 0 : joyClamp(control.stickX), stickY = disabled ? 0 : joyClamp(control.stickY);
-        const bool jumpHeld = !disabled && control.jumpHeld, jumpPressed = !disabled && control.jumpPressed;
+        // controlReadJoypad, after the locks above set disablejoy.
+        const auto input = controlReadJoypad(control.joypad, disabled);
+        controlKeys = input.keys; controlDkeys = input.dkeys; controlXjoy = input.xjoy; controlYjoy = input.yjoy;
+        const int32_t stickX = input.xjoy, stickY = input.yjoy;
+        const bool jumpHeld = input.keys & mode.jump(), jumpPressed = input.dkeys & mode.jump();
         // controlMakeGravity: table1[type & 3] * table2[+0x575]; +0x194 is 0.
         const float gravity = data_->gravityCharacter[0] * data_->gravityState[0];
         clamp50(velocity.x); clamp50(velocity.y); clamp50(velocity.z); clamp50(speed04); clamp50(local08);
@@ -199,19 +215,24 @@ public:
             becomeAirborne(frames);
         else airborne185 = 0;
         if (((feet & floor532) && state568 != 3) || state568 == 4) fallStart57C = position.y;
+        aimWithoutTargets();
         // Water and lava from trackPolyHeight(x, z, +0x5C, 0x8000A000): not ported.
         float surfaceHeight = 0;
         if (query_.polyHeight(position.x, position.z, surfaceHeight, 0x8000A000u))
-            throw std::runtime_error("Water or lava surfaces are not ported");
+            throw NotPortedError("Water or lava surfaces are not ported", "Água e lava ainda não foram portadas.");
         if (state568 != 0 && state568 != 2) {
             halfTurn13E = 0;
             if (state568 != 1) skid576 = 0;
         }
-        if (state568 == 0) walk(speed, direction, frames, jumpHeld, jumpPressed, stickX, stickY, scale, !disabled && control.trigger);
+        if (state568 == 0) walk(speed, direction, frames, jumpPressed, stickX, stickY, scale, mode);
         else if (state568 == 3) air(speed, direction, frames, jumpHeld);
-        else throw std::runtime_error("Juno state outside the ported walking/air subset");
+        else throw NotPortedError("Juno state outside the ported walking/air subset", "Este estado do Juno ainda não foi portado.");
         animate(dt);
         move(gravity, frames, dt, disabled);
+        // controlUpdateWeapon, end of boyControl: with the pistol, a held fire
+        // key starts a shot whenever boyCanFire allows it. Shots are not ported.
+        if ((controlKeys & mode.fire()) && canFire())
+            throw NotPortedError("Pistol shot (controlUpdateWeapon) is not ported", "Tiro (Z) ainda não foi portado.");
         // controlPlayer after the character routine: push decay.
         if (push149) {
             const float decay = OriginalMath::powerf(0.9f, frames);
@@ -242,6 +263,7 @@ private:
     // func_overlay_16_01004E08 with mathRnd(16,19) drawn from the original generator.
     uint32_t chooseMove() {
         auto state = selectionState();
+        state.flag1F4 = firing1F4 != 0;
         const float a = magnitude(speed04), b = magnitude(lateral10);
         if (std::max(a, b) < 0.1f && !state.flag1FA && !state.flag1F9 && !state.flag1F4 && !state.flag198)
             state.idleDraw = uint32_t(random_.next(16, 19));
@@ -288,7 +310,10 @@ private:
         const auto &math = data_->math;
         constexpr int16_t wide = 0x6AAA, narrow = 0x71C;
         skid = false;
-        if (jumpPressed || walkingBack569 || (state568 != 0 && state568 != 2)) { halfTurn13E = 0; return; }
+        if (jumpPressed || walkingBack569 || (firing1F4 != 0 && controlMode == 0) || (state568 != 0 && state568 != 2)) {
+            halfTurn13E = 0;
+            return;
+        }
         if (!halfTurn13E) {
             const auto difference = int16_t(orientation[0] - direction);
             if (difference < -wide || wide < difference) {
@@ -316,15 +341,48 @@ private:
             skid576 = 0;
         }
     }
-    // func_overlay_16_01004934 without strafe or roll buttons: lateral decay.
-    void lateralDecay(int32_t frames) {
-        lateral10 = lateral10 * OriginalMath::powerf(data_->lateralDecay, frames);
-        if (data_->lateralZeroLow < lateral10 && lateral10 < data_->lateralZeroHigh) lateral10 = 0.0f;
+    // func_overlay_16_01004934 with arg2 = 0 (walking state): the strafe keys
+    // (controlModeKeys +0x14/+0x18) push +0x10 sideways up to 2.5; otherwise
+    // it decays. Rolls (+0x584 values 1..4) come from the crouch states only.
+    void strafe(int32_t frames, const ControlModeKeys &mode) {
+        const auto &d = *data_;
+        if (roll584 != 0) throw std::runtime_error("Roll outside the crouch states");
+        strafing56C = 0;
+        uint32_t next = 0;
+        if (controlKeys & mode.strafeLeft()) {
+            lateral10 = lateral10 - (d.strafeLeftRate * float(frames));
+            if (lateral10 < -2.5f) lateral10 = -2.5f;
+            next = 9; strafing56C = 1;
+        } else if (controlKeys & mode.strafeRight()) {
+            lateral10 = lateral10 + (d.strafeRightRate * float(frames));
+            if (lateral10 > 2.5f) lateral10 = 2.5f;
+            next = 0xA; strafing56C = 1;
+        }
+        if (strafing56C) {
+            if (magnitude(speed04) < magnitude(lateral10)) requestMove(next, progress28);
+            return;
+        }
+        roll584 = 0;
+        lateral10 = lateral10 * OriginalMath::powerf(d.lateralDecay, frames);
+        if (d.lateralZeroLow < lateral10 && lateral10 < d.lateralZeroHigh) lateral10 = 0.0f;
+    }
+    // controlUpdatePlayerAim for states other than 5/0xB/0xA. No objects are
+    // instantiated, so there is no target, aim lock or mathRnd call: only the
+    // firing counter +0x1F4 runs down. The aim angles (+0x1C6..+0x1CC) follow
+    // the body and feed only the joint turns of 0x6290, which are not ported.
+    void aimWithoutTargets() {
+        if (firing1F4 != 0) firing1F4 = int8_t(firing1F4 - 1);
+    }
+    // boyCanFire (overlay 16) for the ported moves: no skid, no half-turn,
+    // not move 8, and a state that holds the weapon out.
+    bool canFire() const {
+        if (skid576 != 0 || halfTurn13E != 0 || move3B == 8) return false;
+        const unsigned state = state568 & ~0x20u;
+        return state == 0 || state == 5 || state == 0xB || state == 0xA || (state == 3 && hover14A != 0);
     }
     // Walking state 0: func_overlay_16_01002708.
-    void walk(float speed, int16_t direction, int32_t frames, bool jumpHeld, bool jumpPressed, int32_t stickX, int32_t stickY, float scale,
-              bool trigger) {
-        (void)jumpHeld;
+    void walk(float speed, int16_t direction, int32_t frames, bool jumpPressed, int32_t stickX, int32_t stickY, float scale,
+              const ControlModeKeys &mode) {
         const auto &math = data_->math;
         const auto &d = *data_;
         if (skid576) {
@@ -332,13 +390,14 @@ private:
             if (skid576 < 0) skid576 = 0;
         }
         if (move3B == 0x19 && landingLock56B == 0) requestMove(chooseMove(), 0.0f);
-        if (trigger) throw std::runtime_error("Aim state 0xB (controlKeys 0x10) is not ported");
-        if (5.0f < speed) speed = 5.0f;  // controlWalkingBack, not aiming
-        lateralDecay(frames);
+        if (controlKeys & Pad::R)
+            throw NotPortedError("Aim state 0xB (controlKeys 0x10) is not ported", "Mira com R (estado 0xB) ainda não foi portada.");
+        if (5.0f < speed) speed = 5.0f;  // controlWalkingBack without aim locks
+        strafe(frames, mode);
         if (jumpPressed && ceiling534 == 0) {
             const float current = magnitude(speed04);
             if (walkingBack569) { jumpDelay57A = 7; jumpCharge57B = 0; requestMove(7, 0.0f); }
-            else if (current > 1.25f && speed != 0.0f) {
+            else if ((current > 1.25f && speed != 0.0f) || strafing56C) {
                 jumpDelay57A = 0;
                 velocity.y = velocity.y + 10.0f;
                 requestMove(6, 0.0f);
@@ -347,7 +406,12 @@ private:
                 requestMove(5, 0.0f);
             }
             state568 = 3; jumpReleased58E = 0; fallStart57C = position.y;
+        } else if (controlDkeys & mode.crouch()) {  // unk189 < 4 for Juno
+            throw NotPortedError("Crouch states 1/2 (controlModeKeys +0x10) are not ported",
+                                 "Agachar, deslizar e rolar (estados 1 e 2) ainda não foram portados.");
         }
+        if (controlKeys & mode.fire()) firing1F4 = 0xF;
+        if (!grounded()) firing1F4 = 0;
         if (!walkingBack569) speed = -speed; else direction = int16_t(direction + 0x8000);
         bool skid = false;
         halfTurn(speed, direction, jumpPressed, stickX, stickY, scale, skid);
@@ -420,13 +484,19 @@ private:
         uint32_t next = move3B;
         float start = progress28;
         rate = data_->rates.at(move3B);
-        auto idle = [&]() { next = uint32_t(random_.next(0x10, 0x13)); start = 0.0f; };
+        // Idle choice: +0x1F4 selects move 0x12 without drawing; at the end of an
+        // idle clip that branch also restarts the move (+0x3B = -1).
+        auto idle = [&](bool restart) {
+            if (firing1F4 != 0) { next = 0x12; if (restart) forcedMove_ = 0x12; }
+            else next = uint32_t(random_.next(0x10, 0x13));
+            start = 0.0f;
+        };
         auto strafe = [&]() { next = lateral10 < 0.0f ? 9 : 0xA; start = 0.25f; };
         switch (move3B) {
             case 0: case 28: case 36:
                 rate = rate * largest;
                 if (walkingBack569) next = 3;
-                else if (largest < t[0]) idle();
+                else if (largest < t[0]) idle(false);
                 else if (forward < side) strafe();
                 else if (largest > 1.75f) next = 1;
                 break;
@@ -443,7 +513,7 @@ private:
                 break;
             case 3: case 26:
                 rate = rate * largest;
-                if (largest < t[1] && stickSpeed <= speed04) idle();
+                if (largest < t[1] && stickSpeed <= speed04) idle(false);
                 else if (forward < side) strafe();
                 else if (!walkingBack569) next = 0;
                 break;
@@ -452,7 +522,7 @@ private:
                 break;
             case 9: case 10: case 31: case 32: case 47: case 48:
                 rate = rate * side;
-                if (largest < t[3]) idle();
+                if (largest < t[3] && strafing56C == 0) idle(false);
                 else if (side < forward) {
                     if (walkingBack569) { start = 0.25f; next = 3; }
                     else if (forward < 1.75f) { start = 0.25f; next = 0; }
@@ -463,13 +533,13 @@ private:
                 if (skid576 == 0) { next = chooseMove(); start = 0.0f; }
                 break;
             case 16: case 17: case 18: case 19: case 20: case 27: case 45:
-                if ((progress28 + (rate * dt)) > 1.0f) idle();
+                if ((progress28 + (rate * dt)) > 1.0f) idle(true);
                 if (t[8] < largest) { next = 3; start = 0.25f; if (!walkingBack569) next = 0; }
                 break;
             case 6: case 7: case 24: case 25:
                 break;
             default:
-                throw std::runtime_error("Juno move outside the ported move-machine subset");
+                throw NotPortedError("Juno move outside the ported move-machine subset", "Este movimento do Juno ainda não foi portado.");
         }
         // objAnimDframe: advance the normalized clip position; loops wrap.
         progress28 = progress28 + (rate * dt);
@@ -556,7 +626,9 @@ private:
         if (position.y < (float(e[2]) - 1000.0f)) outside = true;
         if ((float(e[5]) + 1000.0f) < position.z) outside = true;
         if (position.z < (float(e[4]) - 1000.0f)) outside = true;
-        if (outside) throw std::runtime_error("Juno left the track bounds; controlRestartPlayer is not ported");
+        if (outside)
+            throw NotPortedError("Juno left the track bounds; controlRestartPlayer is not ported",
+                                 "O Juno saiu dos limites da fase; o reinício do jogo original ainda não foi portado.");
         position = {nx, position.y + delta.y, position.z + delta.z};
     }
     // controlGroundHits for the five Juno spheres without object hit models.

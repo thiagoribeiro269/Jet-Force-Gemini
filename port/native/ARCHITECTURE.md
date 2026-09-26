@@ -92,7 +92,8 @@ flowchart LR
 | `planar_motion.h` | Movimento provisório dos diagnósticos antigos, fora do caminho original |
 | `original_math.h` | Seno, arco-tangente, potência, rotações e teste XZ originais |
 | `track_collision.h` | Colisão original do cenário: máscaras, planos, candidatos, testes e resolução |
-| `juno_body.h` | Controle, estados de andar e ar, gravidade, contatos e máquina de movimentos do Juno |
+| `original_input.h` | Controle do N64 como o jogo o lê: `joyRead`, `controlReadJoypad`, `joyClamp`, tabelas de modo e `NotPortedError` |
+| `juno_body.h` | Controle, estados de andar e ar, passo lateral, gravidade, contatos e máquina de movimentos do Juno |
 | `juno_camera.h` | Câmera livre original, colisão de câmera no modo 1 e projeção; fornece o ângulo usado pelo controle |
 | `movement_assets.py` / `overlay_listing.py` | Conversão auditada dos dados e leitura estática de overlays para o m2c |
 | `movement_scenario.h` / `movement_main.cpp` | Prova de movimento e câmera originais com roteiro de entrada reproduzível |
@@ -158,7 +159,7 @@ precisam de medição. A validação a 144 Hz não é benchmark de desempenho.
 | Câmera, desenho de mundo e materiais | Câmera livre original, perspectiva, catálogo e terreno ativos em D3D11; outras câmeras, céu e efeitos pendentes |
 | Armas, projéteis, inimigos e scripts | Pendente; deverá usar a mesma vida de entidades, sem cenários paralelos isolados |
 | Áudio e música | Saída/síntese ainda não integradas |
-| Interface, salvamento e entrada física | Pendentes; entrada de teste com `joyClamp` original e encerramento controlado |
+| Interface, salvamento e entrada física | Leitura original do controle portada; dispositivo físico, interface e salvamento pendentes |
 
 `requireOriginalService` rejeita pedidos dos serviços ainda ausentes. Pedir
 uma cena marcada como gameplay original também falha; `regionId` identifica

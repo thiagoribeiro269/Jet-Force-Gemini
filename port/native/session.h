@@ -36,13 +36,14 @@ struct ActorInput {
     JunoSelectionState selection;
     std::optional<uint32_t> directMove;
     double initialFraction = 0, blendSeconds = 0.2;
-    std::optional<JunoControl> control; // Original-body actors only.
+    std::optional<PadState> pad; // Original-body actors only: N64 controller state held from this tick on.
 };
 struct SpawnSpec {
     uint32_t slot; double x = 0, y = 0, z = 0, yaw = 0; ActorInput input;
     float scale = 1, visualOffsetY = 0;
     bool originalBody = false; // Recovered Juno movement and track collision.
     int16_t originalYaw = 0;
+    uint8_t controlMode = 0;   // frontGetTargetControl menu option: 0 Normal, 1 Expert
 };
 struct SceneSpec {
     std::string name; bool originalLevel = false; std::vector<SpawnSpec> entities;
@@ -91,6 +92,8 @@ class NativeSession {
         ActorInput held;
         std::optional<JunoBody> body;
         std::optional<JunoCamera> camera;
+        JoypadReader joypad;       // joyRead state of this actor's controller
+        uint8_t controlMode = 0;
         Actor(EntityHandle id, const SpawnSpec &spawn, const AssetPackage &assets, const JunoSelectionData &selection,
               const std::shared_ptr<const JunoPhysicsData> &physics, const std::shared_ptr<const TrackCollision> &collision,
               const std::shared_ptr<const JunoCameraData> &cameraData)
@@ -101,13 +104,16 @@ class NativeSession {
                 throw std::runtime_error("Invalid native model placement");
             if (spawn.originalBody) {
                 if (!physics || !collision) requireOriginalService(MissingService::OriginalPhysics);
+                if (spawn.controlMode > 1) throw std::runtime_error("Unknown original control mode");
+                if (spawn.input.pad) validatePad(*spawn.input.pad);
+                controlMode = spawn.controlMode;
                 if (spawn.input.directMove || spawn.input.movement.x != 0 || spawn.input.movement.z != 0 || spawn.input.movement.low)
                     throw std::runtime_error("Original-body actors take controller input only");
                 body.emplace(physics, collision, selection, assets.clips, Vec3f{float(spawn.x), float(spawn.y), float(spawn.z)}, spawn.originalYaw);
                 if (cameraData) camera.emplace(cameraData, *body);
                 followBody(0);
             } else {
-                if (spawn.input.control) throw std::runtime_error("Controller input requires an original-body actor");
+                if (spawn.input.pad) throw std::runtime_error("Controller input requires an original-body actor");
                 consume(held);
             }
         }
@@ -125,24 +131,23 @@ class NativeSession {
             if (body) {
                 if (input.directMove || input.movement.x != 0 || input.movement.z != 0 || input.movement.low)
                     throw std::runtime_error("Original-body actors take controller input only");
-                if (input.control) for (int32_t v : {input.control->stickX, input.control->stickY})
-                    if (v < -128 || v > 127) throw std::runtime_error("Stick value outside the controller range");
+                if (input.pad) validatePad(*input.pad);
                 if (!std::isfinite(input.blendSeconds) || input.blendSeconds < 0 || input.blendSeconds > 10)
                     throw std::runtime_error("Invalid transition duration");
                 held = input;
                 return;
             }
-            if (input.control) throw std::runtime_error("Controller input requires an original-body actor");
+            if (input.pad) throw std::runtime_error("Controller input requires an original-body actor");
             Actor validate(*this); validate.consume(input);
             held = input; // A paused actor retains its displayed state until resuming.
         }
         void advance(double seconds) {
             if (body) {
-                auto control = held.control.value_or(JunoControl{});
+                // joyRead once per world tick; the controller keeps its last state.
+                JunoControl control{joypad.read(held.pad.value_or(PadState{})), 0, controlMode};
                 if (camera) control.cameraYaw = camera->yaw();  // boyControl reads *controlcam
                 body->tick(control);
-                if (camera) camera->tick(*body, {control.cRight, control.cLeft, control.trigger}, 1);  // controlPlayer, after the character
-                if (held.control) held.control->jumpPressed = false; // A press is one original frame.
+                if (camera) camera->tick(*body, cameraKeys(body->controlKeys), 1);  // controlPlayer, after the character
                 followBody(seconds);
                 return;
             }

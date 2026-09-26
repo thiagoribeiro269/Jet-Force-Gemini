@@ -48,11 +48,39 @@ static std::shared_ptr<TrackCollision> syntheticTrack(const OriginalMath &math) 
 int main(int argc, char **argv) {
     try {
         check(argc == 1 || argc == 8, "usage: check_movement [CHARACTER SELECTOR REGION_MESH REGION_INFO COLLISION PHYSICS CAMERA]");
-        unsigned mathCases = 0, collisionCases = 0, movementCases = 0, rejected = 0;
+        unsigned mathCases = 0, collisionCases = 0, movementCases = 0, inputCases = 0, rejected = 0, stops = 0;
         auto reject = [&](std::function<void()> f) {
-            try { f(); } catch (const std::runtime_error &) { ++rejected; return; }
+            try { f(); } catch (const NotPortedError &) { throw std::runtime_error("Boundary reported as a gameplay stop");
+            } catch (const std::runtime_error &) { ++rejected; return; }
             throw std::runtime_error("Invalid movement boundary accepted");
         };
+        // A behaviour the original performs but the port does not: typed stop.
+        auto stop = [&](std::function<void()> f, const char *what) {
+            try { f(); } catch (const NotPortedError &error) { check(!error.explanation().empty(), what); ++stops; return; }
+            throw std::runtime_error(what);
+        };
+        // controller.c joyRead edges and charControl.c controlReadJoypad.
+        {
+            JoypadReader reader;
+            auto frame = reader.read({Pad::A | Pad::CLeft, 80, -80});
+            check(frame.pressed == (Pad::A | Pad::CLeft) && frame.released == 0, "joyRead press edge differs");
+            frame = reader.read({Pad::A, 80, -80});
+            check(frame.pressed == 0 && frame.released == Pad::CLeft && frame.pad.button == Pad::A, "joyRead held/release edge differs");
+            frame = reader.read({Pad::B, 3, -4});
+            check(frame.pressed == Pad::B && frame.released == Pad::A, "joyRead swap edge differs");
+            auto in = controlReadJoypad(frame, false);
+            check(in.keys == Pad::B && in.dkeys == Pad::B && in.released == Pad::A && in.xjoy == 0 && in.yjoy == 0 && in.absX == 3 && in.absY == -4,
+                  "controlReadJoypad differs");
+            in = controlReadJoypad(reader.read({Pad::Z, 80, -80}), false);
+            check(in.xjoy == 65 && in.yjoy == -65 && in.dkeys == Pad::Z, "controlReadJoypad clamp differs");
+            in = controlReadJoypad(reader.read({Pad::Z, 80, -80}), true);
+            check(in.keys == 0 && in.dkeys == 0 && in.released == 0 && in.xjoy == 0 && in.absX == 0, "disablejoy did not clear the joypad");
+            check(joyClamp(4) == 0 && joyClamp(-4) == 0 && joyClamp(5) == 0 && joyClamp(6) == 1 && joyClamp(70) == 65 && joyClamp(-127) == -65,
+                  "joyClamp differs");
+            reject([&] { JoypadReader other; other.read({0x0040, 0, 0}); });
+            reject([&] { JoypadReader other; other.read({0x0080, 0, 0}); });
+            inputCases += 4;
+        }
         const auto math = syntheticMath();
         // Sinf/Cosf quadrants, mirror step and sign bit.
         check(math.sinf(0) == 0 && math.sinf(0x4000) == 1 && math.sinf(0xC000) == -1 && math.cosf(0) == 1, "Sinf quadrants differ");
@@ -230,12 +258,81 @@ int main(int argc, char **argv) {
                 }
             }
             check(planes == 5759 && exposed == 1759, "Forest First collision derivation differs");
+            // Ledge bits (+0x20 bits 3..5) come only from ledge-pairing faces;
+            // Forest First has none, so trackGetLedgeCrossed never reports one.
+            for (const auto &b : collision->blocks) {
+                for (auto m : b.edgeMask) check(!(m & 0x38), "Unexpected ledge edge in Forest First");
+                for (const auto &f : b.faces) check(!(f.flags & 3), "Unexpected ledge-pairing face in Forest First");
+            }
             ++movementCases;
             // Entry point: fall 21 units onto the path.
             JunoBody body(physics, collision, selection, character->clips, {40, 19, 841}, 0);
             for (int t = 0; t < 30; ++t) body.tick({});
             near(body.position.y, -1.99, 1e-4); check(body.grounded() && body.state568 == 0 && body.move3B == 16, "Entry landing differs");
             ++movementCases;
+            // Drive a copy with raw pads through joyRead, as the session does.
+            auto drive = [&](JunoBody &b, JoypadReader &reader, PadState pad, int ticks, uint8_t mode = 0) {
+                for (int t = 0; t < ticks; ++t) b.tick({reader.read(pad), 0, mode});
+            };
+            {   // func_overlay_16_01004934: C-left strafes by 0.2 per frame up to 2.5, move 9.
+                JunoBody b = body; JoypadReader reader;
+                drive(b, reader, {Pad::CLeft, 0, 0}, 1);
+                check(b.lateral10 == -0.2f && b.strafing56C == 1 && b.controlKeys == Pad::CLeft, "Strafe step differs");
+                drive(b, reader, {Pad::CLeft, 0, 0}, 14);
+                check(b.lateral10 == -2.5f && b.move3B == 9 && b.position.x < 40.0f - 20.0f, "Strafe clamp, move or direction differs");
+                const float before = b.lateral10;
+                drive(b, reader, {}, 1);
+                check(b.strafing56C == 0 && b.lateral10 == before * physics->lateralDecay, "Strafe release decay differs");
+                // A jump while strafing is a running jump, even without forward speed.
+                drive(b, reader, {Pad::CRight, 0, 0}, 3);
+                drive(b, reader, {uint16_t(Pad::CRight | Pad::A), 0, 0}, 1);
+                check(b.state568 == 3 && b.move3B == 6 && b.velocity.y > 9.0f, "Strafe running jump differs");
+                // Z in the air: boyCanFire refuses, so nothing is fired or stopped.
+                drive(b, reader, {Pad::Z, 0, 0}, 5);
+                check(b.state568 == 3 && b.firing1F4 == 0, "Fire key in the air differs");
+            }
+            {   // Expert mode (frontGetTargetControl 1): C-up jumps, A selects weapons (one weapon: inert).
+                JunoBody b = body; JoypadReader reader;
+                drive(b, reader, {Pad::A, 0, 0}, 2, 1);
+                check(b.state568 == 0, "A jumped in Expert mode");
+                drive(b, reader, {}, 1, 1);
+                drive(b, reader, {Pad::CUp, 0, 0}, 1, 1);
+                check(b.state568 == 3 && b.move3B == 5, "C-up did not jump in Expert mode");
+            }
+            {   // A half-turn skid starts first; then Z is held. Z cancels the
+                // half-turn (Normal mode), boyCanFire refuses while the skid lasts
+                // and +0x1F4 holds 0xF; once firing is allowed the shot stops.
+                JunoBody b = body; JoypadReader reader;
+                drive(b, reader, {0, 0, 70}, 60);
+                drive(b, reader, {0, 0, -70}, 1);
+                check(b.halfTurn13E == 1 && b.skid576 == 2, "Half-turn skid did not start");
+                bool blocked = false;
+                stop([&] {
+                    for (int t = 0; t < 120; ++t) {
+                        b.tick({reader.read({Pad::Z, 0, -70}), 0, 0});
+                        blocked = blocked || (b.firing1F4 == 0xF && (b.skid576 != 0 || b.halfTurn13E != 0));
+                    }
+                }, "Pistol shot did not stop the session");
+                check(blocked, "boyCanFire did not hold the shot during the skid");
+            }
+            stop([&] { JunoBody b = body; JoypadReader r; drive(b, r, {Pad::Z, 0, 0}, 1); }, "Standing shot did not stop");
+            stop([&] { JunoBody b = body; JoypadReader r; drive(b, r, {Pad::R, 0, 0}, 1); }, "Aim state did not stop");
+            stop([&] { JunoBody b = body; JoypadReader r; drive(b, r, {Pad::B, 0, 0}, 1); }, "Crouch did not stop");
+            stop([&] { JunoBody b = body; JoypadReader r; drive(b, r, {Pad::CDown, 0, 0}, 1, 1); }, "Expert crouch did not stop");
+            {   // Inert with one weapon or no reader: C-up/C-down, D-pad, L, Start in Normal mode.
+                JunoBody b = body, reference = body; JoypadReader r, q;
+                drive(b, r, {uint16_t(Pad::CUp | Pad::CDown | Pad::Up | Pad::Down | Pad::Left | Pad::Right | Pad::L | Pad::Start), 0, 0}, 40);
+                drive(reference, q, {}, 40);
+                check(b.position == reference.position && b.move3B == reference.move3B && b.progress28 == reference.progress28,
+                      "Buttons the original ignores changed Juno");
+            }
+            {   // Landing lock (disablejoy): the keys the camera reads are cleared too.
+                JunoBody b = body; JoypadReader r;
+                b.landingLock56B = 5;
+                drive(b, r, {uint16_t(Pad::CLeft | Pad::R | Pad::Z), 0, 70}, 1);
+                check(b.controlKeys == 0 && b.controlXjoy == 0 && b.lateral10 == 0.0f, "disablejoy leaked controller input");
+            }
+            movementCases += 5;
             // Scripted run, jump, wall, turn and bank: deterministic and bounded.
             // Original camera right after spawning: behind Juno, above the path.
             {
@@ -247,12 +344,13 @@ int main(int argc, char **argv) {
             }
             ++movementCases;
             auto run = [&](uint64_t &hash, JunoBody &juno, JunoCamera &cam) {
-                uint32_t jumps = 0, walls = 0; float top = -1e9f;
+                uint32_t jumps = 0, walls = 0, strafeTicks = 0; float top = -1e9f;
+                JoypadReader reader;
                 for (uint64_t t = 0; t < MovementTicks; ++t) {
-                    auto control = movementControl(t);
-                    control.cameraYaw = cam.yaw();
+                    JunoControl control{reader.read(movementPad(t)), cam.yaw(), 0};
                     juno.tick(control);
-                    cam.tick(juno, {control.cRight, control.cLeft, control.trigger}, 1);
+                    cam.tick(juno, cameraKeys(juno.controlKeys), 1);
+                    strafeTicks += juno.move3B == 9 && juno.lateral10 < -2.0f;
                     const float dx = juno.position.x - cam.position.x, dz = juno.position.z - cam.position.z;
                     check((dx * dx) + (dz * dz) >= 1023.0f, "Camera left Juno inside its 32-unit push radius");
                     check(cam.position.y >= float(collision->extents[2]) - 100.0f - 1e-3f, "Camera below the track floor limit");
@@ -265,6 +363,7 @@ int main(int argc, char **argv) {
                     for (auto word : bits) hash = (hash ^ word) * 1099511628211ull;
                 }
                 check(jumps > 20 && walls > 10 && top > 50, "Scenario did not jump or reach a wall");
+                check(strafeTicks > 20, "Scenario did not strafe with C-left");
             };
             uint64_t first = 1469598103934665603ull, second = first;
             JunoBody one(physics, collision, selection, character->clips, {40, 19, 841}, 0), two = one;
@@ -280,7 +379,7 @@ int main(int argc, char **argv) {
             const EntityHandle juno{1, 1};
             uint64_t scriptTick = 0; // Host ticks also advance while paused.
             auto source = [&](uint64_t) {
-                TickInput input; ActorInput actor; actor.control = movementControl(scriptTick++);
+                TickInput input; ActorInput actor; actor.pad = movementPad(scriptTick++);
                 input.actors.push_back({juno, actor}); return input;
             };
             std::set<uint32_t> clips;
@@ -302,9 +401,13 @@ int main(int argc, char **argv) {
                   "Session and bare body/camera diverged");
             for (uint32_t id : {1019u, 1026u, 1027u, 1028u, 1040u}) check(clips.count(id), "Expected original clip was not played");
             ++movementCases;
-            reject([&] {  // Controller values outside the N64 stick range.
-                TickInput input; ActorInput actor; actor.control = JunoControl{}; actor.control->stickX = 300;
+            reject([&] {  // Controller bits outside the standard N64 buttons.
+                TickInput input; ActorInput actor; actor.pad = PadState{0x0080, 0, 0};
                 input.actors.push_back({juno, actor}); session.apply(input);
+            });
+            reject([&] {  // Unknown menu control mode.
+                TickInput input; SpawnSpec spawn{2, 40, 19, 841, 0, {}, 1, 0}; spawn.originalBody = true; spawn.controlMode = 2;
+                input.spawn.push_back(spawn); session.apply(input);
             });
             reject([&] {  // Provisional planar commands on an original body.
                 TickInput input; ActorInput actor; actor.movement.x = 1; input.actors.push_back({juno, actor}); session.apply(input);
@@ -318,17 +421,18 @@ int main(int argc, char **argv) {
             reject([&] { NativeSession other; other.boot(character, selection, region, physics, {}); });
             reject([&] { NativeSession other; other.boot(character, selection, region, {}, {}, cameraData); });
             reject([&] { readJunoCamera(argv[6]); });
-            reject([&] { JunoControl control; control.trigger = true; JunoBody b = body; b.tick(control); });
+            reject([&] { JunoControl control; control.controlMode = 2; JunoBody b = body; b.tick(control); });
             reject([&] { readJunoPhysics(argv[5]); });
             reject([&] { TrackCollision::load(argv[6], physics->math); });
             reject([&] { JunoBody far(physics, collision, selection, character->clips, {1e7f, 0, 0}, 0); });
-            reject([&] { JunoControl control; control.stickY = 128; JunoBody b = body; b.tick(control); });
+            reject([&] { JunoControl control; control.joypad.pad.button = 0x0040; JunoBody b = body; b.tick(control); });
             session.stop();
             check(!session.snapshot().region && !session.body(juno), "Stopped session kept the body");
             actual = true;
         }
-        std::cout << "{\"status\":\"passed\",\"math_cases\":" << mathCases << ",\"collision_cases\":" << collisionCases
-                  << ",\"movement_cases\":" << movementCases << ",\"rejected_cases\":" << rejected
+        std::cout << "{\"status\":\"passed\",\"math_cases\":" << mathCases << ",\"input_cases\":" << inputCases
+                  << ",\"collision_cases\":" << collisionCases << ",\"movement_cases\":" << movementCases
+                  << ",\"not_ported_stops\":" << stops << ",\"rejected_cases\":" << rejected
                   << ",\"original_region\":" << (actual ? "true" : "false") << ",\"scenario_digest\":\"" << std::hex << digest << "\"}\n";
         return 0;
     } catch (const std::exception &error) { std::cerr << error.what() << '\n'; return 1; }

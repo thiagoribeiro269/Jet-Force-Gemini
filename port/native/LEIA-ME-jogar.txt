@@ -14,15 +14,18 @@ tela cheia.
 Controle (modo Normal, o padrão do jogo)
 ----------------------------------------
 Analógico esquerdo   andar e correr, em relação à câmera
-A                    pular; parado, segure para carregar o pulo
-Analógico direito    esquerda/direita: passo lateral e giro da câmera
+A                    pular; parado, segure para carregar o pulo;
+                     agachado, levanta (se houver espaço acima)
+B ou X               agachar; correndo, desliza; com o analógico, anda agachado
+Analógico direito    esquerda/direita: passo lateral e giro da câmera;
+                     agachado, rola para o lado
 Start                pausa (o menu de pausa original ainda não foi portado)
 Back                 recomeça no ponto de entrada (função do port)
 
 Ainda não portados. Ao usar, a sessão para e explica o motivo:
-LT ou RB (R)         mira
-B ou X               agachar, deslizar e rolar
-RT (Z)               tiro; no ar o Juno não atira, como no original
+LT ou RB (R)         mira (em pé ou agachado)
+RT (Z)               tiro; no ar e andando agachado o Juno não atira,
+                     como no original
 
 Para trocar botões ou usar o modo Expert do menu original, edite
 controles.ini.

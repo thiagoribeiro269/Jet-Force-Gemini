@@ -9,7 +9,7 @@ from check_animation_frames import png_rgb, require
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "build/port-native/movement"
 SIZE = 640 * 480 * 4
-FRAMES = 270
+FRAMES = 450
 
 
 def digest(data):
@@ -27,7 +27,7 @@ def main():
     require(result["ok"] and windows == linux and windows["status"] == "passed" and windows["original_region"],
             "Movement checks failed or differ between Linux and Windows")
     require((meta["api"], meta["vendor"], meta["region"], meta["geometry"], meta["frame_count"], meta["ticks"]) ==
-            ("D3D11", 0x10DE, 21, 17, FRAMES, 540), "Wrong movement render profile")
+            ("D3D11", 0x10DE, 21, 17, FRAMES, 900), "Wrong movement render profile")
     require(meta["perspective"] and not meta["emulator_dependencies"] and not meta["display_list_interpreter"], "Wrong graphics path")
     require(trace["stopped"] and trace["original_movement"] and trace["original_camera"] and not trace["object_collision"] and not trace["emulation"],
             "Wrong scope or cleanup")
@@ -41,7 +41,7 @@ def main():
         require((frame["x"] - frame["camera_x"]) ** 2 + (frame["z"] - frame["camera_z"]) ** 2 >= 1023, "Camera inside Juno")
         require(frame["camera_y"] >= -1.99 - 100 - 1e-3, "Camera below the recovered track limit")
     clips = [frame["clip"] for frame in frames]
-    for clip in (1024, 1061, 1062, 1063, 1064, 1040):
+    for clip in (1024, 1061, 1062, 1063, 1064, 1040, 1029, 1030, 1033, 1037, 1038, 1044):
         require(clip in clips, f"Original clip {clip} missing from the movement proof")
     airborne = [i for i, f in enumerate(frames) if f["state"] == 3]
     require(airborne and trace["highest_y"] > 150 and trace["wall_ticks"] > 20, "Jump, slope or wall contact missing")
@@ -73,8 +73,15 @@ def main():
     orbit = next(i for i, f in enumerate(frames) if f["tick"] > 480 and (f["camera_yaw"] - frames[239]["camera_yaw"]) % 65536 > 0x2000)
     strafe = [i for i, f in enumerate(frames) if 480 < f["tick"] <= 520 and f["lateral10"] <= -2.5 and f["keys"] == 2]
     require(len(strafe) >= 10, "C-left did not strafe Juno as the original walking state does")
+    crouch = next(i for i, f in enumerate(frames) if f["state"] == 1 and f["move"] == 14)
+    crouch_walk = next(i for i, f in enumerate(frames) if f["state"] == 2 and f["move"] == 4)
+    roll = next(i for i, f in enumerate(frames) if f["move"] == 50) + 8
+    stand = next(i for i, f in enumerate(frames) if f["tick"] > 720 and f["move"] == 8)
+    slide = next(i for i, f in enumerate(frames) if f["state"] == 1 and f["move"] == 15) + 5
+    require(frames[slide]["move"] == 15 and frames[roll]["move"] == 50, "Slide or roll too short for its key frame")
     keys = {"landing": first_ground, "running": 60, "slope": 130, "jump": jump, "peak": peak, "turned": turned,
-            "return": 215, "c-left": orbit, "settled": FRAMES - 1}
+            "return": 215, "c-left": orbit, "crouch": crouch, "crouch-walk": crouch_walk + 10, "roll": roll, "stand": stand,
+            "slide": slide, "settled": FRAMES - 1}
     for frame in range(FRAMES):
         pixels = raw[frame * SIZE:(frame + 1) * SIZE]; hashes.append(digest(pixels))
         covered = sum(pixels[p:p + 3] != background[p:p + 3] for p in range(0, SIZE, 4))
@@ -82,14 +89,14 @@ def main():
         coverage.append(covered)
     for name, frame in keys.items():
         (OUT / f"movement-{frame:03}-{name}.png").write_bytes(png_rgb(raw[frame * SIZE:(frame + 1) * SIZE]))
-    require(len(set(hashes)) > 240, "Movement sequence did not evolve")
+    require(len(set(hashes)) > 400, "Movement sequence did not evolve")
     subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "rawvideo", "-pixel_format", "rgba", "-video_size", "640x480",
                     "-framerate", "30", "-i", str(OUT / "frame.rgba"), "-an", "-c:v", "libx264", "-preset", "fast",
                     "-crf", "18", "-pix_fmt", "yuv420p", "-movflags", "+faststart", str(OUT / "forest-first-movement.mp4")], check=True)
     assets = json.loads((OUT / "movement-assets-report.json").read_text())
     camera = json.loads((OUT / "camera-assets-report.json").read_text())
     distances = [((f["x"] - f["camera_x"]) ** 2 + (f["z"] - f["camera_z"]) ** 2) ** 0.5 for f in frames]
-    report = {"status": "passed", "level": 21, "geometry": 17, "frames": FRAMES, "original_frames": 540, "unique_frames": len(set(hashes)),
+    report = {"status": "passed", "level": 21, "geometry": 17, "frames": FRAMES, "original_frames": 900, "unique_frames": len(set(hashes)),
               "linux_windows_checks": windows, "scenario_digest_equal_on_linux_and_windows": True,
               "final_position": trace["final"], "lowest_y": trace["lowest_y"], "highest_y": trace["highest_y"],
               "wall_contact_ticks": trace["wall_ticks"], "airborne_ticks": trace["airborne_ticks"], "move_changes": trace["move_changes"],
@@ -109,10 +116,10 @@ def main():
                          "yaw_at_start": frames[0]["camera_yaw"], "yaw_at_end": frames[-1]["camera_yaw"]},
               "raw_sha256": digest(raw), "video_sha256": digest((OUT / "forest-first-movement.mp4").read_bytes()),
               "fps_output": 30, "duration_seconds": FRAMES / 30,
-              "limits": ["Juno walking and air states with original track collision; other states, water, ledges and object hit models not ported",
+              "limits": ["Juno walking, crouch (1/2) and air states with original track collision and collision profiles; aim, water and object hit models not ported",
                          "Original free camera (player type 0, collision mode 1); zone, spline, static and cutscene cameras not ported",
                          "A scripted controller stands in for a physical controller; raw N64 pad values pass through the original joyRead and controlReadJoypad",
-                         "Native animation blend replaces controlSetTransition; move selection and clip positions follow the original machine",
+                         "Native animation blend between clips; move selection, clip positions and collision profiles follow the original machine",
                          "No enemies, weapons, audio or full levelInit; no emulation; ROM and derived assets remain private"]}
     (ROOT / "port/native/movement-validation.json").write_text(json.dumps(report, indent=2) + "\n")
     print(json.dumps({k: report[k] for k in ("status", "frames", "unique_frames", "highest_y", "wall_contact_ticks",

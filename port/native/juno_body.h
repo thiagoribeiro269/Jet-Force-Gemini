@@ -9,7 +9,8 @@ namespace jfg_native {
 // Juno movement recovered from the original player code and ported to PC
 // structures. Sources (static reading, bytes audited by movement_assets.py):
 // objObjectsTick (previous position), boyControl (overlay 16), its walking
-// state 0x2708, air state 0x3464, strafe/lateral decay 0x4934, move machine
+// state 0x2708, crouch states 0x2EB4/0x321C, air state 0x3464, strafe, rolls
+// and lateral decay 0x4934 with controlMakeV and controlCeiling, move machine
 // 0x5120, movement 0x5BB8, controlPlatform, controlMakeGravity,
 // controlHalfTurn, controlWalkingBack, controlGroundHits, func_80035628,
 // func_800344C8, objMoveXYZ, objAnimDframe/objAnimSetMove, mathRnd,
@@ -256,6 +257,8 @@ public:
             if (state568 != 1) skid576 = 0;
         }
         if (state568 == 0) walk(speed, direction, frames, jumpPressed, stickX, stickY, scale, mode);
+        else if (state568 == 1) crouch(speed, frames, mode);
+        else if (state568 == 2) crouchWalk(speed, direction, frames, jumpPressed, stickX, stickY, mode);
         else if (state568 == 3) air(speed, direction, frames, jumpHeld);
         else throw NotPortedError("Juno state outside the ported walking/air subset", "Este estado do Juno ainda não foi portado.");
         animate(dt);
@@ -403,30 +406,128 @@ private:
             skid576 = 0;
         }
     }
-    // func_overlay_16_01004934 with arg2 = 0 (walking state): the strafe keys
-    // (controlModeKeys +0x14/+0x18) push +0x10 sideways up to 2.5; otherwise
-    // it decays. Rolls (+0x584 values 1..4) come from the crouch states only.
-    void strafe(int32_t frames, const ControlModeKeys &mode) {
+    // func_overlay_16_01004934. Walking (arg2 0): the strafe keys
+    // (controlModeKeys +0x14/+0x18) push +0x10 sideways up to 2.5. Crouched
+    // (arg2 1) or crouch-walking (arg2 2): they start a roll (+0x584 1..4)
+    // whose sideways speed follows a distance curve (controlMakeV) along the
+    // roll clip. Otherwise +0x10 decays.
+    void strafe(int32_t arg2, int32_t frames, const ControlModeKeys &mode) {
         const auto &d = *data_;
-        if (roll584 != 0) throw std::runtime_error("Roll outside the crouch states");
         strafing56C = 0;
-        uint32_t next = 0;
-        if (controlKeys & mode.strafeLeft()) {
-            lateral10 = lateral10 - (d.strafeLeftRate * float(frames));
-            if (lateral10 < -2.5f) lateral10 = -2.5f;
-            next = 9; strafing56C = 1;
-        } else if (controlKeys & mode.strafeRight()) {
-            lateral10 = lateral10 + (d.strafeRightRate * float(frames));
-            if (lateral10 > 2.5f) lateral10 = 2.5f;
-            next = 0xA; strafing56C = 1;
+        if (roll584 >= 1 && roll584 <= 4 && progress28 == 1.0f) { roll584 = 0; lateral10 = 0.0f; }
+        if (roll584 == 0) {
+            const bool left = controlKeys & mode.strafeLeft(), right = !left && (controlKeys & mode.strafeRight());
+            if (arg2 != 0) {
+                if (left || right) {
+                    roll584 = uint8_t(arg2 == 2 ? (left ? 3 : 4) : (left ? 1 : 2));
+                    requestMove(arg2 == 2 ? (left ? 0x32 : 0xC) : (left ? 0x31 : 0xB), 0.0f);
+                    progress28 = 0.0f;
+                    strafing56C = 1;
+                }
+            } else {
+                uint32_t next = 0;
+                if (left) {
+                    lateral10 = lateral10 - (d.strafeLeftRate * float(frames));
+                    if (lateral10 < -2.5f) lateral10 = -2.5f;
+                    next = 9; strafing56C = 1;
+                } else if (right) {
+                    lateral10 = lateral10 + (d.strafeRightRate * float(frames));
+                    if (lateral10 > 2.5f) lateral10 = 2.5f;
+                    next = 0xA; strafing56C = 1;
+                }
+                if (strafing56C && magnitude(speed04) < magnitude(lateral10)) requestMove(next, progress28);
+            }
         }
-        if (strafing56C) {
-            if (magnitude(speed04) < magnitude(lateral10)) requestMove(next, progress28);
-            return;
+        const std::array<float, 12> *curve = nullptr;
+        float rate = 0.0f;
+        switch (roll584) {
+            case 3: if (move3B == 0x32) { curve = &d.rollCurves[0]; rate = d.rollRate3; } break;
+            case 4: if (move3B == 0xC) { curve = &d.rollCurves[0]; rate = d.rollRate4; } break;
+            case 1: if (move3B == 0x31) { curve = &d.rollCurves[1]; rate = d.rollRate1; } break;
+            case 2: if (move3B == 0xB) { curve = &d.rollCurves[1]; rate = d.rollRate2; } break;
+            default: break;
         }
+        if (curve) {
+            const float from = progress28;
+            float to = from + (rate * float(frames));
+            if (to < 0.0f) to = 0.0f;
+            if (to > 1.0f) to = 1.0f;
+            lateral10 = controlMakeV(from, to, *curve, float(frames));
+            if (roll584 == 3 || roll584 == 1) lateral10 = -lateral10;
+            strafing56C = 1;
+        }
+        if (strafing56C) return;
         roll584 = 0;
         lateral10 = lateral10 * OriginalMath::powerf(d.lateralDecay, frames);
         if (d.lateralZeroLow < lateral10 && lateral10 < d.lateralZeroHigh) lateral10 = 0.0f;
+    }
+    // controlMakeV: distance travelled along a 0.1-step curve between two clip
+    // positions, per frame. The indices truncate (FCSR round-toward-zero).
+    static float controlMakeV(float from, float to, const std::array<float, 12> &curve, float frames) {
+        const float a = to * 10.0f, b = from * 10.0f;
+        const auto ia = size_t(int32_t(a)), ib = size_t(int32_t(b));
+        if (ia > 10 || ib > 10) throw std::runtime_error("Roll curve index outside the table");
+        const float at = ((curve[ia + 1] - curve[ia]) * (a - float(int32_t(a)))) + curve[ia];
+        const float bt = curve[ib] + ((curve[ib + 1] - curve[ib]) * (b - float(int32_t(b))));
+        return (at - bt) / frames;
+    }
+    // controlCeiling(x, y, z, 60, 15): a 15-unit sphere can rise 60 units
+    // without a ceiling response (type 0x48), so Juno has room to stand.
+    bool roomToStand() {
+        const Vec3f start = position;
+        Vec3f end{position.x, position.y + 60.0f, position.z};
+        const float radius = 15.0f;
+        query_.makePolylist(1, &start, &end, &radius, 0, 0);
+        TrackHit hit;
+        return !(query_.getIntersect(start, end, radius, 1, hit) && (hit.type & 0x48));
+    }
+    // Crouch state 1: func_overlay_16_01002EB4 (crouched, sliding, rolling).
+    // Deep water (+0x60) would force standing; Forest First has none.
+    void crouch(float speed, int32_t frames, const ControlModeKeys &mode) {
+        const auto &d = *data_;
+        if ((controlKeys & mode.jump()) && strafing56C == 0 && roomToStand()) {
+            requestMove(chooseMove(), 0.0f);
+            state568 = 0;
+            skid576 = 0;
+        } else if (skid576 != 0) {  // slide
+            skid576 = int8_t(skid576 - frames);
+            lateral10 = lateral10 * OriginalMath::powerf(d.slideLateralDecay, frames);
+            if (skid576 <= 0) {
+                skid576 = 0;
+                speed04 = 0.0f;
+                lateral10 = 0.0f;
+                if (speed > 0.5f && !(controlKeys & Pad::R)) { state568 = 2; requestMove(0x16, 0.0f); }
+                else requestMove(0xE, 0.0f);
+            }
+        }
+        if (state568 == 1 && skid576 == 0) {
+            if ((controlKeys & Pad::R) && canFire())
+                throw NotPortedError("Crouched aim state 5 (controlKeys 0x10) is not ported", "Mira agachado (estado 5) ainda não foi portada.");
+            strafe(1, frames, mode);
+            if (move3B != 0xB && move3B != 0x31) {
+                if (controlKeys & mode.fire()) firing1F4 = 0xF;
+                if (!grounded()) firing1F4 = 0;
+                if (speed > 0.5f) { requestMove(0x16, 0.0f); state568 = 2; }
+            }
+        }
+        speed04 = speed04 * OriginalMath::powerf(d.crouchSpeedDecay, frames);
+    }
+    // Crouch-walk state 2: func_overlay_16_0100321C.
+    void crouchWalk(float speed, int16_t direction, int32_t frames, bool jumpPressed, int32_t stickX, int32_t stickY,
+                    const ControlModeKeys &mode) {
+        const auto &d = *data_;
+        if ((controlKeys & mode.jump()) && strafing56C == 0 && roomToStand()) {
+            requestMove(8, 0.0f);
+            state568 = 0;
+            return;
+        }
+        strafe(2, frames, mode);
+        if (1.25f < speed) speed = 1.25f;  // controlWalkingBack(1.25, 1.25) without aim locks
+        if (!walkingBack569) speed = -speed; else direction = int16_t(direction + 0x8000);
+        bool skid = false;  // its skid result is not used here
+        halfTurn(speed, direction, jumpPressed, stickX, stickY, d.crouchStickScale, skid);
+        speed04 = ((1.0f - OriginalMath::powerf(d.crouchSpeedRate, frames)) * (speed - speed04)) + speed04;
+        heading11C = OriginalMath::dAngle(heading11C, direction, 1.0f - OriginalMath::powerf(d.crouchTurnRate, frames));
     }
     // controlUpdatePlayerAim for states other than 5/0xB/0xA. No objects are
     // instantiated, so there is no target, aim lock or mathRnd call: only the
@@ -436,11 +537,15 @@ private:
         if (firing1F4 != 0) firing1F4 = int8_t(firing1F4 - 1);
     }
     // boyCanFire (overlay 16) for the ported moves: no skid, no half-turn,
-    // not move 8, and a state that holds the weapon out.
+    // not move 8, and a state that holds the weapon out, or crouched on moves
+    // 0xE/0x21 once the model's clip blend (+0x5E) has ended. The port blends
+    // natively, so the crouched case is taken as allowed from the first frame:
+    // the session may stop a few frames before the original would.
     bool canFire() const {
         if (skid576 != 0 || halfTurn13E != 0 || move3B == 8) return false;
         const unsigned state = state568 & ~0x20u;
-        return state == 0 || state == 5 || state == 0xB || state == 0xA || (state == 3 && hover14A != 0);
+        if (state == 0 || state == 5 || state == 0xB || state == 0xA || (state == 3 && hover14A != 0)) return true;
+        return move3B == 0xE || move3B == 0x21;
     }
     // Walking state 0: func_overlay_16_01002708.
     void walk(float speed, int16_t direction, int32_t frames, bool jumpPressed, int32_t stickX, int32_t stickY, float scale,
@@ -455,7 +560,7 @@ private:
         if (controlKeys & Pad::R)
             throw NotPortedError("Aim state 0xB (controlKeys 0x10) is not ported", "Mira com R (estado 0xB) ainda não foi portada.");
         if (5.0f < speed) speed = 5.0f;  // controlWalkingBack without aim locks
-        strafe(frames, mode);
+        strafe(0, frames, mode);
         if (jumpPressed && ceiling534 == 0) {
             const float current = magnitude(speed04);
             if (walkingBack569) { jumpDelay57A = 7; jumpCharge57B = 0; requestMove(7, 0.0f); }
@@ -469,8 +574,10 @@ private:
             }
             state568 = 3; jumpReleased58E = 0; fallStart57C = position.y;
         } else if (controlDkeys & mode.crouch()) {  // unk189 < 4 for Juno
-            throw NotPortedError("Crouch states 1/2 (controlModeKeys +0x10) are not ported",
-                                 "Agachar, deslizar e rolar (estados 1 e 2) ainda não foram portados.");
+            if (magnitude(speed04) > 2.0f) { state568 = 1; requestMove(0xF, 0.0f); skid576 = 0x28; }  // slide
+            else if (speed > 0.5f) { state568 = 2; requestMove(4, 0.0f); }                        // crouch-walk
+            else { state568 = 1; requestMove(0xD, 0.0f); }                                          // crouch down
+            strafing56C = 0;
         }
         if (controlKeys & mode.fire()) firing1F4 = 0xF;
         if (!grounded()) firing1F4 = 0;
@@ -579,8 +686,34 @@ private:
                 else if (forward < side) strafe();
                 else if (!walkingBack569) next = 0;
                 break;
+            case 4: case 44:  // crouch-walk
+                rate = rate * largest;
+                if (largest < t[2]) { start = 0.0f; next = 0x16; }
+                break;
             case 5:
                 if ((progress28 + (rate * dt)) > 0.75f) { progress28 = 0.75f; rate = 0.0f; }
+                break;
+            case 8:  // stand up
+                if (progress28 == 1.0f) { next = chooseMove(); start = 0.0f; }
+                break;
+            case 11: if (roll584 != 2) { start = 0.0f; next = 0xE; } break;   // crouched rolls
+            case 49: if (roll584 != 1) { start = 0.0f; next = 0xE; } break;
+            case 12:                                                          // crouch-walk rolls
+                if (roll584 != 4) { next = 4; start = 0.0f; if (largest < t[4]) next = 0x16; }
+                break;
+            case 50:
+                if (roll584 != 3) { next = 4; start = 0.0f; if (largest < t[5]) next = 0x16; }
+                break;
+            case 13:  // crouch down; R doubles its rate
+                start = 0.0f;
+                if (controlKeys & Pad::R) rate = rate * 2.0f;
+                if (t[6] < progress28) next = 0xE;
+                break;
+            case 14: case 33:  // crouched
+                if (t[7] < largest) { start = 0.0f; next = 4; }
+                break;
+            case 22:  // crouch-walk stop
+                if (t[10] < largest) { start = 0.0f; next = 4; }
                 break;
             case 9: case 10: case 31: case 32: case 47: case 48:
                 rate = rate * side;

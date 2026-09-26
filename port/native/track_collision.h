@@ -479,6 +479,27 @@ public:
         return true;
     }
     // func_800175A0: swept sphere against exposed edges and their endpoints.
+    // trackGetIntersect(0, start, end, radius, flags, result) without the edge
+    // (0x10) or single-pass (0x40) modes: repeat the plane test while it
+    // responds, up to six times; after six the sphere stays at the start.
+    // hitPolyPlaneTest adds object planes, and no objects exist here.
+    bool getIntersect(const Vec3f &start, Vec3f &end, float radius, uint16_t flags, TrackHit &result) const {
+        if (flags & 0x50) throw std::runtime_error("trackGetIntersect edge or single-pass mode is not ported");
+        result = TrackHit{};
+        result.object = 0;
+        bool any = false;
+        for (int responses = 0;;) {
+            if (!planeTest(start, end, result, radius, flags, 0.0f)) break;
+            any = true;
+            if (++responses >= 6) {
+                end = start;
+                any = false;
+                result.type = 0;
+                break;
+            }
+        }
+        return any;
+    }
     bool edgeTest(const Vec3f &start, Vec3f &end, TrackHit &result, float radius, uint16_t flags) const {
         const auto &track = *track_;
         const float mx = end.x - start.x, my = end.y - start.y, mz = end.z - start.z;

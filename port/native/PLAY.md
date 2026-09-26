@@ -27,10 +27,10 @@ N64.
 | Controle Xbox | N64 | Efeito no Juno (modo Normal) |
 | --- | --- | --- |
 | Analógico esquerdo | analógico | andar e correr, em relação à câmera |
-| A | A | pulo; parado, segurar carrega o pulo |
-| Analógico direito | C-buttons | esquerda/direita: passo lateral e câmera |
-| B, X | B | agachar: **parada** (estados 1 e 2) |
-| LT, RB | R | mira: **parada** (estado 0xB) |
+| A | A | pulo; parado, segurar carrega o pulo; agachado, levanta |
+| Analógico direito | C-buttons | esquerda/direita: passo lateral e câmera; agachado, rolar |
+| B, X | B | agachar; correndo, deslizar; com o analógico, andar agachado |
+| LT, RB | R | mira: **parada** (estados 0xB e 5) |
 | RT | Z | tiro: **parada** quando `boyCanFire` permite |
 | LB | L | sem leitura no personagem |
 | D-pad | D-pad | trocar arma: inerte com uma arma só |
@@ -85,7 +85,7 @@ Resultados em [movement-validation.json](movement-validation.json).
 
 - Só Forest First e só o Juno. Sem inimigos, objetos, portas, itens, sons,
   céu, menus ou salvamento.
-- Mira, agachar, tiro, água, lava e os demais estados param a sessão.
+- Mira, tiro, água, lava e os demais estados param a sessão.
 - As rotações de juntas do tronco e da cabeça não foram portadas.
 - O teste remoto não abre a janela; ela só foi verificada no PC de Thiago.
 

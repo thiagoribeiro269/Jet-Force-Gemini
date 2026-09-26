@@ -1,6 +1,7 @@
 # Movimento, colisão e câmera originais em Forest First
 
-O Juno agora anda, corre, pula, cai, sobe rampas e para em paredes dentro de
+O Juno agora anda, corre, pula, agacha, anda agachado, rola, desliza, cai,
+sobe rampas e para em paredes dentro de
 Forest First pelo código original portado para C++, sem emulação. A física,
 a colisão com o cenário e a escolha de animações seguem as rotinas do jogo.
 A câmera livre do jogo também foi portada e define a direção do controle,
@@ -25,7 +26,9 @@ confere 52 rotinas, 63.732 bytes, contra a ROM US antes de gerar os dados.
 | `trackPolyHeight`, `mathXZInTri` | `TrackQuery::polyHeight` | Superfícies especiais (água e lava) |
 | `controlGroundHits`, `func_80035628`, `func_800344C8` | `JunoBody::groundHits`, `placeSpheres`, `tilt` | Contatos, travamento e inclinação |
 | `boyControl` e estados `0x2708`, `0x3464` | `JunoBody::tick`, `walk`, `air` | Controle, andar, ar e pulo |
-| `0x4934` | `JunoBody::strafe` | Passo lateral com C-left/C-right e seu decaimento |
+| `0x4934`, `controlMakeV` | `JunoBody::strafe`, `controlMakeV` | Passo lateral, rolamentos com curva de distância e decaimento |
+| Estados `0x2EB4` e `0x321C` | `JunoBody::crouch`, `crouchWalk` | Agachado, deslizando e andando agachado |
+| `controlCeiling`, `trackGetIntersect` | `roomToStand`, `TrackQuery::getIntersect` | Espaço acima para levantar |
 | `joyRead`, `controlReadJoypad`, `controlPlayer`, `frontGetTargetControl` | `JoypadReader`, `controlReadJoypad`, `ControlModeKeys` | Leitura do controle e tabelas dos modos Normal e Expert |
 | `controlUpdatePlayerAim`, `controlUpdateWeapon`, `boyCanFire` | `aimWithoutTargets`, `canFire` | Contador de tiro `+0x1F4` e decisão de disparo da pistola |
 | `0x5BB8`, `objMoveXYZ`, `controlPlatform` | `JunoBody::move`, `objMove` | Gravidade, deslocamento, colisão e velocidade real |
@@ -130,7 +133,7 @@ Normal; a Expert também foi convertida.
 | A | pulo; com passo lateral, pulo correndo | segurar carrega o pulo |
 | C-left/C-right | passo lateral e giro da câmera | só a câmera |
 | R | mira, estado 0xB: **parada** | a câmera se alinha atrás do Juno |
-| B | agachar, estados 1 e 2: **parada** | ignorado pelo Juno |
+| B | agachar; correndo, deslizar; com o analógico, andar agachado | ignorado pelo Juno |
 | Z | tiro da pistola: **parada** quando `boyCanFire` permite | ignorado: no ar não há tiro |
 | C-up/C-down, D-pad | trocar arma: inerte com uma arma só | inerte |
 | L, Start | sem leitura no personagem | sem leitura |
@@ -150,14 +153,36 @@ checagens de cada tique também não agem nesse recorte:
 `controlSquashCheckPrior/Post` dependem de caixas, plataformas ou estados de
 borda; `0x2220` trata acertos no Juno; `controlFadePlayer` só age na mira.
 
+## Agachar, rolar e deslizar
+
+B em pé leva ao estado 1 ou 2, conforme o movimento. Parado, o Juno agacha
+(movimento 13, depois 14). Com o analógico, anda agachado (estado 2,
+movimentos 22 e 4) a no máximo 1,25. Correndo acima de 2, desliza por 40
+quadros (movimento 15) e termina agachado. Agachado, C-left e C-right rolam
+(movimentos 49 e 11; andando agachado, 50 e 12). A velocidade lateral do
+rolamento segue curvas de distância da ROM ao longo do clipe (`controlMakeV`).
+A levanta quando uma esfera de raio 15 sobe 60 unidades sem bater em teto
+(`controlCeiling`), e nunca durante um rolamento.
+
+Cada movimento traz seu perfil de colisão: agachado são três esferas baixas
+(perfil 2), e andando agachado, três esferas de raio 15 lado a lado, todas
+de apoio (perfil 1, máscara de pés 7).
+
+Mira e tiro agachados param a sessão. No original, eles esperam o fim da
+mistura entre clipes (`+0x5E` do modelo); a mistura do port é própria, então
+a parada pode vir alguns quadros antes do jogo.
+
 ## Verificação
 
 - Linux com ASAN/UBSAN e Windows na RTX: 6 casos de matemática, 4 de entrada,
-  10 de colisão sintética, 10 de movimento e câmera com dados reais, 5 paradas
+  11 de colisão sintética, 13 de movimento e câmera com dados reais, 5 paradas
   tipadas e 18 rejeições. O resumo do cenário, que inclui a posição da câmera
   a cada tique, é igual nas duas plataformas.
 - Os testes cobrem o passo lateral de 0,2 por quadro até 2,5, o pulo correndo
   durante o passo lateral, o modo Expert, os botões inertes e a trava de pouso.
+- Também cobrem agachar, andar agachado, os rolamentos, levantar, deslizar, os
+  perfis de colisão, a checagem de teto sob um teto sintético e as paradas de
+  mira e tiro agachados.
 - Na carga de Forest First surgem 5.759 planos e 1.759 arestas expostas. Todos
   os planos são normalizados e todas as referências são válidas.
 - O Juno nasce no ponto original, 21 unidades acima do caminho, e pousa em
@@ -166,8 +191,7 @@ borda; `0x2220` trata acertos no Juno; `controlFadePlayer` só age na mira.
   bit, após o roteiro inteiro. Pausa, retomada e rejeições preservam o mundo.
 - Em todo tique, a câmera fica a pelo menos 32 unidades do Juno e acima do
   limite do cenário.
-- A RTX produziu 270 quadros, todos distintos, em 640 × 480, nove segundos a
-  30 fps.
+- A RTX produziu 450 quadros em 640 × 480, quinze segundos a 30 fps.
   As sete provas gráficas anteriores, incluindo a da região, ficaram idênticas
   byte a byte. A ROM matching continua com SHA-1
   `493ced9008dbe932d6e91179b68e8630cf23a023`.
@@ -185,6 +209,11 @@ Métricas e hashes estão em [movement-validation.json](movement-validation.json
 | 460–480 | nenhum | desaceleração |
 | 480–520 | C-left | passo lateral para a esquerda; a câmera volta para trás do Juno |
 | 520–540 | nenhum | repouso |
+| 540–600 | B | agacha |
+| 600–700 | analógico para frente; C-left em 660 | anda agachado e rola para a esquerda |
+| 700–770 | A em 720–730 | para agachado e levanta |
+| 770–821 | analógico para frente; B em 820 | corre e desliza |
+| 821–900 | A em 870–900 | termina o deslize agachado e levanta |
 
 ## Limites
 
@@ -194,8 +223,8 @@ Métricas e hashes estão em [movement-validation.json](movement-validation.json
 - Da câmera, só a câmera livre do jogador no modo de colisão 1. Câmeras de
   zona, estáticas, de spline, de cena de corte e de mira falham ou ficam fora.
   O botão de mira, que leva ao estado 0xB, falha de forma explícita.
-- Só os estados de andar e de ar do Juno. Mira, agachar, tiro, água, lava e
-  os demais estados param de forma explícita quando alcançados. Objetos com
+- Estados portados: andar, ar, agachado e andando agachado. Mira, tiro,
+  água, lava e os demais estados param de forma explícita quando alcançados. Objetos com
   modelos de colisão e os outros personagens ainda não existem.
 - O modelo da pistola não é desenhado: a pose das variantes com arma
   aparece com as mãos vazias.

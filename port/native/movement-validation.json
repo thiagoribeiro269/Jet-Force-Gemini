@@ -1,0 +1,219 @@
+{
+  "status": "passed",
+  "recorded_date": "2026-09-26",
+  "previous_checkpoint": "fb7320604ba7890fffc7dea8c93432158b58825e",
+  "architecture": "Native C++ host with recovered Juno control/physics and track collision; Direct3D 11 renderer; no emulation",
+  "movement": {
+    "status": "passed",
+    "level": 21,
+    "geometry": 17,
+    "frames": 270,
+    "original_frames": 540,
+    "unique_frames": 270,
+    "linux_windows_checks": {
+      "status": "passed",
+      "math_cases": 6,
+      "collision_cases": 7,
+      "movement_cases": 4,
+      "rejected_cases": 12,
+      "original_region": true,
+      "scenario_digest": "4603e7f4108b1cc9"
+    },
+    "scenario_digest_equal_on_linux_and_windows": true,
+    "final_position": {
+      "x": -70.8108521,
+      "y": -0.808712006,
+      "z": 293.040924
+    },
+    "lowest_y": -1.98999977,
+    "highest_y": 164.153336,
+    "wall_contact_ticks": 51,
+    "airborne_ticks": 48,
+    "move_changes": 9,
+    "clips_played": [
+      1019,
+      1021,
+      1026,
+      1027,
+      1028,
+      1040
+    ],
+    "key_frames": {
+      "landing": 4,
+      "running": 60,
+      "slope": 130,
+      "jump": 165,
+      "peak": 175,
+      "turned": 178,
+      "return": 215,
+      "settled": 269
+    },
+    "region_coverage_range": [
+      306653,
+      307200
+    ],
+    "terrain_pixels_first_frame": 306729,
+    "character_pixels_in_isolation": 5484,
+    "all_seven_previous_gpu_proofs_byte_equal": true,
+    "collision": {
+      "blocks": 13,
+      "triangles": 2342,
+      "shared_edges": 5778,
+      "boundary_edges": 1248,
+      "one_sided_links": 162,
+      "polylist_capacity": 120,
+      "edge_capacity": 80,
+      "sha256": "9f5491d1ba050a88125ff7091f8e3fe213f892e5c54503d46e290dd5be05b5cd"
+    },
+    "physics_sha256": "2e0756e0113cc4f13c1dccb998fb47c5e3d4c8225ec1b1de65ef58b908e04010",
+    "routine_audits": 32,
+    "audited_bytes": 45116,
+    "raw_sha256": "83b303bf9ee7955ee6e8464619cd3e5690cbfdeaf4941b5522bb494b1b88d4b5",
+    "video_sha256": "2098789251936f598b191a5fa5746c2a7e6eb883267b349e5a805bbe562ac526",
+    "fps_output": 30,
+    "duration_seconds": 9.0,
+    "limits": [
+      "Juno walking and air states with original track collision; other states, water, ledges and object hit models not ported",
+      "Port camera policy and a scripted controller stand in for the original camera and a physical controller",
+      "Native animation blend replaces controlSetTransition; move selection and clip positions follow the original machine",
+      "No enemies, weapons, audio or full levelInit; no emulation; ROM and derived assets remain private"
+    ]
+  },
+  "build": {
+    "native_movement_executable_sha256": "99ac6050122e126bf2efbddcb0c8c0fd251cdd8513911269c261fea1458ccf60",
+    "native_movement_check_sha256": "3303118689a2e81ae5d974e4812474a79567c3b31ed7c80d1353175d14c47212"
+  },
+  "imports": {
+    "jfg_native_movement.exe": [
+      "D3DCOMPILER_47.dll",
+      "KERNEL32.dll",
+      "d3d11.dll",
+      "dxgi.dll"
+    ],
+    "check_movement.exe": [
+      "KERNEL32.dll"
+    ]
+  },
+  "private_package_sha256": "b90a77960fbaa8149d585003bda2fc4c5de1af201786e410fa7d340a8458ea1e",
+  "windows": "Windows-11-10.0.26200-SP0",
+  "tests": {
+    "windows": {
+      "math_test": {
+        "status": "passed",
+        "math_cases": 6,
+        "rejected_cases": 4
+      },
+      "controller_test": {
+        "status": "passed",
+        "controller_cases": 8,
+        "rejected_cases": 6
+      },
+      "character_test": {
+        "status": "passed",
+        "character_cases": 10,
+        "rejected_cases": 20
+      },
+      "juno_selection_test": {
+        "status": "passed",
+        "choice_cases": 18,
+        "priority_cases": 8,
+        "bridge_cases": 8,
+        "rejected_cases": 19,
+        "original_table_cases": 20
+      },
+      "session_test": {
+        "status": "passed",
+        "session_cases": 9,
+        "rejected_cases": 18,
+        "presentation_rates": [
+          30,
+          60,
+          144
+        ],
+        "cadence_checkpoints": 12,
+        "original_assets": true
+      },
+      "region_test": {
+        "status": "passed",
+        "geometry_camera_cases": 6,
+        "rejected_cases": 11,
+        "original_region": true
+      },
+      "movement_test": {
+        "status": "passed",
+        "math_cases": 6,
+        "collision_cases": 7,
+        "movement_cases": 4,
+        "rejected_cases": 12,
+        "original_region": true,
+        "scenario_digest": "4603e7f4108b1cc9"
+      }
+    },
+    "linux_asan_ubsan": {
+      "check_animation": {
+        "status": "passed",
+        "math_cases": 6,
+        "rejected_cases": 4
+      },
+      "check_player": {
+        "status": "passed",
+        "controller_cases": 8,
+        "rejected_cases": 6
+      },
+      "check_character": {
+        "status": "passed",
+        "character_cases": 10,
+        "rejected_cases": 20
+      },
+      "check_juno_selection": {
+        "status": "passed",
+        "choice_cases": 18,
+        "priority_cases": 8,
+        "bridge_cases": 8,
+        "rejected_cases": 19,
+        "original_table_cases": 20
+      },
+      "check_session": {
+        "status": "passed",
+        "session_cases": 9,
+        "rejected_cases": 18,
+        "presentation_rates": [
+          30,
+          60,
+          144
+        ],
+        "cadence_checkpoints": 12,
+        "original_assets": true
+      },
+      "check_region": {
+        "status": "passed",
+        "geometry_camera_cases": 6,
+        "rejected_cases": 11,
+        "original_region": true
+      },
+      "check_movement": {
+        "status": "passed",
+        "math_cases": 6,
+        "collision_cases": 7,
+        "movement_cases": 4,
+        "rejected_cases": 12,
+        "original_region": true,
+        "scenario_digest": "4603e7f4108b1cc9"
+      }
+    }
+  },
+  "matching_rom_byte_equal": true,
+  "rom_sha1": "493ced9008dbe932d6e91179b68e8630cf23a023",
+  "emulation_used": false,
+  "visual_review": [
+    "Frame 4: Juno lands on the path from the original entry point",
+    "Frame 60: running animation along the path, camera behind",
+    "Frame 130: climbing the bank at the south end",
+    "Frame 175: running-jump pose in the air beside a tree",
+    "Frame 215: running back toward the camera after the original half-turn",
+    "Frame 269: standing on the path after deceleration"
+  ],
+  "scope": "Juno walking and air states in Forest First with original collision; port camera policy and scripted controller",
+  "next_milestone": "Original camera system (camTick and charControl camera routines) feeding controlcam",
+  "ai_assistance": "Claude Code (Anthropic); reviewed changes and recorded evidence"
+}

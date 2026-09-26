@@ -63,6 +63,13 @@ O [perfil de eventos e timers](../port/events/README.md) inicia o scheduler orig
 
 O [perfil de inicialização e PI](../port/init/README.md) passou a executar `mainInitGame` desde sua entrada, preparando buffers de vídeo, filas do RCP e tabelas lidas da ROM pelo `romCopy` original. A descompressão de um arquivo de 153.616 bytes coincide com MIPS e zlib. O percurso para explicitamente na chamada dinâmica de `mainInitRlo`, no overlay 36; o boot completo e o jogo visual continuam pendentes.
 
+Em 26/09/2026, Thiago passou a condução do projeto ao Claude Code, mantendo
+as mesmas diretrizes. O [movimento do Juno em Forest First](../port/native/MOVEMENT.md)
+foi portado a partir das rotinas originais de controle, física e colisão,
+lidas estaticamente e auditadas contra a ROM, sem emulação. A pedido de Thiago,
+o comportamento original é a referência; câmera e entrada do port são marcadas
+como provisórias até o port da câmera original e da entrada física.
+
 ## Melhorias futuras
 
 As ideias para depois da base jogável incluem dublagem em inglês, modelos com mais detalhes e melhorias visuais. São possibilidades para uma etapa posterior; não fazem parte da prova atual de CPU. A prioridade permanece chegar a um port funcional que preserve a identidade do jogo.

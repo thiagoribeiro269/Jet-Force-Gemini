@@ -113,6 +113,16 @@ public:
     bool motion(const JunoSelectionState &state, double startFraction, double blendSeconds) {
         return request(selector_.choose(state), state, startFraction, blendSeconds);
     }
+    // Follow the original move machine: switch clips only on a move change,
+    // then place the clip at the original normalized position.
+    bool follow(const JunoSelectedMove &move, double fraction, double blendSeconds, double seconds) {
+        const bool changed = animation_.selectAt(move.clip, blendSeconds, fraction);
+        animation_.place(fraction, changed ? 0.0 : seconds);
+        selected_ = move;
+        changes_ += changed;
+        return changed;
+    }
+    const JunoSelector &selector() const { return selector_; }
     void advance(double seconds) { animation_.advance(seconds); }
     const JunoSelectedMove &selection() const { return selected_; }
     const AnimationPlayer &animation() const { return animation_; }

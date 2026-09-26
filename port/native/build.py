@@ -53,5 +53,14 @@ subprocess.run([str(compiler), "-std=c++17", "-O2", "-Wall", "-Wextra", "-Werror
                 str(ROOT / "port/native/check_region.cpp"), "-o", str(region_check)], check=True)
 report["native_region_executable_sha256"] = hashlib.sha256(region_exe.read_bytes()).hexdigest()
 report["native_region_check_sha256"] = hashlib.sha256(region_check.read_bytes()).hexdigest()
+movement_exe = out / "jfg_native_movement.exe"
+subprocess.run([str(compiler), "-std=c++17", "-O2", "-Wall", "-Wextra", "-Werror", "-ffp-contract=off", "-DNOMINMAX", "-DWIN32_LEAN_AND_MEAN",
+                "-static", str(ROOT / "port/native/movement_main.cpp"), str(ROOT / "port/native/renderer_d3d11.cpp"), "-o", str(movement_exe),
+                "-ld3d11", "-ld3dcompiler", "-ldxgi", "-lole32"], check=True)
+movement_check = out / "check_movement.exe"
+subprocess.run([str(compiler), "-std=c++17", "-O2", "-Wall", "-Wextra", "-Werror", "-ffp-contract=off", "-static",
+                str(ROOT / "port/native/check_movement.cpp"), "-o", str(movement_check)], check=True)
+report["native_movement_executable_sha256"] = hashlib.sha256(movement_exe.read_bytes()).hexdigest()
+report["native_movement_check_sha256"] = hashlib.sha256(movement_check.read_bytes()).hexdigest()
 (out / "build-report.json").write_text(json.dumps(report, indent=2) + "\n")
 print(json.dumps(report))

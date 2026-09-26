@@ -16,12 +16,16 @@ def clip_for_model(assets, model_id, clip_index=0):
     channel_bones, frame_count, stride = raw[9], raw[11], raw[13]
     supported = {0: (1026, 16, 25, 193), 1: (1027, 16, 29, 231), 2: (1028, 16, 42, 336),
                  3: (1025, 16, 27, 212), 14: (1030, 10, 10, 77), 16: (1019, 50, 12, 91),
-                 28: (1055, 16, 14, 110), 36: (1061, 16, 23, 183), 51: (1071, 3, 0, 0)}
+                 28: (1055, 16, 14, 110), 36: (1061, 16, 23, 183), 51: (1071, 3, 0, 0),
+                 # Movement profile: jumps, strafe, skid, idle variants, fall and landing.
+                 5: (1039, 31, 35, 280), 6: (1040, 21, 33, 259), 7: (1041, 21, 33, 259), 9: (1042, 16, 31, 242),
+                 10: (1043, 16, 31, 245), 15: (1044, 6, 6, 47), 17: (1020, 40, 6, 42), 18: (1021, 50, 11, 86),
+                 24: (1048, 9, 30, 237), 25: (1050, 11, 26, 202)}
     require(model_id == 220 and clip_index in supported, "Animation index outside the validated native subset")
     expected_id, expected_count, expected_stride, expected_bits = supported[clip_index]
     require((animation_id, channel_bones, frame_count, stride) == (expected_id, 21, expected_count, expected_stride),
             "Selected native animation header differs")
-    looping = clip_index not in (16, 51)
+    looping = clip_index not in (16, 51, 6, 15, 17, 18, 24, 25)
     require((raw[1] & 0xF0) == (0x10 if looping else 0), "Selected native animation playback flags differ")
     mapping_start, mapping_end = struct.unpack(">II", region(assets.section(0x2C), model_id * 4, 8))
     mappings = region(assets.section(0x2D), mapping_start, mapping_end - mapping_start)

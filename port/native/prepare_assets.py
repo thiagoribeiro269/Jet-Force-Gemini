@@ -109,7 +109,7 @@ def skeleton(model):
     return positions
 
 
-def convert(assets, animated=False, transitions=False, character=False, juno_selection=False):
+def convert(assets, animated=False, transitions=False, character=False, juno_selection=False, movement=False):
     transitions = transitions or character or juno_selection
     animated = animated or transitions
     body, hand = assets.model(220), assets.model(309)
@@ -191,6 +191,8 @@ def convert(assets, animated=False, transitions=False, character=False, juno_sel
         for parent, local in skeleton_nodes(body):
             data.extend(struct.pack("<i3f", parent, *local))
         indices = (0, 14, 51, 1, 2, 3, 16, 28, 36) if juno_selection else (0, 14, 51) if character else (0, 14) if transitions else (0,)
+        if movement:
+            indices += (5, 6, 7, 9, 10, 15, 17, 18, 24, 25)
         if transitions:
             data.extend(struct.pack("<I", len(indices)))
         for index in indices:
@@ -223,7 +225,10 @@ def main():
     parser.add_argument("--juno-selection", action="store_true")
     parser.add_argument("--integration", action="store_true")
     parser.add_argument("--region", action="store_true")
+    parser.add_argument("--movement", action="store_true")
     args = parser.parse_args()
+    if args.movement:
+        args.region = True
     if args.region:
         args.integration = True
     if args.integration:
@@ -231,13 +236,27 @@ def main():
     out = args.out.resolve()
     require(out.is_relative_to(ROOT / "build"), "Private assets must remain inside ignored build/")
     assets = Assets(args.rom.read_bytes())
-    data, report = convert(assets, animated=args.animation, transitions=args.transitions, character=args.character, juno_selection=args.juno_selection)
+    data, report = convert(assets, animated=args.animation, transitions=args.transitions, character=args.character,
+                           juno_selection=args.juno_selection)
     out.mkdir(parents=True, exist_ok=True)
     if args.region:
         from region_assets import convert_region
         mesh, info, region_report = convert_region(assets)
         (out / "region-mesh.bin").write_bytes(mesh); (out / "region-info.bin").write_bytes(info)
         (out / "region-assets-report.json").write_text(json.dumps(region_report, indent=2) + "\n")
+    if args.movement:
+        # The nine-clip scene.bin stays identical for the earlier regressions;
+        # the movement proof adds jump, fall, landing and skid clips separately.
+        movement_scene, movement_report = convert(assets, animated=args.animation, transitions=args.transitions, character=args.character,
+                                                  juno_selection=args.juno_selection, movement=True)
+        (out / "movement-scene.bin").write_bytes(movement_scene)
+        report["movement_scene_sha256"] = hashlib.sha256(movement_scene).hexdigest()
+        report["movement_animations"] = movement_report["animations"]
+        from movement_assets import convert_collision, convert_physics
+        collision, collision_report = convert_collision(assets)
+        physics, physics_report = convert_physics(assets, args.rom)
+        (out / "collision.bin").write_bytes(collision); (out / "juno-physics.bin").write_bytes(physics)
+        (out / "movement-assets-report.json").write_text(json.dumps({"collision": collision_report, "physics": physics_report}, indent=2) + "\n")
     if args.juno_selection:
         from juno_selection_assets import prepare_selection
         selection, audit = prepare_selection(assets, args.rom)
@@ -247,6 +266,7 @@ def main():
     report["scene_sha256"] = hashlib.sha256(data).hexdigest()
     report["integration_profile"] = args.integration
     report["region_profile"] = args.region
+    report["movement_profile"] = args.movement
     (out / "assets-report.json").write_text(json.dumps(report, indent=2) + "\n")
     print(json.dumps({k: report[k] for k in ("status", "triangles", "draws", "texture_count", "bones", "scene_sha256")}))
 

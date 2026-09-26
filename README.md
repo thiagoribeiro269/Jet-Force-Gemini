@@ -10,7 +10,7 @@ Para alterações de descompilação, a referência de validação é recompilar
 
 Consulte [a direção e a base do fork](docs/FORK.md) e [as instruções de desenvolvimento](AGENTS.md). ROMs, arquivos extraídos e binários de jogo ficam fora do Git.
 
-Na branch experimental `port/recomp-poc`, a [estrutura nativa do port](port/native/ARCHITECTURE.md) integra recursos, cenas, entidades, animações e renderização Direct3D 11 própria no Windows x64/NVIDIA. O inventário estático cobre o programa identificado pelo ELF e orienta a integração de uma região original como próximo marco. A rota atual elimina RT64 e emulação; as comparações MIPS anteriores são somente históricas. As cenas atuais são de diagnóstico: gameplay completo, cenário original, colisões, áudio e controle físico ainda não estão integrados.
+Na branch experimental `port/recomp-poc`, a [estrutura nativa do port](port/native/ARCHITECTURE.md) integra recursos, cenas, entidades, animações e renderização Direct3D 11 própria no Windows x64/NVIDIA. Em Forest First, o Juno já anda, corre, pula e colide com o cenário pelo código original portado para C++ ([resultado](port/native/MOVEMENT.md)); a câmera original é o próximo marco. A rota atual elimina RT64 e emulação; as comparações MIPS anteriores são somente históricas. Gameplay completo, inimigos, áudio e controle físico ainda não estão integrados.
 
 ## Instruções de compilação herdadas
 

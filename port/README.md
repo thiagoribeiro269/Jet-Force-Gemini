@@ -5,9 +5,10 @@ toda emulação. O novo caminho está em [native/PLAN.md](native/PLAN.md), com
 conversão direta de assets, meshes/texturas de PC e renderizador D3D11
 próprio. A [arquitetura geral](native/ARCHITECTURE.md) agora inclui inventário
 do programa, host de aplicação, cenas e entidades independentes, snapshots
-e backend compartilhado. O [roteiro vigente](ROADMAP.md) prioriza uma região
-original nesse host. O ciclo completo de gameplay e a colisão ainda não
-estão integrados; as cenas executadas são de diagnóstico.
+e backend compartilhado. Em Forest First, o Juno já se move pelo controle,
+física, colisão e máquina de movimentos originais, portados para C++
+([resultado](native/MOVEMENT.md)). O [roteiro vigente](ROADMAP.md) prioriza a
+câmera original. O ciclo completo de gameplay ainda não está integrado.
 
 ## Histórico da rota anterior
 

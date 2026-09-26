@@ -7,9 +7,10 @@ com código nativo, sem RT64, emulação, código de emuladores ou Android.
 O port tem agora um host de aplicação separado dos diagnósticos de animação.
 Ele carrega recursos, mantém cenas e entidades, atualiza o mundo em passos
 fixos e entrega snapshots ao mesmo renderer D3D11 usado pelas regressões.
-O host também carrega a geometria de Forest First com Juno, câmera em
-perspectiva e consulta vertical de piso. Ainda não executa o ciclo completo
-de gameplay do JFG nem oferece uma fase jogável.
+O host também carrega a geometria de Forest First com Juno. O Juno se move
+pelo código original portado: controle, gravidade, pulo, colisão com o
+cenário e máquina de movimentos das animações. Ainda não executa o ciclo
+completo de gameplay do JFG nem oferece uma fase jogável.
 
 ## Fluxo original identificado
 
@@ -67,6 +68,9 @@ flowchart LR
     B --> C[NativeSession: cena e entidades]
     A --> R[NativeRegion: geometria e metadados]
     R --> C
+    A --> T[TrackCollision: blocos, planos e arestas]
+    T --> K[JunoBody: controle e física originais]
+    K --> C
     I[TickInput: comandos tipados] --> C
     J[Seletor original recuperado] --> C
     C --> D[SessionSnapshot: poses e transformações]
@@ -81,7 +85,12 @@ flowchart LR
 | `region_assets.py` / `region.h` | Conversão e leitura de região, associação ao ponto de entrada e consulta vertical de piso |
 | `camera.h` | Matrizes de câmera em perspectiva no espaço do PC |
 | `session.h` | Inicialização, transações de cena, vida das entidades, relógio, pausa e encerramento |
-| `planar_motion.h` | Movimento provisório separado da seleção/animação |
+| `planar_motion.h` | Movimento provisório dos diagnósticos antigos, fora do caminho original |
+| `original_math.h` | Seno, arco-tangente, potência, rotações e teste XZ originais |
+| `track_collision.h` | Colisão original do cenário: máscaras, planos, candidatos, testes e resolução |
+| `juno_body.h` | Controle, estados de andar e ar, gravidade, contatos e máquina de movimentos do Juno |
+| `movement_assets.py` / `overlay_listing.py` | Conversão auditada dos dados e leitura estática de overlays para o m2c |
+| `movement_scenario.h` / `movement_main.cpp` | Prova de movimento com roteiro reproduzível e câmera do port |
 | `juno_selection.h` | As duas decisões originais já recuperadas e sua ponte para animação |
 | `animation_player.h` / `animation.h` | Relógios dos clipes, mistura, poses e hierarquia |
 | `renderer.h` / `renderer_d3d11.cpp` | Backend que recebe instâncias prontas; não escolhe clipes nem avança o jogo |
@@ -139,17 +148,18 @@ precisam de medição. A validação a 144 Hz não é benchmark de desempenho.
 | Inicialização e ciclo principal | Host e ciclo de vida implementados; não chama o boot original completo |
 | Memória e carregamento de overlays | Recursos com propriedade explícita; rotinas devem ser adaptadas ou ligadas estaticamente, sem imitar RAM/chips |
 | `levelInit`, `trackInit`, listas de objetos | Formatos inspecionados; geometria/material de Forest First e ponto de entrada convertidos. Inicialização completa e comportamentos dos objetos pendentes |
-| `objObjectsTick`, `controlPlayer`, `boyControl` | Entidades e comandos integrados; apenas os dois seletores originais foram portados neste caminho |
-| Colisão, gravidade e física de personagem | Consulta vertical de piso disponível; gravidade, obstáculos e controle original pendentes |
-| Câmera, desenho de mundo e materiais | Perspectiva, catálogo e terreno ativos em D3D11; câmera jogável, céu e efeitos originais pendentes |
+| `objObjectsTick`, `controlPlayer`, `boyControl` | Estados de andar e ar do Juno portados; água, bordas, armas e outros estados pendentes |
+| Colisão, gravidade e física de personagem | Colisão original do cenário e física do Juno portadas; modelos de colisão de objetos pendentes |
+| Câmera, desenho de mundo e materiais | Perspectiva, catálogo e terreno ativos em D3D11; câmera original, céu e efeitos pendentes |
 | Armas, projéteis, inimigos e scripts | Pendente; deverá usar a mesma vida de entidades, sem cenários paralelos isolados |
 | Áudio e música | Saída/síntese ainda não integradas |
-| Interface, salvamento e entrada física | Pendentes; só há entrada de teste e encerramento controlado |
+| Interface, salvamento e entrada física | Pendentes; entrada de teste com `joyClamp` original e encerramento controlado |
 
 `requireOriginalService` rejeita pedidos dos serviços ainda ausentes. Pedir
 uma cena marcada como gameplay original também falha; `regionId` identifica
 separadamente a geometria convertida. Não há stubs de áudio,
-colisão, salvamento ou dispositivos que retornem sucesso fictício.
+salvamento ou dispositivos que retornem sucesso fictício. Estados, superfícies
+e serviços do Juno ainda não portados também falham explicitamente.
 
 Os perfis legados em `port/boot`, `port/init`, `port/objects` e similares
 são evidência histórica delimitada. Seus contratos de RAM/PI/VI/filas e suas
@@ -175,6 +185,9 @@ as seis provas gráficas anteriores permaneceram idênticas byte a byte.
 Capturas separadas do cenário e do personagem conferem sua contribuição
 na imagem conjunta. [Resultado e limites](REGION.md).
 
-O próximo marco é **movimento e colisão dentro dessa região**, começando
-pelo contrato de controle, gravidade, piso e obstáculos. As particularidades
-de animação entram nesse contexto, preservando as regressões do host.
+O movimento e a colisão originais do Juno foram integrados a essa região,
+com 270 quadros na RTX e as sete provas anteriores idênticas byte a byte.
+[Resultado e limites](MOVEMENT.md).
+
+O próximo marco é a **câmera original**, portada sobre o mesmo host para
+substituir a câmera do port e alimentar `controlcam` como no jogo.

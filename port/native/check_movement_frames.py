@@ -1,0 +1,107 @@
+#!/usr/bin/env python3
+"""Check the Forest First movement proof, its trace and every earlier GPU regression."""
+import hashlib
+import json
+from pathlib import Path
+import subprocess
+from check_animation_frames import png_rgb, require
+
+ROOT = Path(__file__).resolve().parents[2]
+OUT = ROOT / "build/port-native/movement"
+SIZE = 640 * 480 * 4
+FRAMES = 270
+
+
+def digest(data):
+    return hashlib.sha256(data).hexdigest()
+
+
+def changed(a, b):
+    return [offset // 4 for offset in range(0, SIZE, 4) if a[offset:offset + 3] != b[offset:offset + 3]]
+
+
+def main():
+    result = json.loads((OUT / "rtx-result.json").read_text()); meta = result["frame"]; trace = result["movement_trace"]
+    linux = json.loads((OUT / "linux-checks.json").read_text())["check_movement"]
+    windows = json.loads(result["movement_test"]["stdout"])
+    require(result["ok"] and windows == linux and windows["status"] == "passed" and windows["original_region"],
+            "Movement checks failed or differ between Linux and Windows")
+    require((meta["api"], meta["vendor"], meta["region"], meta["geometry"], meta["frame_count"], meta["ticks"]) ==
+            ("D3D11", 0x10DE, 21, 17, FRAMES, 540), "Wrong movement render profile")
+    require(meta["perspective"] and not meta["emulator_dependencies"] and not meta["display_list_interpreter"], "Wrong graphics path")
+    require(trace["stopped"] and trace["original_movement"] and not trace["object_collision"] and not trace["emulation"], "Wrong scope or cleanup")
+    frames = trace["frames"]; require(len(frames) == FRAMES, "Incomplete movement timeline")
+    for index, frame in enumerate(frames):
+        require((frame["frame"], frame["tick"]) == (index, (index + 1) * 2), "Movement ticks left the 60 Hz host clock")
+        require(frame["y"] >= -1.99 - 1e-4, "Juno went below the recovered floor response")
+        if frame["floor"] & 1:
+            require(frame["state"] == 0 or frame["vy"] <= 0, "Grounded frame with upward motion")
+    clips = [frame["clip"] for frame in frames]
+    for clip in (1019, 1026, 1027, 1028, 1040):
+        require(clip in clips, f"Original clip {clip} missing from the movement proof")
+    airborne = [i for i, f in enumerate(frames) if f["state"] == 3]
+    require(airborne and trace["highest_y"] > 150 and trace["wall_ticks"] > 20, "Jump, slope or wall contact missing")
+    require(frames[-1]["floor"] & 1 and frames[-1]["state"] == 0, "Juno did not settle on the ground")
+    # Earlier GPU proofs stay byte-identical, including the region checkpoint.
+    references = {
+        "neutral.rgba": "ac70cc84b273b79b814209eae1d0451d706ac19fdf914b7345013d8e4c4bacc6",
+        "cycle.rgba": json.loads((ROOT / "port/native/animation-validation.json").read_text())["animation"]["raw_stream_sha256"],
+        "transitions.rgba": json.loads((ROOT / "port/native/transition-validation.json").read_text())["transition"]["raw_sha256"],
+        "character.rgba": json.loads((ROOT / "port/native/character-validation.json").read_text())["character"]["raw_sha256"],
+        "juno.rgba": json.loads((ROOT / "port/native/juno-selection-validation.json").read_text())["selection"]["raw_sha256"],
+        "integration.rgba": json.loads((ROOT / "port/native/integration-validation.json").read_text())["integration"]["raw_sha256"],
+        "region.rgba": json.loads((ROOT / "port/native/region-validation.json").read_text())["region"]["raw_sha256"],
+    }
+    for name, expected in references.items():
+        require(digest((OUT / name).read_bytes()) == expected, "Native GPU regression: " + name)
+    background = (OUT / "frame.background.rgba").read_bytes(); terrain = (OUT / "frame.terrain.rgba").read_bytes()
+    actor = (OUT / "frame.character.rgba").read_bytes()
+    require(all(len(p) == SIZE for p in (background, terrain, actor)), "Missing independent resource captures")
+    require(background == background[:4] * (640 * 480), "Empty renderer frame is not the controlled backdrop")
+    raw = (OUT / "frame.rgba").read_bytes(); require(len(raw) == FRAMES * SIZE, "Incomplete movement video stream")
+    terrain_pixels, actor_pixels = changed(terrain, background), changed(actor, background)
+    require(len(terrain_pixels) > 30000 and 200 < len(actor_pixels) < 60000, "Region or character failed to contribute visibly")
+    coverage, hashes = [], []
+    peak = max(range(FRAMES), key=lambda i: frames[i]["y"])
+    first_ground = next(i for i, f in enumerate(frames) if f["floor"] & 1)
+    jump = airborne[0]
+    turned = next(i for i, f in enumerate(frames) if f["tick"] > 340 and f["speed04"] < -3)
+    keys = {"landing": first_ground, "running": 60, "slope": 130, "jump": jump, "peak": peak, "turned": turned,
+            "return": 215, "settled": FRAMES - 1}
+    for frame in range(FRAMES):
+        pixels = raw[frame * SIZE:(frame + 1) * SIZE]; hashes.append(digest(pixels))
+        covered = sum(pixels[p:p + 3] != background[p:p + 3] for p in range(0, SIZE, 4))
+        require(covered > 30000, "Camera lost the region")
+        coverage.append(covered)
+    for name, frame in keys.items():
+        (OUT / f"movement-{frame:03}-{name}.png").write_bytes(png_rgb(raw[frame * SIZE:(frame + 1) * SIZE]))
+    require(len(set(hashes)) > 240, "Movement sequence did not evolve")
+    subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "rawvideo", "-pixel_format", "rgba", "-video_size", "640x480",
+                    "-framerate", "30", "-i", str(OUT / "frame.rgba"), "-an", "-c:v", "libx264", "-preset", "fast",
+                    "-crf", "18", "-pix_fmt", "yuv420p", "-movflags", "+faststart", str(OUT / "forest-first-movement.mp4")], check=True)
+    assets = json.loads((OUT / "movement-assets-report.json").read_text())
+    report = {"status": "passed", "level": 21, "geometry": 17, "frames": FRAMES, "original_frames": 540, "unique_frames": len(set(hashes)),
+              "linux_windows_checks": windows, "scenario_digest_equal_on_linux_and_windows": True,
+              "final_position": trace["final"], "lowest_y": trace["lowest_y"], "highest_y": trace["highest_y"],
+              "wall_contact_ticks": trace["wall_ticks"], "airborne_ticks": trace["airborne_ticks"], "move_changes": trace["move_changes"],
+              "clips_played": sorted(set(clips)), "key_frames": keys, "region_coverage_range": [min(coverage), max(coverage)],
+              "terrain_pixels_first_frame": len(terrain_pixels), "character_pixels_in_isolation": len(actor_pixels),
+              "all_seven_previous_gpu_proofs_byte_equal": True,
+              "collision": {k: assets["collision"][k] for k in ("blocks", "triangles", "shared_edges", "boundary_edges", "one_sided_links",
+                                                                "polylist_capacity", "edge_capacity", "sha256")},
+              "physics_sha256": assets["physics"]["sha256"],
+              "routine_audits": len(assets["physics"]["routine_audits"]),
+              "audited_bytes": sum(a["bytes"] for a in assets["physics"]["routine_audits"]),
+              "raw_sha256": digest(raw), "video_sha256": digest((OUT / "forest-first-movement.mp4").read_bytes()),
+              "fps_output": 30, "duration_seconds": FRAMES / 30,
+              "limits": ["Juno walking and air states with original track collision; other states, water, ledges and object hit models not ported",
+                         "Port camera policy and a scripted controller stand in for the original camera and a physical controller",
+                         "Native animation blend replaces controlSetTransition; move selection and clip positions follow the original machine",
+                         "No enemies, weapons, audio or full levelInit; no emulation; ROM and derived assets remain private"]}
+    (ROOT / "port/native/movement-validation.json").write_text(json.dumps(report, indent=2) + "\n")
+    print(json.dumps({k: report[k] for k in ("status", "frames", "unique_frames", "highest_y", "wall_contact_ticks",
+                                           "clips_played", "all_seven_previous_gpu_proofs_byte_equal")}))
+
+
+if __name__ == "__main__":
+    main()

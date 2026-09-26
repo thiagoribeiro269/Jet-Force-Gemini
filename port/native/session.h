@@ -4,6 +4,7 @@
 #include "juno_selection.h"
 #include "renderer.h"
 #include "region.h"
+#include "juno_body.h"
 #include <functional>
 #include <optional>
 #include <set>
@@ -35,10 +36,13 @@ struct ActorInput {
     JunoSelectionState selection;
     std::optional<uint32_t> directMove;
     double initialFraction = 0, blendSeconds = 0.2;
+    std::optional<JunoControl> control; // Original-body actors only.
 };
 struct SpawnSpec {
     uint32_t slot; double x = 0, y = 0, z = 0, yaw = 0; ActorInput input;
     float scale = 1, visualOffsetY = 0;
+    bool originalBody = false; // Recovered Juno movement and track collision.
+    int16_t originalYaw = 0;
 };
 struct SceneSpec {
     std::string name; bool originalLevel = false; std::vector<SpawnSpec> entities;
@@ -85,13 +89,24 @@ class NativeSession {
         PlanarMotion motion;
         JunoAnimationController animation;
         ActorInput held;
-        Actor(EntityHandle id, const SpawnSpec &spawn, const AssetPackage &assets, const JunoSelectionData &selection)
+        std::optional<JunoBody> body;
+        Actor(EntityHandle id, const SpawnSpec &spawn, const AssetPackage &assets, const JunoSelectionData &selection,
+              const std::shared_ptr<const JunoPhysicsData> &physics, const std::shared_ptr<const TrackCollision> &collision)
             : handle(id), elevation(spawn.y), scale(spawn.scale), visualOffsetY(spawn.visualOffsetY),
               motion(spawn.x, spawn.z, spawn.yaw), animation(selection, assets.clips, assets.skeleton.size()), held(spawn.input) {
             if (!std::isfinite(elevation) || std::abs(elevation) > 1000000) throw std::runtime_error("Invalid entity elevation");
             if (!std::isfinite(scale) || scale <= 0 || scale > 1024 || !std::isfinite(visualOffsetY) || std::abs(visualOffsetY) > 8192)
                 throw std::runtime_error("Invalid native model placement");
-            consume(held);
+            if (spawn.originalBody) {
+                if (!physics || !collision) requireOriginalService(MissingService::OriginalPhysics);
+                if (spawn.input.directMove || spawn.input.movement.x != 0 || spawn.input.movement.z != 0 || spawn.input.movement.low)
+                    throw std::runtime_error("Original-body actors take controller input only");
+                body.emplace(physics, collision, selection, assets.clips, Vec3f{float(spawn.x), float(spawn.y), float(spawn.z)}, spawn.originalYaw);
+                followBody(0);
+            } else {
+                if (spawn.input.control) throw std::runtime_error("Controller input requires an original-body actor");
+                consume(held);
+            }
         }
         void consume(const ActorInput &input) {
             auto next = motion; next.command(input.movement);
@@ -99,11 +114,34 @@ class NativeSession {
             else animation.motion(input.selection, input.initialFraction, input.blendSeconds);
             motion = next;
         }
+        void followBody(double seconds) {
+            const auto move = animation.selector().resolve(body->move3B, {});
+            animation.follow(move, body->progress28, held.blendSeconds, seconds);
+        }
         void setInput(const ActorInput &input) {
+            if (body) {
+                if (input.directMove || input.movement.x != 0 || input.movement.z != 0 || input.movement.low)
+                    throw std::runtime_error("Original-body actors take controller input only");
+                if (input.control) for (int32_t v : {input.control->stickX, input.control->stickY})
+                    if (v < -128 || v > 127) throw std::runtime_error("Stick value outside the controller range");
+                if (!std::isfinite(input.blendSeconds) || input.blendSeconds < 0 || input.blendSeconds > 10)
+                    throw std::runtime_error("Invalid transition duration");
+                held = input;
+                return;
+            }
+            if (input.control) throw std::runtime_error("Controller input requires an original-body actor");
             Actor validate(*this); validate.consume(input);
             held = input; // A paused actor retains its displayed state until resuming.
         }
-        void advance(double seconds) { consume(held); motion.advance(seconds); animation.advance(seconds); }
+        void advance(double seconds) {
+            if (body) {
+                body->tick(held.control.value_or(JunoControl{}));
+                if (held.control) held.control->jumpPressed = false; // A press is one original frame.
+                followBody(seconds);
+                return;
+            }
+            consume(held); motion.advance(seconds); animation.advance(seconds);
+        }
     };
     struct World {
         std::string name;
@@ -120,6 +158,8 @@ class NativeSession {
     SessionPhase phase_ = SessionPhase::Cold;
     std::shared_ptr<const AssetPackage> assets_;
     std::shared_ptr<const NativeRegion> region_;
+    std::shared_ptr<const JunoPhysicsData> physics_;
+    std::shared_ptr<const TrackCollision> collision_;
     JunoSelectionData selection_;
     std::unique_ptr<World> world_;
     uint64_t hostTick_ = 0, accumulator_ = 0;
@@ -132,7 +172,8 @@ class NativeSession {
     void spawn(World &world, const SpawnSpec &spec) const {
         if (!spec.slot || world.actors.size() >= 64 || world.usedSlots.count(spec.slot))
             throw std::runtime_error("Duplicate or unbounded native entity slot");
-        world.actors.push_back(std::make_unique<Actor>(EntityHandle{world.generation, spec.slot}, spec, *assets_, selection_));
+        if (spec.originalBody && !world.region) throw std::runtime_error("Original-body actor requires a region scene");
+        world.actors.push_back(std::make_unique<Actor>(EntityHandle{world.generation, spec.slot}, spec, *assets_, selection_, physics_, collision_));
         world.usedSlots.insert(spec.slot);
     }
     void execute(const TickInput &input, bool update) {
@@ -182,14 +223,18 @@ public:
     NativeSession() = default;
     NativeSession(const NativeSession &) = delete;
     NativeSession &operator=(const NativeSession &) = delete;
-    void boot(std::shared_ptr<const AssetPackage> assets, const JunoSelectionData &selection, std::shared_ptr<const NativeRegion> region = {}) {
+    void boot(std::shared_ptr<const AssetPackage> assets, const JunoSelectionData &selection, std::shared_ptr<const NativeRegion> region = {},
+              std::shared_ptr<const JunoPhysicsData> physics = {}, std::shared_ptr<const TrackCollision> collision = {}) {
         if (phase_ != SessionPhase::Cold || !assets || !assets->rigged || assets->skeleton.empty())
             throw std::runtime_error("Invalid or repeated native boot");
         JunoAnimationController validate(selection, assets->clips, assets->skeleton.size());
         composePose(assets->skeleton, validate.animation().current());
         if (region && (!region->mesh || !region->mesh->worldGeometry || region->mesh->rigged || region->triangles.empty()))
             throw std::runtime_error("Invalid native region binding");
-        selection_ = selection; assets_ = std::move(assets); region_ = std::move(region); phase_ = SessionPhase::Ready;
+        if (bool(physics) != bool(collision) || (collision && (!region || collision->level != region->level || collision->geometry != region->geometry)))
+            throw std::runtime_error("Original movement requires matching physics and region collision");
+        selection_ = selection; assets_ = std::move(assets); region_ = std::move(region);
+        physics_ = std::move(physics); collision_ = std::move(collision); phase_ = SessionPhase::Ready;
     }
     void apply(const TickInput &input) { execute(input, false); }
     void advanceNanoseconds(uint64_t elapsed, const std::function<TickInput(uint64_t)> &source) {
@@ -210,9 +255,17 @@ public:
             auto bones = composePose(assets_->skeleton, actor->animation.animation().current());
             auto world = actor->motion.world(); world[13] = float(actor->elevation);
             if (actor->visualOffsetY != 0) world[13] += actor->visualOffsetY;
+            if (actor->body) world = originalWorld(*actor->body);
             for (auto &bone : bones) {
                 if (actor->scale != 1) bone = multiply(bone, uniformScale(actor->scale));
                 bone = multiply(bone, world);
+            }
+            if (actor->body) {
+                const auto &b = *actor->body;
+                result.entities.push_back({actor->handle, b.position.x, b.position.y, b.position.z, b.orientation[0] * (2 * double(Pi) / 65536),
+                                           actor->animation.animation().frame(), actor->animation.animation().id(),
+                                           actor->animation.selection().transitionProfile, {0, std::move(bones)}});
+                continue;
             }
             result.entities.push_back({actor->handle, actor->motion.x(), actor->elevation, actor->motion.z(), actor->motion.yaw(),
                                        actor->animation.animation().frame(), actor->animation.animation().id(),
@@ -221,7 +274,20 @@ public:
         return result;
     }
     void stop() {
-        world_.reset(); assets_.reset(); region_.reset(); selection_ = {}; accumulator_ = 0; phase_ = SessionPhase::Stopped;
+        world_.reset(); assets_.reset(); region_.reset(); physics_.reset(); collision_.reset();
+        selection_ = {}; accumulator_ = 0; phase_ = SessionPhase::Stopped;
+    }
+    // Original object orientation (mathOneFloatRPY basis) and position.
+    static Matrix originalWorld(const JunoBody &body) {
+        const auto &math = body.data().math;
+        const auto x = math.rotateRPY(body.orientation, {1, 0, 0}), y = math.rotateRPY(body.orientation, {0, 1, 0});
+        const auto z = math.rotateRPY(body.orientation, {0, 0, 1});
+        return {x.x, x.y, x.z, 0, y.x, y.y, y.z, 0, z.x, z.y, z.z, 0, body.position.x, body.position.y, body.position.z, 1};
+    }
+    const JunoBody *body(EntityHandle id) const {
+        if (!world_) return nullptr;
+        for (const auto &actor : world_->actors) if (actor->handle == id) return actor->body ? &*actor->body : nullptr;
+        return nullptr;
     }
 };
 }

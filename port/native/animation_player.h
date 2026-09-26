@@ -65,6 +65,20 @@ public:
         from_ = std::move(visible);
         return true;
     }
+    // Place the selected clip at an original normalized position (obj +0x28)
+    // and advance only the native transition clock. The frame mapping is the
+    // one used by selectAt: loops span every key, other clips stop at the last.
+    void place(double fraction, double seconds) {
+        if (!std::isfinite(fraction) || !std::isfinite(seconds) || seconds < 0) throw std::runtime_error("Invalid original clip position");
+        const auto &clip = clips_[selected_];
+        const double position = std::clamp(fraction, 0.0, 1.0) * double(clip.loop ? clip.keys.size() : clip.keys.size() - 1);
+        frame_ = clip.loop ? std::fmod(position, double(clip.keys.size())) : position;
+        if (transitioning()) {
+            elapsed_ = std::min(duration_, elapsed_ + seconds);
+            const double tolerance = 64 * std::numeric_limits<double>::epsilon() * std::max(1.0, duration_);
+            if (duration_ - elapsed_ <= tolerance) elapsed_ = duration_;
+        }
+    }
     void advance(double seconds) {
         if (!std::isfinite(seconds) || seconds < 0) throw std::runtime_error("Invalid animation time step");
         const auto &clip = clips_[selected_];

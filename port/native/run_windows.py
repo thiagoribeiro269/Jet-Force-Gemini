@@ -61,7 +61,8 @@ def main():
     if region_test["exit_code"] or region_test["timed_out"]:
         raise RuntimeError("Native region/camera checks failed: " + region_test["stderr"])
     movement = (package / "jfg_native_movement.exe").is_file()
-    movement_inputs = [str(package / "movement-scene.bin"), *region_inputs[1:], str(package / "collision.bin"), str(package / "juno-physics.bin")]
+    movement_inputs = [str(package / "movement-scene.bin"), *region_inputs[1:], str(package / "collision.bin"), str(package / "juno-physics.bin"),
+                       str(package / "juno-camera.bin")]
     movement_test = owned("movement_test", [str(package / "check_movement.exe"), *movement_inputs]) if movement else None
     if movement and (movement_test["exit_code"] or movement_test["timed_out"]):
         raise RuntimeError("Native movement checks failed: " + movement_test["stderr"])

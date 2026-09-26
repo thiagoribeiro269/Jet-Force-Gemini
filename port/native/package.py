@@ -48,6 +48,10 @@ if assets.get("movement_profile"):
         files[name] = (out / name).read_bytes()
         if hashlib.sha256(files[name]).hexdigest() != movement[key]["sha256"]:
             raise ValueError("Native movement data differs from its conversion report")
+    files["juno-camera.bin"] = (out / "juno-camera.bin").read_bytes()
+    camera = json.loads((out / "camera-assets-report.json").read_text())
+    if hashlib.sha256(files["juno-camera.bin"]).hexdigest() != camera["sha256"]:
+        raise ValueError("Native camera data differs from its conversion report")
 files["run_windows.py"] = (ROOT / "port/native/run_windows.py").read_bytes()
 files["PRIVATE.txt"] = b"Private game-derived meshes and textures. Do not publish this package.\n"
 files["hashes.json"] = (json.dumps({n: hashlib.sha256(v).hexdigest() for n, v in files.items()}, indent=2) + "\n").encode()

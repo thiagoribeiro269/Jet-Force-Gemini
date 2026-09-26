@@ -1,87 +1,11 @@
 {
   "status": "passed",
   "recorded_date": "2026-09-26",
-  "previous_checkpoint": "fb7320604ba7890fffc7dea8c93432158b58825e",
-  "architecture": "Native C++ host with recovered Juno control/physics and track collision; Direct3D 11 renderer; no emulation",
-  "movement": {
-    "status": "passed",
-    "level": 21,
-    "geometry": 17,
-    "frames": 270,
-    "original_frames": 540,
-    "unique_frames": 270,
-    "linux_windows_checks": {
-      "status": "passed",
-      "math_cases": 6,
-      "collision_cases": 7,
-      "movement_cases": 4,
-      "rejected_cases": 12,
-      "original_region": true,
-      "scenario_digest": "4603e7f4108b1cc9"
-    },
-    "scenario_digest_equal_on_linux_and_windows": true,
-    "final_position": {
-      "x": -70.8108521,
-      "y": -0.808712006,
-      "z": 293.040924
-    },
-    "lowest_y": -1.98999977,
-    "highest_y": 164.153336,
-    "wall_contact_ticks": 51,
-    "airborne_ticks": 48,
-    "move_changes": 9,
-    "clips_played": [
-      1019,
-      1021,
-      1026,
-      1027,
-      1028,
-      1040
-    ],
-    "key_frames": {
-      "landing": 4,
-      "running": 60,
-      "slope": 130,
-      "jump": 165,
-      "peak": 175,
-      "turned": 178,
-      "return": 215,
-      "settled": 269
-    },
-    "region_coverage_range": [
-      306653,
-      307200
-    ],
-    "terrain_pixels_first_frame": 306729,
-    "character_pixels_in_isolation": 5484,
-    "all_seven_previous_gpu_proofs_byte_equal": true,
-    "collision": {
-      "blocks": 13,
-      "triangles": 2342,
-      "shared_edges": 5778,
-      "boundary_edges": 1248,
-      "one_sided_links": 162,
-      "polylist_capacity": 120,
-      "edge_capacity": 80,
-      "sha256": "9f5491d1ba050a88125ff7091f8e3fe213f892e5c54503d46e290dd5be05b5cd"
-    },
-    "physics_sha256": "2e0756e0113cc4f13c1dccb998fb47c5e3d4c8225ec1b1de65ef58b908e04010",
-    "routine_audits": 32,
-    "audited_bytes": 45116,
-    "raw_sha256": "83b303bf9ee7955ee6e8464619cd3e5690cbfdeaf4941b5522bb494b1b88d4b5",
-    "video_sha256": "2098789251936f598b191a5fa5746c2a7e6eb883267b349e5a805bbe562ac526",
-    "fps_output": 30,
-    "duration_seconds": 9.0,
-    "limits": [
-      "Juno walking and air states with original track collision; other states, water, ledges and object hit models not ported",
-      "Port camera policy and a scripted controller stand in for the original camera and a physical controller",
-      "Native animation blend replaces controlSetTransition; move selection and clip positions follow the original machine",
-      "No enemies, weapons, audio or full levelInit; no emulation; ROM and derived assets remain private"
-    ]
-  },
+  "previous_checkpoint": "ab2dd70",
+  "architecture": "Native C++ host with recovered Juno control/physics, track collision and free camera; Direct3D 11 renderer; no emulation",
   "build": {
-    "native_movement_executable_sha256": "99ac6050122e126bf2efbddcb0c8c0fd251cdd8513911269c261fea1458ccf60",
-    "native_movement_check_sha256": "3303118689a2e81ae5d974e4812474a79567c3b31ed7c80d1353175d14c47212"
+    "native_movement_executable_sha256": "fd5f80ca3af1bb3d1c7762c7538643e5aa15e550e2311023eaf936d65ee83f89",
+    "native_movement_check_sha256": "5187cf8064ccd84fa485de049a47bb8d3e99f3882ee45157c81e4065c3405f8e"
   },
   "imports": {
     "jfg_native_movement.exe": [
@@ -92,9 +16,10 @@
     ],
     "check_movement.exe": [
       "KERNEL32.dll"
-    ]
+    ],
+    "plus_windows_ucrt_api_sets_only": true
   },
-  "private_package_sha256": "b90a77960fbaa8149d585003bda2fc4c5de1af201786e410fa7d340a8458ea1e",
+  "private_package_sha256": "8c54e0a48c087a4622499c46ff09784db2763d8814a17b9a60039e31c843f30b",
   "windows": "Windows-11-10.0.26200-SP0",
   "tests": {
     "windows": {
@@ -142,11 +67,11 @@
       "movement_test": {
         "status": "passed",
         "math_cases": 6,
-        "collision_cases": 7,
-        "movement_cases": 4,
-        "rejected_cases": 12,
+        "collision_cases": 10,
+        "movement_cases": 5,
+        "rejected_cases": 15,
         "original_region": true,
-        "scenario_digest": "4603e7f4108b1cc9"
+        "scenario_digest": "ccc115e293dffd5"
       }
     },
     "linux_asan_ubsan": {
@@ -194,26 +119,125 @@
       "check_movement": {
         "status": "passed",
         "math_cases": 6,
-        "collision_cases": 7,
-        "movement_cases": 4,
-        "rejected_cases": 12,
+        "collision_cases": 10,
+        "movement_cases": 5,
+        "rejected_cases": 15,
         "original_region": true,
-        "scenario_digest": "4603e7f4108b1cc9"
+        "scenario_digest": "ccc115e293dffd5"
       }
     }
   },
   "matching_rom_byte_equal": true,
   "rom_sha1": "493ced9008dbe932d6e91179b68e8630cf23a023",
   "emulation_used": false,
+  "movement": {
+    "status": "passed",
+    "level": 21,
+    "geometry": 17,
+    "frames": 270,
+    "original_frames": 540,
+    "unique_frames": 270,
+    "linux_windows_checks": {
+      "status": "passed",
+      "math_cases": 6,
+      "collision_cases": 10,
+      "movement_cases": 5,
+      "rejected_cases": 15,
+      "original_region": true,
+      "scenario_digest": "ccc115e293dffd5"
+    },
+    "scenario_digest_equal_on_linux_and_windows": true,
+    "final_position": {
+      "x": -41.5072021,
+      "y": -0.642019272,
+      "z": 268.211365
+    },
+    "lowest_y": -1.98999977,
+    "highest_y": 164.136353,
+    "wall_contact_ticks": 61,
+    "airborne_ticks": 45,
+    "move_changes": 10,
+    "clips_played": [
+      1019,
+      1021,
+      1026,
+      1027,
+      1028,
+      1040
+    ],
+    "key_frames": {
+      "landing": 4,
+      "running": 60,
+      "slope": 130,
+      "jump": 165,
+      "peak": 175,
+      "turned": 183,
+      "return": 215,
+      "c-left": 251,
+      "settled": 269
+    },
+    "region_coverage_range": [
+      295764,
+      307200
+    ],
+    "terrain_pixels_first_frame": 295709,
+    "character_pixels_in_isolation": 8293,
+    "all_seven_previous_gpu_proofs_byte_equal": true,
+    "collision": {
+      "blocks": 13,
+      "triangles": 2342,
+      "shared_edges": 5778,
+      "boundary_edges": 1248,
+      "one_sided_links": 162,
+      "polylist_capacity": 120,
+      "edge_capacity": 80,
+      "sha256": "9f5491d1ba050a88125ff7091f8e3fe213f892e5c54503d46e290dd5be05b5cd"
+    },
+    "physics_sha256": "2e0756e0113cc4f13c1dccb998fb47c5e3d4c8225ec1b1de65ef58b908e04010",
+    "routine_audits": 32,
+    "audited_bytes": 45116,
+    "camera": {
+      "sha256": "d634db125c653457f3eecb9523a651898bcce5bcda898717367fd3966e391c8b",
+      "mode": 1,
+      "profiles": 6,
+      "routine_audits": 18,
+      "level_camera_objects": {
+        "override": 0,
+        "static": 0,
+        "cutscene": 2
+      },
+      "audited_bytes": 19616,
+      "horizontal_distance_range": [
+        99.0,
+        208.72
+      ],
+      "yaw_at_start": -32768,
+      "yaw_at_end": -3595
+    },
+    "raw_sha256": "226a0886d98a82f2582ac7db1bc68daaf079565305ed66b1066164382c089d33",
+    "video_sha256": "e69fc798e8f2193a340e604793f79dafa2c6df200cefa48b1af43ef92634f3ce",
+    "fps_output": 30,
+    "duration_seconds": 9.0,
+    "limits": [
+      "Juno walking and air states with original track collision; other states, water, ledges and object hit models not ported",
+      "Original free camera (player type 0, collision mode 1); zone, spline, static and cutscene cameras not ported",
+      "A scripted controller stands in for a physical controller; raw values pass through the original joyClamp",
+      "Native animation blend replaces controlSetTransition; move selection and clip positions follow the original machine",
+      "No enemies, weapons, audio or full levelInit; no emulation; ROM and derived assets remain private"
+    ]
+  },
   "visual_review": [
-    "Frame 4: Juno lands on the path from the original entry point",
-    "Frame 60: running animation along the path, camera behind",
+    "Frame 4: Juno lands on the path from the original entry point, seen from behind by the original camera",
+    "Frame 60: running along the path with the camera trailing about 207 units behind",
     "Frame 130: climbing the bank at the south end",
-    "Frame 175: running-jump pose in the air beside a tree",
-    "Frame 215: running back toward the camera after the original half-turn",
-    "Frame 269: standing on the path after deceleration"
+    "Frame 165: running jump take-off behind a large plant",
+    "Frame 175: jump peak; Juno leaves the top of the frame because the original camera aims at the take-off height during jumps under 108 units",
+    "Frame 183: turning in the air toward the camera after the original half-turn",
+    "Frame 215: running back toward the camera, which retreats ahead of Juno",
+    "Frame 251: C-left swings the camera back behind Juno with a side offset",
+    "Frame 269: standing on the path, camera behind Juno facing the tunnel"
   ],
-  "scope": "Juno walking and air states in Forest First with original collision; port camera policy and scripted controller",
-  "next_milestone": "Original camera system (camTick and charControl camera routines) feeding controlcam",
+  "scope": "Juno walking and air states in Forest First with original collision and original free camera (collision mode 1); scripted controller",
+  "next_milestone": "Physical controller on Windows through the original joyClamp, in a playable executable run by Thiago",
   "ai_assistance": "Claude Code (Anthropic); reviewed changes and recorded evidence"
 }

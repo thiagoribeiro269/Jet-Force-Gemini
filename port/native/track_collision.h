@@ -632,6 +632,181 @@ public:
         }
         return 0;
     }
+    // func_80019324: one Liang-Barsky slab test.
+    static bool clipTest(float p, float q, float &enter, float &leave) {
+        if (p > 0.0f) {
+            const float r = q / p;
+            if (leave < r) return false;
+            if (enter < r) enter = r;
+            return true;
+        }
+        if (p < 0.0f) {
+            const float r = q / p;
+            if (r < enter) return false;
+            if (r < leave) leave = r;
+            return true;
+        }
+        return !(q > 0.0f);
+    }
+    // trackClip3D: clips start/end in place to a box, returns the parameters.
+    static bool clip3D(Vec3f &start, Vec3f &end, const Vec3f &low, const Vec3f &high, float &enter, float &leave) {
+        const float dx = end.x - start.x, dz = end.z - start.z, dy = end.y - start.y;
+        if (dx == 0.0f && dy == 0.0f && dz == 0.0f) {
+            if (low.x <= start.x && start.x <= high.x && low.y <= start.y && start.y <= high.y && low.z <= start.z && start.z <= high.z) {
+                enter = 0.0f; leave = 0.0f;
+                return true;
+            }
+            return false;
+        }
+        float t0 = 0.0f, t1 = 1.0f;
+        if (!(clipTest(dx, low.x - start.x, t0, t1) && clipTest(-dx, start.x - high.x, t0, t1) && clipTest(dy, low.y - start.y, t0, t1) &&
+              clipTest(-dy, start.y - high.y, t0, t1) && clipTest(dz, low.z - start.z, t0, t1) && clipTest(-dz, start.z - high.z, t0, t1)))
+            return false;
+        if (t1 < 1.0f) end = {start.x + (t1 * dx), start.y + (t1 * dy), start.z + (t1 * dz)};
+        leave = t1;
+        if (t0 > 0.0f) start = {start.x + (t0 * dx), start.y + (t0 * dy), start.z + (t0 * dz)};
+        enter = t0;
+        return true;
+    }
+    struct NearestHit { Vec3f point; TrackPlane plane; float distance = 0; uint32_t flags = 0; uint8_t surface = 0; };
+    // trackNearestIntersection(0, start, end, result, exclude, include) without object hit models.
+    bool nearestIntersection(const Vec3f &start, const Vec3f &end, NearestHit &result, uint32_t exclude, uint32_t include) const {
+        const auto &track = *track_;
+        struct Candidate { uint32_t block, xz; uint8_t y; float enter; };
+        std::vector<Candidate> candidates;
+        for (uint32_t b = 0; b < track.blocks.size() && candidates.size() < 20; ++b) {
+            const auto &box = track.blocks[b].box;
+            Vec3f s = start, e = end;
+            float enter = 0, leave = 0;
+            if (!clip3D(s, e, {float(box.minX), float(box.minY), float(box.minZ)}, {float(box.maxX), float(box.maxY), float(box.maxZ)}, enter, leave))
+                continue;
+            int32_t x0 = trunc(s.x), y0 = trunc(s.y), z0 = trunc(s.z), x1 = trunc(e.x), y1 = trunc(e.y), z1 = trunc(e.z);
+            if (x1 < x0) std::swap(x0, x1);
+            if (y1 < y0) std::swap(y0, y1);
+            if (z1 < z0) std::swap(z0, z1);
+            Candidate candidate{b, TrackCollision::xzCompareMask(box, x0, z0, x1, z1), TrackCollision::yCompareMask(box, y0, y1), enter};
+            candidates.push_back(candidate);
+            for (size_t i = candidates.size() - 1; i > 0 && candidates[i].enter < candidates[i - 1].enter; --i) std::swap(candidates[i], candidates[i - 1]);
+        }
+        const float dx = end.x - start.x, dy = end.y - start.y, dz = end.z - start.z;
+        const uint32_t skip = exclude | 0xCE000880u;
+        float best = 1.0f;
+        bool hit = false;
+        for (const auto &candidate : candidates) {
+            const auto &block = track.blocks[candidate.block];
+            for (size_t n = 0; n < block.batchCount(); ++n) {
+                const auto &batch = block.batches[n];
+                if ((batch.flags & skip) || (include && !(batch.flags & include))) continue;
+                for (size_t t = batch.firstTriangle; t < block.batches[n + 1].firstTriangle; ++t) {
+                    const uint32_t overlap = block.xzMask[t] & candidate.xz;
+                    if (!(overlap & 0xFFFF) || !(overlap & 0xFFFF0000u) || !(block.yMask[t] & candidate.y)) continue;
+                    const auto &link = block.links[t];
+                    const auto &plane = block.planes.at(link[0]);
+                    const float after = ((end.z * plane.nz) + ((plane.nx * end.x) + (plane.ny * end.y))) + plane.d;
+                    if (!(after < 0.0f)) continue;
+                    const float before = ((start.z * plane.nz) + ((plane.nx * start.x) + (plane.ny * start.y))) + plane.d;
+                    if (!(before >= 0.0f)) continue;
+                    const float t0 = before / (before - after);
+                    const Vec3f point{start.x + (dx * t0), start.y + (dy * t0), start.z + (dz * t0)};
+                    bool inside = true;
+                    for (unsigned j = 0; j < 3 && inside; ++j) {
+                        const uint16_t reference = link[1 + j], flip = reference & 0x8000;
+                        const auto &edge = block.planes.at(reference ^ flip);
+                        float side = (((edge.nx * point.x) + (edge.ny * point.y)) + (edge.nz * point.z)) + edge.d;
+                        if (flip) side = -side;
+                        if (side > 0.0f) inside = false;
+                    }
+                    if (inside && t0 < best) {
+                        best = t0; hit = true;
+                        result.point = point; result.plane = plane;
+                        result.surface = track.surfaces[batch.texture]; result.flags = batch.flags;
+                    }
+                }
+            }
+            if (hit) break;
+        }
+        if (hit) {
+            const float a = dx * best, b = dy * best, c = dz * best;
+            result.distance = std::sqrt(((a * a) + (b * b)) + (c * c));
+        } else result.distance = std::sqrt(((dx * dx) + (dy * dy)) + (dz * dz));
+        return hit;
+    }
+    // trackGetCubeBlockList with the original 16-bit margins.
+    std::vector<uint32_t> cubeBlockList(int32_t minX, int32_t minY, int32_t minZ, int32_t maxX, int32_t maxY, int32_t maxZ) const {
+        std::vector<uint32_t> result;
+        const auto &blocks = track_->blocks;
+        for (uint32_t b = 0; b < blocks.size(); ++b) {
+            const auto &box = blocks[b].box;
+            if (box.maxX >= int16_t(minX - 4) && int16_t(int16_t(maxX) + 4) >= box.minX && box.maxZ >= int16_t(minZ - 4) &&
+                int16_t(int16_t(maxZ) + 4) >= box.minZ && box.maxY >= int16_t(minY - 4) && int16_t(int16_t(maxY) + 4) >= box.minY)
+                result.push_back(b);
+        }
+        return result;
+    }
+    // func_8001A990: circle of squared radius against a segment and its first endpoint.
+    static bool circleTouchesEdge(float px, float pz, float ax, float az, float bx, float bz, float radiusSquared) {
+        const float ex = bx - ax, ez = bz - az;
+        const float length = (ex * ex) + (ez * ez);
+        if (length > 0.0f) {
+            const float t = (((px - ax) * ex) + ((pz - az) * ez)) / length;
+            if (t >= 0.0f && t <= 1.0f) {
+                const float x = px - ((t * ex) + ax), z = pz - ((t * ez) + az);
+                if (((x * x) + (z * z)) <= radiusSquared) return true;
+            }
+        }
+        const float x = px - ax, z = pz - az;
+        return ((x * x) + (z * z)) <= radiusSquared;
+    }
+    struct Height { float height, nx, ny, nz; uint32_t flags; };
+    // trackCylinderHeights with a result list: floors (ceilings when asked)
+    // under a vertical cylinder, sorted by descending height, at most 20.
+    std::vector<Height> cylinderHeights(float x, float z, float minY, float maxY, float radius, uint32_t exclude, bool ceilings) const {
+        const auto &track = *track_;
+        std::vector<Height> result;
+        const int32_t ix = trunc(x), iz = trunc(z), ir = trunc(radius), iminY = trunc(minY), imaxY = trunc(maxY);
+        const int32_t minX = ix - ir, maxX = ix + ir, minZ = iz - ir, maxZ = iz + ir;
+        const auto low = int16_t(iminY), high = int16_t(imaxY);
+        const auto blocks = cubeBlockList(minX, low, minZ, maxX, high, maxZ);
+        if (blocks.empty() || blocks.size() >= 8) return result;
+        for (auto b : blocks) {
+            const auto &block = track.blocks[b];
+            const uint32_t compare = TrackCollision::xzCompareMask(block.box, int16_t(minX), int16_t(minZ), int16_t(maxX), int16_t(maxZ));
+            for (size_t n = 0; n < block.batchCount(); ++n) {
+                const auto &batch = block.batches[n];
+                if (batch.flags & exclude) continue;
+                const uint8_t surface = (batch.flags & 0x2000) ? 2 : track.surfaces[batch.texture];
+                for (size_t t = batch.firstTriangle; t < block.batches[n + 1].firstTriangle; ++t) {
+                    const uint32_t overlap = block.xzMask[t] & compare;
+                    const auto &plane = block.planes.at(block.links[t][0]);
+                    if (!(overlap >> 16) || !(overlap & 0xFFFF)) continue;
+                    if (!((!ceilings && plane.ny > 0.0f) || (ceilings && plane.ny < 0.0f))) continue;
+                    const auto &face = block.faces[t];
+                    const auto &a = block.corner(batch, face, 0), &c1 = block.corner(batch, face, 1), &c2 = block.corner(batch, face, 2);
+                    if (a[1] < low && c1[1] < low && c2[1] < low) continue;
+                    if (high < a[1] && high < c1[1] && high < c2[1]) continue;
+                    bool inside = ceilings ? OriginalMath::xzInTriangle(ix, iz, c2, c1, a) : OriginalMath::xzInTriangle(ix, iz, a, c1, c2);
+                    if (!inside) {
+                        const float r2 = radius * radius;
+                        inside = circleTouchesEdge(x, z, a[0], a[2], c1[0], c1[2], r2) || circleTouchesEdge(x, z, c1[0], c1[2], c2[0], c2[2], r2) ||
+                                 circleTouchesEdge(x, z, c2[0], c2[2], a[0], a[2], r2);
+                    }
+                    if (!inside) continue;
+                    const float height = -((((plane.nx * x) + (plane.nz * z)) + plane.d) / plane.ny);
+                    result.push_back({height, plane.nx, plane.ny, plane.nz, (batch.flags & 0xFFFFFF00u) | surface});
+                    if (result.size() >= 20) return sortHeights(result);
+                }
+            }
+        }
+        return sortHeights(result);
+    }
+    static std::vector<Height> sortHeights(std::vector<Height> heights) {
+        for (bool sorted = false; !sorted;) {
+            sorted = true;
+            for (size_t i = 0; i + 1 < heights.size(); ++i)
+                if (heights[i].height < heights[i + 1].height) { std::swap(heights[i], heights[i + 1]); sorted = false; }
+        }
+        return heights;
+    }
 private:
     static int32_t trunc(float value) {
         if (!std::isfinite(value) || std::abs(value) >= 2147483648.0f) throw std::runtime_error("Nonfinite collision query");

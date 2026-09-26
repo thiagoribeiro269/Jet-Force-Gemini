@@ -14,7 +14,7 @@ import sys
 from pathlib import Path
 
 from prepare_assets import ROOT, region, require, word
-from region_assets import indexed
+from region_assets import indexed, object_definition
 
 sys.path.insert(0, str(ROOT / "tools"))
 from overlay_reloc import OverlayRelocTool  # noqa: E402
@@ -222,4 +222,68 @@ def convert_physics(assets, rom_path):
               "routine_audits": audits, "emulation_used": False, "sha256": hashlib.sha256(out).hexdigest(),
               "limits": ["Juno walking/air subset; object hit models, water, ledges, weapons and other states not converted",
                          "Anti-tamper branch of boyControl (arithmeticSums) follows the legitimate-ROM path"]}
+    return bytes(out), report
+
+
+CAMERA_LISTINGS = [
+    ("asm/nonmatchings/charControl/func_8002B378.s", "func_8002B378"), ("asm/nonmatchings/charControl/func_8002CF78.s", "func_8002CF78"),
+    ("asm/nonmatchings/charControl/func_8002CBD0.s", "func_8002CBD0"), ("asm/nonmatchings/charControl/func_8002F2BC.s", "func_8002F2BC"),
+    ("asm/nonmatchings/charControl/func_8002F45C.s", "func_8002F45C"), ("asm/nonmatchings/charControl/func_8002F0E8.s", "func_8002F0E8"),
+    ("asm/nonmatchings/charControl/func_8002EDA0.s", "func_8002EDA0"), ("asm/nonmatchings/camera/func_8003F66C.s", "func_8003F66C"),
+    ("asm/nonmatchings/camera/camSetProjMtx.s", "camSetProjMtx"), ("asm/nonmatchings/camera/camSetFOV.s", "camSetFOV"),
+    ("asm/nonmatchings/camera/camInit.s", "camInit"), ("asm/nonmatchings/level/levelGetCamera.s", "levelGetCamera"),
+    ("asm/nonmatchings/track/trackNearestIntersection.s", "trackNearestIntersection"),
+    ("asm/nonmatchings/track/trackCylinderHeights.s", "trackCylinderHeights"), ("asm/nonmatchings/track/trackClip3D.s", "trackClip3D"),
+    ("asm/nonmatchings/track/func_80019324.s", "func_80019324"), ("asm/nonmatchings/track/func_8001A990.s", "func_8001A990"),
+    ("asm/nonmatchings/track/trackGetCubeBlockList.s", "trackGetCubeBlockList"),
+]
+
+
+def level_camera_objects(assets, header):
+    """Count the level objects that replace the free camera (control numbers read like objGetControlNo)."""
+    control = lambda object_id: struct.unpack_from(">h", object_definition(assets, object_id)[0], 0x1C)[0]
+    kinds = {"override": (130, b"OverrideCamera"), "static": (12, b"StaticCamera"), "cutscene": (430, b"cutcamera")}
+    numbers = {}
+    for kind, (object_id, name) in kinds.items():
+        require(object_definition(assets, object_id)[0].find(name) >= 0, "Camera object definition differs")
+        numbers[control(object_id)] = kind
+    require(sorted(numbers) == [17, 19, 100], "Camera object control numbers differ")
+    counts = {kind: 0 for kind in kinds}
+    for list_id in (struct.unpack_from(">h", header, 0x56)[0], struct.unpack_from(">h", header, 0xCA)[0]):
+        objects = indexed(assets, 0x1C, 0x1D, list_id); size = word(objects, 0); at = 16
+        while at < 16 + size:
+            record_size = objects[at + 2]
+            require(record_size >= 10 and at + record_size <= 16 + size, "Invalid object record size")
+            kind = numbers.get(control(struct.unpack_from(">H", objects, at)[0]))
+            if kind: counts[kind] += 1
+            at += record_size
+        require(at == 16 + size, "Object list boundary differs")
+    return counts
+
+
+def convert_camera(assets, level_id=21):
+    """Free-camera tables (charControl data at 0x800A2BE0..0x800A2D38) and the level camera mode."""
+    audits = [audit_listing(assets, path, name) for path, name in CAMERA_LISTINGS]
+    header = indexed(assets, 0x1E, 0x1F, level_id)
+    # OverrideCamera objects feed the zones read by func_8002F2BC; Forest First places none,
+    # nor static cameras. Its two cutscene cameras stay outside the free camera.
+    camera_objects = level_camera_objects(assets, header)
+    require(camera_objects == {"override": 0, "static": 0, "cutscene": 2}, "Level camera objects differ from the inspected profile")
+    mode = header[0xE3]  # levelGetCamera: level header +0xE3; camera collision mode is value + 1
+    require(level_id == 21 and mode == 0, "Camera collision mode differs from the inspected profile")
+    characters = [struct.unpack(">4f", main_bytes(assets, 0x800A2BE0 + i * 16, 16)) for i in range(8)]
+    profiles = [struct.unpack(">9f", main_bytes(assets, address, 36)) for address in
+                (0x800A2C60, 0x800A2C84, 0x800A2CA8, 0x800A2CCC, 0x800A2CF0, 0x800A2D14)]
+    require(profiles[0] == struct.unpack(">9f", struct.pack(">9f", 0, 40, 0, 150, 0, 0.02, 0.125, 0.065, 0.125)) and
+            characters[0] == (40.0,) * 4 and struct.unpack(">i", main_bytes(assets, 0x800A2D38, 4))[0] == 0,
+            "Original camera tables differ")
+    out = bytearray(struct.pack("<8sIII", b"JFGCAM1\0", level_id, mode, len(profiles)))
+    for row in characters:
+        out.extend(struct.pack("<4f", *row))
+    for row in profiles:
+        out.extend(struct.pack("<9f", *row))
+    report = {"status": "prepared", "level": level_id, "camera_mode": mode + 1, "character_tables": characters, "profiles": profiles,
+              "level_camera_objects": camera_objects, "routine_audits": audits, "emulation_used": False,
+              "sha256": hashlib.sha256(out).hexdigest(),
+              "limits": ["Free camera for player type 0 in camera collision mode 1; static, spline, lobby, cutscene and zone cameras not ported"]}
     return bytes(out), report

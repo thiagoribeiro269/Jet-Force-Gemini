@@ -255,7 +255,11 @@ def main():
         from movement_assets import convert_collision, convert_physics
         collision, collision_report = convert_collision(assets)
         physics, physics_report = convert_physics(assets, args.rom)
+        from movement_assets import convert_camera
+        camera, camera_report = convert_camera(assets)
         (out / "collision.bin").write_bytes(collision); (out / "juno-physics.bin").write_bytes(physics)
+        (out / "juno-camera.bin").write_bytes(camera)
+        (out / "camera-assets-report.json").write_text(json.dumps(camera_report, indent=2) + "\n")
         (out / "movement-assets-report.json").write_text(json.dumps({"collision": collision_report, "physics": physics_report}, indent=2) + "\n")
     if args.juno_selection:
         from juno_selection_assets import prepare_selection

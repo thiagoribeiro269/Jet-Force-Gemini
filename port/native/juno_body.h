@@ -80,7 +80,8 @@ inline std::shared_ptr<const JunoPhysicsData> readJunoPhysics(const char *path) 
 struct JunoControl {
     int32_t stickX = 0, stickY = 0;
     bool jumpHeld = false, jumpPressed = false;
-    int16_t cameraYaw = 0;
+    bool cRight = false, cLeft = false, trigger = false;  // camera and aim buttons (controlKeys 0x1, 0x2, 0x10)
+    int16_t cameraYaw = 0;                                // *controlcam
 };
 
 // controller.c joyClamp: dead zone 5, offset by 5, range 65.
@@ -154,6 +155,8 @@ public:
         requestMove(16, 0.0f); // objAnimSetMove(arg0, 0x10, 0) for types 0/1.
     }
     const TrackQuery &query() const { return query_; }
+    // objMoveXYZ(player, dx, 0, dz) issued by the free camera (func_8002CF78).
+    void pushByCamera(float dx, float dz) { objMove({dx, 0.0f, dz}); }
     const JunoPhysicsData &data() const { return *data_; }
     uint32_t clipId() const { return selector_.resolve(move3B, {}).clip; }
     bool grounded() const { return data_->masks[1] & floor532; }
@@ -204,7 +207,7 @@ public:
             halfTurn13E = 0;
             if (state568 != 1) skid576 = 0;
         }
-        if (state568 == 0) walk(speed, direction, frames, jumpHeld, jumpPressed, stickX, stickY, scale);
+        if (state568 == 0) walk(speed, direction, frames, jumpHeld, jumpPressed, stickX, stickY, scale, !disabled && control.trigger);
         else if (state568 == 3) air(speed, direction, frames, jumpHeld);
         else throw std::runtime_error("Juno state outside the ported walking/air subset");
         animate(dt);
@@ -319,7 +322,8 @@ private:
         if (data_->lateralZeroLow < lateral10 && lateral10 < data_->lateralZeroHigh) lateral10 = 0.0f;
     }
     // Walking state 0: func_overlay_16_01002708.
-    void walk(float speed, int16_t direction, int32_t frames, bool jumpHeld, bool jumpPressed, int32_t stickX, int32_t stickY, float scale) {
+    void walk(float speed, int16_t direction, int32_t frames, bool jumpHeld, bool jumpPressed, int32_t stickX, int32_t stickY, float scale,
+              bool trigger) {
         (void)jumpHeld;
         const auto &math = data_->math;
         const auto &d = *data_;
@@ -328,6 +332,7 @@ private:
             if (skid576 < 0) skid576 = 0;
         }
         if (move3B == 0x19 && landingLock56B == 0) requestMove(chooseMove(), 0.0f);
+        if (trigger) throw std::runtime_error("Aim state 0xB (controlKeys 0x10) is not ported");
         if (5.0f < speed) speed = 5.0f;  // controlWalkingBack, not aiming
         lateralDecay(frames);
         if (jumpPressed && ceiling534 == 0) {

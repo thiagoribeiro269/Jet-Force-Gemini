@@ -4,7 +4,7 @@
 #include "juno_selection.h"
 #include "renderer.h"
 #include "region.h"
-#include "juno_body.h"
+#include "juno_camera.h"
 #include <functional>
 #include <optional>
 #include <set>
@@ -90,8 +90,10 @@ class NativeSession {
         JunoAnimationController animation;
         ActorInput held;
         std::optional<JunoBody> body;
+        std::optional<JunoCamera> camera;
         Actor(EntityHandle id, const SpawnSpec &spawn, const AssetPackage &assets, const JunoSelectionData &selection,
-              const std::shared_ptr<const JunoPhysicsData> &physics, const std::shared_ptr<const TrackCollision> &collision)
+              const std::shared_ptr<const JunoPhysicsData> &physics, const std::shared_ptr<const TrackCollision> &collision,
+              const std::shared_ptr<const JunoCameraData> &cameraData)
             : handle(id), elevation(spawn.y), scale(spawn.scale), visualOffsetY(spawn.visualOffsetY),
               motion(spawn.x, spawn.z, spawn.yaw), animation(selection, assets.clips, assets.skeleton.size()), held(spawn.input) {
             if (!std::isfinite(elevation) || std::abs(elevation) > 1000000) throw std::runtime_error("Invalid entity elevation");
@@ -102,6 +104,7 @@ class NativeSession {
                 if (spawn.input.directMove || spawn.input.movement.x != 0 || spawn.input.movement.z != 0 || spawn.input.movement.low)
                     throw std::runtime_error("Original-body actors take controller input only");
                 body.emplace(physics, collision, selection, assets.clips, Vec3f{float(spawn.x), float(spawn.y), float(spawn.z)}, spawn.originalYaw);
+                if (cameraData) camera.emplace(cameraData, *body);
                 followBody(0);
             } else {
                 if (spawn.input.control) throw std::runtime_error("Controller input requires an original-body actor");
@@ -135,7 +138,10 @@ class NativeSession {
         }
         void advance(double seconds) {
             if (body) {
-                body->tick(held.control.value_or(JunoControl{}));
+                auto control = held.control.value_or(JunoControl{});
+                if (camera) control.cameraYaw = camera->yaw();  // boyControl reads *controlcam
+                body->tick(control);
+                if (camera) camera->tick(*body, {control.cRight, control.cLeft, control.trigger}, 1);  // controlPlayer, after the character
                 if (held.control) held.control->jumpPressed = false; // A press is one original frame.
                 followBody(seconds);
                 return;
@@ -160,6 +166,7 @@ class NativeSession {
     std::shared_ptr<const NativeRegion> region_;
     std::shared_ptr<const JunoPhysicsData> physics_;
     std::shared_ptr<const TrackCollision> collision_;
+    std::shared_ptr<const JunoCameraData> camera_;
     JunoSelectionData selection_;
     std::unique_ptr<World> world_;
     uint64_t hostTick_ = 0, accumulator_ = 0;
@@ -173,7 +180,7 @@ class NativeSession {
         if (!spec.slot || world.actors.size() >= 64 || world.usedSlots.count(spec.slot))
             throw std::runtime_error("Duplicate or unbounded native entity slot");
         if (spec.originalBody && !world.region) throw std::runtime_error("Original-body actor requires a region scene");
-        world.actors.push_back(std::make_unique<Actor>(EntityHandle{world.generation, spec.slot}, spec, *assets_, selection_, physics_, collision_));
+        world.actors.push_back(std::make_unique<Actor>(EntityHandle{world.generation, spec.slot}, spec, *assets_, selection_, physics_, collision_, camera_));
         world.usedSlots.insert(spec.slot);
     }
     void execute(const TickInput &input, bool update) {
@@ -224,7 +231,8 @@ public:
     NativeSession(const NativeSession &) = delete;
     NativeSession &operator=(const NativeSession &) = delete;
     void boot(std::shared_ptr<const AssetPackage> assets, const JunoSelectionData &selection, std::shared_ptr<const NativeRegion> region = {},
-              std::shared_ptr<const JunoPhysicsData> physics = {}, std::shared_ptr<const TrackCollision> collision = {}) {
+              std::shared_ptr<const JunoPhysicsData> physics = {}, std::shared_ptr<const TrackCollision> collision = {},
+              std::shared_ptr<const JunoCameraData> camera = {}) {
         if (phase_ != SessionPhase::Cold || !assets || !assets->rigged || assets->skeleton.empty())
             throw std::runtime_error("Invalid or repeated native boot");
         JunoAnimationController validate(selection, assets->clips, assets->skeleton.size());
@@ -234,7 +242,8 @@ public:
         if (bool(physics) != bool(collision) || (collision && (!region || collision->level != region->level || collision->geometry != region->geometry)))
             throw std::runtime_error("Original movement requires matching physics and region collision");
         selection_ = selection; assets_ = std::move(assets); region_ = std::move(region);
-        physics_ = std::move(physics); collision_ = std::move(collision); phase_ = SessionPhase::Ready;
+        if (camera && (!collision || camera->level != collision->level)) throw std::runtime_error("Original camera requires its region collision");
+        physics_ = std::move(physics); collision_ = std::move(collision); camera_ = std::move(camera); phase_ = SessionPhase::Ready;
     }
     void apply(const TickInput &input) { execute(input, false); }
     void advanceNanoseconds(uint64_t elapsed, const std::function<TickInput(uint64_t)> &source) {
@@ -274,7 +283,7 @@ public:
         return result;
     }
     void stop() {
-        world_.reset(); assets_.reset(); region_.reset(); physics_.reset(); collision_.reset();
+        world_.reset(); assets_.reset(); region_.reset(); physics_.reset(); collision_.reset(); camera_.reset();
         selection_ = {}; accumulator_ = 0; phase_ = SessionPhase::Stopped;
     }
     // Original object orientation (mathOneFloatRPY basis) and position.
@@ -283,6 +292,11 @@ public:
         const auto x = math.rotateRPY(body.orientation, {1, 0, 0}), y = math.rotateRPY(body.orientation, {0, 1, 0});
         const auto z = math.rotateRPY(body.orientation, {0, 0, 1});
         return {x.x, x.y, x.z, 0, y.x, y.y, y.z, 0, z.x, z.y, z.z, 0, body.position.x, body.position.y, body.position.z, 1};
+    }
+    const JunoCamera *camera(EntityHandle id) const {
+        if (!world_) return nullptr;
+        for (const auto &actor : world_->actors) if (actor->handle == id) return actor->camera ? &*actor->camera : nullptr;
+        return nullptr;
     }
     const JunoBody *body(EntityHandle id) const {
         if (!world_) return nullptr;

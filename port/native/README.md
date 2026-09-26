@@ -8,8 +8,9 @@ A prioridade agora é a [estrutura geral do port](ARCHITECTURE.md), com mapa
 do programa, sessão de aplicação, cenas, entidades e backend gráfico
 separados. As provas abaixo passaram a servir como regressões desse backend.
 A região original [Forest First](REGION.md) já foi integrada ao host com
-o Juno, que agora se move pelo [código original portado](MOVEMENT.md). O
-[roteiro vigente](../ROADMAP.md) prevê a câmera original como próximo marco.
+o Juno, que agora se move pelo [código original portado](MOVEMENT.md), com a
+câmera livre original. O [roteiro vigente](../ROADMAP.md) prevê a entrada por
+controle físico como próximo marco.
 
 O executável C++ recebe meshes e texturas convertidos diretamente da ROM
 local e desenha por Direct3D 11 com shaders HLSL próprios. Não contém
@@ -20,10 +21,11 @@ RDP. Não simula CIC/PIF. A única API gráfica utilizada é a do Windows.
 
 O checkpoint mais recente move o **Juno em Forest First** pelo controle,
 gravidade, pulo, colisão e máquina de movimentos originais, portados para
-C++. A RTX produziu 270 frames em nove segundos: queda do ponto de entrada,
-corrida, subida da encosta, pulo, meia-volta e repouso. As sete provas
-anteriores ficaram idênticas byte a byte. Câmera e roteiro de entrada ainda
-são do port; detalhes em [MOVEMENT.md](MOVEMENT.md).
+C++, vistos pela câmera livre original. A RTX produziu 270 frames distintos em
+nove segundos: queda do ponto de entrada, corrida, subida da encosta, pulo,
+meia-volta, giro de câmera com C-left e repouso. As sete provas anteriores
+ficaram idênticas byte a byte. O roteiro de entrada ainda substitui o
+controle físico; detalhes em [MOVEMENT.md](MOVEMENT.md).
 
 O checkpoint anterior desenha **Forest First, nível 21**, e Juno na
 mesma sessão nativa: 2.018 triângulos de cenário, 44 texturas de terreno,

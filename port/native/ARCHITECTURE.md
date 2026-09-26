@@ -9,8 +9,9 @@ Ele carrega recursos, mantém cenas e entidades, atualiza o mundo em passos
 fixos e entrega snapshots ao mesmo renderer D3D11 usado pelas regressões.
 O host também carrega a geometria de Forest First com Juno. O Juno se move
 pelo código original portado: controle, gravidade, pulo, colisão com o
-cenário e máquina de movimentos das animações. Ainda não executa o ciclo
-completo de gameplay do JFG nem oferece uma fase jogável.
+cenário e máquina de movimentos das animações. A câmera livre original segue
+o Juno e orienta o controle. Ainda não executa o ciclo completo de gameplay
+do JFG nem oferece uma fase jogável.
 
 ## Fluxo original identificado
 
@@ -71,6 +72,9 @@ flowchart LR
     A --> T[TrackCollision: blocos, planos e arestas]
     T --> K[JunoBody: controle e física originais]
     K --> C
+    T --> L[JunoCamera: câmera livre original]
+    L --> K
+    L --> C
     I[TickInput: comandos tipados] --> C
     J[Seletor original recuperado] --> C
     C --> D[SessionSnapshot: poses e transformações]
@@ -89,8 +93,9 @@ flowchart LR
 | `original_math.h` | Seno, arco-tangente, potência, rotações e teste XZ originais |
 | `track_collision.h` | Colisão original do cenário: máscaras, planos, candidatos, testes e resolução |
 | `juno_body.h` | Controle, estados de andar e ar, gravidade, contatos e máquina de movimentos do Juno |
+| `juno_camera.h` | Câmera livre original, colisão de câmera no modo 1 e projeção; fornece o ângulo usado pelo controle |
 | `movement_assets.py` / `overlay_listing.py` | Conversão auditada dos dados e leitura estática de overlays para o m2c |
-| `movement_scenario.h` / `movement_main.cpp` | Prova de movimento com roteiro reproduzível e câmera do port |
+| `movement_scenario.h` / `movement_main.cpp` | Prova de movimento e câmera originais com roteiro de entrada reproduzível |
 | `juno_selection.h` | As duas decisões originais já recuperadas e sua ponte para animação |
 | `animation_player.h` / `animation.h` | Relógios dos clipes, mistura, poses e hierarquia |
 | `renderer.h` / `renderer_d3d11.cpp` | Backend que recebe instâncias prontas; não escolhe clipes nem avança o jogo |
@@ -150,7 +155,7 @@ precisam de medição. A validação a 144 Hz não é benchmark de desempenho.
 | `levelInit`, `trackInit`, listas de objetos | Formatos inspecionados; geometria/material de Forest First e ponto de entrada convertidos. Inicialização completa e comportamentos dos objetos pendentes |
 | `objObjectsTick`, `controlPlayer`, `boyControl` | Estados de andar e ar do Juno portados; água, bordas, armas e outros estados pendentes |
 | Colisão, gravidade e física de personagem | Colisão original do cenário e física do Juno portadas; modelos de colisão de objetos pendentes |
-| Câmera, desenho de mundo e materiais | Perspectiva, catálogo e terreno ativos em D3D11; câmera original, céu e efeitos pendentes |
+| Câmera, desenho de mundo e materiais | Câmera livre original, perspectiva, catálogo e terreno ativos em D3D11; outras câmeras, céu e efeitos pendentes |
 | Armas, projéteis, inimigos e scripts | Pendente; deverá usar a mesma vida de entidades, sem cenários paralelos isolados |
 | Áudio e música | Saída/síntese ainda não integradas |
 | Interface, salvamento e entrada física | Pendentes; entrada de teste com `joyClamp` original e encerramento controlado |
@@ -187,7 +192,8 @@ na imagem conjunta. [Resultado e limites](REGION.md).
 
 O movimento e a colisão originais do Juno foram integrados a essa região,
 com 270 quadros na RTX e as sete provas anteriores idênticas byte a byte.
-[Resultado e limites](MOVEMENT.md).
+A câmera livre original substituiu a câmera do port e alimenta `controlcam`
+como no jogo, na mesma sessão. [Resultado e limites](MOVEMENT.md).
 
-O próximo marco é a **câmera original**, portada sobre o mesmo host para
-substituir a câmera do port e alimentar `controlcam` como no jogo.
+O próximo marco é a **entrada física**: ler um controle no Windows, passar os
+valores brutos pelo `joyClamp` original e abrir um executável jogável.

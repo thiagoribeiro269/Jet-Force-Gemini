@@ -67,8 +67,9 @@ Em 26/09/2026, Thiago passou a condução do projeto ao Claude Code, mantendo
 as mesmas diretrizes. O [movimento do Juno em Forest First](../port/native/MOVEMENT.md)
 foi portado a partir das rotinas originais de controle, física e colisão,
 lidas estaticamente e auditadas contra a ROM, sem emulação. A pedido de Thiago,
-o comportamento original é a referência; câmera e entrada do port são marcadas
-como provisórias até o port da câmera original e da entrada física.
+o comportamento original é a referência. A câmera livre original foi portada
+em seguida e substituiu a câmera provisória. A entrada da prova continua um
+roteiro até a integração do controle físico.
 
 ## Melhorias futuras
 

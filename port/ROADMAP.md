@@ -22,8 +22,9 @@ O host nativo já possui recursos separados do backend gráfico, ciclo em
 passos fixos, snapshots, entidades independentes, pausa/retomada, troca de
 cena validada e encerramento. Em Forest First, o Juno agora se move pelo
 código original portado: controle, gravidade, pulo, colisão com o cenário,
-meia-volta e máquina de movimentos das animações. A câmera da prova e o
-roteiro de entrada ainda são do port. [Resultado do movimento](native/MOVEMENT.md).
+meia-volta e máquina de movimentos das animações. A câmera livre original
+também foi portada e orienta o controle como no jogo. Só o roteiro de
+entrada ainda substitui o controle físico. [Resultado](native/MOVEMENT.md).
 
 ## Marcos orientados à integração
 
@@ -31,24 +32,23 @@ roteiro de entrada ainda são do port. [Resultado do movimento](native/MOVEMENT.
 | --- | --- | --- |
 | Estrutura geral e inventário | Carregar duas cenas, atualizar entidades, pausar, trocar cena e liberar referências; renderer recebe snapshots | Concluído no escopo de diagnóstico; cinco regressões GPU preservadas |
 | Região original | Geometria/material de uma região da ROM e personagem inseridos no mesmo host, com câmera reproduzível | Concluído no escopo documentado: Forest First + Juno, 180 frames, seis regressões GPU preservadas |
-| Movimento na região | Deslocamento, gravidade, piso/obstáculos e câmera coerentes | Concluído para andar e ar do Juno com colisão original; câmera original pendente |
-| Câmera original | Câmera do jogo seguindo o Juno, com os mesmos modos e limites | Portar `camera.c` e as rotinas de câmera de `charControl` sobre o host; próximo bloco |
+| Movimento na região | Deslocamento, gravidade, piso/obstáculos e câmera coerentes | Concluído para andar e ar do Juno com colisão original |
+| Câmera original | Câmera do jogo seguindo o Juno, com os mesmos modos e limites | Concluído para a câmera livre no modo de colisão 1, o de Forest First; zonas, câmeras estáticas, splines, cenas de corte e mira pendentes |
+| Entrada física | Controle lido no Windows, valores brutos pelo `joyClamp` original, executável jogável | Próximo bloco; executado por Thiago no PC com janela e controle |
 | Interação de gameplay | Arma, projétil, alvo/inimigo, dano e ciclo de criação/remoção | Selecionar um encontro simples da mesma região e ampliar comportamentos/recursos necessários |
-| Sessão utilizável | Entrada física, áudio, interface, troca de região e save/load | Integrar serviços nativos, mantendo métodos de acesso ao PC autorizados; nenhum dispositivo virtual de N64 |
+| Sessão utilizável | Áudio, interface, troca de região e save/load, sobre a entrada física | Integrar serviços nativos, mantendo métodos de acesso ao PC autorizados; nenhum dispositivo virtual de N64 |
 | Cobertura e fidelidade | Mais regiões/personagens/efeitos, estabilidade e desempenho medidos | Expandir sobre os mesmos contratos e regressões; aprimoramentos visuais/voz ficam posteriores |
 
 ## Ordem do próximo bloco
 
-1. Mapear o sistema de câmera original: `camTick`, as rotinas de câmera de
-   `charControl` (`func_8002CF78`, `cameraTopDown`, `cameraGetBlend` e
-   vizinhas), os modos e as câmeras estática, de spline e de objeto.
-2. Portar o modo usado em Forest First, com a colisão de câmera contra o
-   cenário, e expor `controlcam` à entrada do Juno como no jogo.
-3. Substituir a câmera do port na prova de movimento e preservar as
-   regressões anteriores byte a byte.
-4. Em seguida, entrada física: ler um controle no Windows e passar os valores
-   brutos pelo `joyClamp` original, num executável jogável aberto por Thiago.
-5. Depois, interação de gameplay na mesma região.
+1. Entrada física: ler um controle no Windows e mapear analógico, botões e
+   C-buttons para os valores brutos do N64, passando pelo `joyClamp` original.
+2. Executável jogável com janela, apresentação a 60 Hz e encerramento limpo,
+   aberto por Thiago no PC. Estados ainda não portados continuam falhando de
+   forma explícita, sem substituto silencioso.
+3. Portar a mira (estado 0xB) e o perfil de câmera correspondente, que o
+   botão de mira exige.
+4. Depois, interação de gameplay na mesma região.
 
 Não usar resultados históricos de emulação como comprovação automática da
 rota atual. Pedidos que dependem de serviços ainda ausentes devem falhar

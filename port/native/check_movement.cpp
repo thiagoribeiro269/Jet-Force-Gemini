@@ -47,7 +47,7 @@ static std::shared_ptr<TrackCollision> syntheticTrack(const OriginalMath &math) 
 
 int main(int argc, char **argv) {
     try {
-        check(argc == 1 || argc == 7, "usage: check_movement [CHARACTER SELECTOR REGION_MESH REGION_INFO COLLISION PHYSICS]");
+        check(argc == 1 || argc == 8, "usage: check_movement [CHARACTER SELECTOR REGION_MESH REGION_INFO COLLISION PHYSICS CAMERA]");
         unsigned mathCases = 0, collisionCases = 0, movementCases = 0, rejected = 0;
         auto reject = [&](std::function<void()> f) {
             try { f(); } catch (const std::runtime_error &) { ++rejected; return; }
@@ -185,12 +185,40 @@ int main(int argc, char **argv) {
 
         bool actual = false;
         uint64_t digest = 0;
-        if (argc == 7) {
+        // Camera queries on the synthetic block.
+        {
+            Vec3f s0{-150, 50, 0}, e0{150, 50, 0};
+            float enter = 0, leave = 0;
+            check(TrackQuery::clip3D(s0, e0, {-100, 0, -100}, {100, 100, 100}, enter, leave), "Segment through box rejected");
+            near(enter, 50.0 / 300.0, 1e-6); near(leave, 250.0 / 300.0, 1e-6); near(s0.x, -100, 1e-4); near(e0.x, 100, 1e-4);
+            Vec3f s1{-150, 150, 0}, e1{150, 150, 0};
+            check(!TrackQuery::clip3D(s1, e1, {-100, 0, -100}, {100, 100, 100}, enter, leave), "Segment above box accepted");
+            TrackQuery::NearestHit hit;
+            check(query.nearestIntersection({0, 50, 0}, {80, 50, 0}, hit, 0, 0), "Wall not found by the camera ray");
+            near(hit.point.x, 50, 1e-4); near(hit.distance, 50, 1e-4); check(hit.plane.nx == -1.0f && hit.flags == 8, "Ray hit plane differs");
+            check(!query.nearestIntersection({0, 50, 0}, {40, 50, 0}, hit, 0, 0), "Ray hit before reaching the wall");
+            near(hit.distance, 40, 1e-4);
+            check(!query.nearestIntersection({80, 50, 0}, {0, 50, 0}, hit, 0, 0), "Back face stopped the ray");
+            const auto floors = query.cylinderHeights(0, 0, -32000, 32000, 16, 0xC00, false);
+            const auto ceilings = query.cylinderHeights(0, 0, -32000, 32000, 16, 0xC00, true);
+            // The floor diagonal crosses the axis; the ceiling diagonal stays 24.6 units away.
+            check(floors.size() == 2 && floors[0].height == 0 && ceilings.size() == 1 && ceilings[0].height == 100 && ceilings[0].ny == -1.0f,
+                  "Cylinder heights differ");
+            check(query.cylinderHeights(60, 0, -32000, 32000, 16, 0xC00, true).empty() &&
+                  query.cylinderHeights(45, 0, -32000, 32000, 16, 0xC00, true).size() == 1, "Cylinder radius against the ceiling edge differs");
+            check(TrackQuery::circleTouchesEdge(0, 3, -10, 0, 10, 0, 9.0f) && !TrackQuery::circleTouchesEdge(0, 3.1f, -10, 0, 10, 0, 9.0f) &&
+                  TrackQuery::circleTouchesEdge(-12, 0, -10, 0, 10, 0, 4.0f), "Circle against edge differs");
+            check(query.cubeBlockList(-200, -10, -200, -96, 10, -96).size() == 1 && query.cubeBlockList(-200, -10, -200, -105, 10, -105).empty(),
+                  "Cube block margin differs");
+        }
+        collisionCases += 3;
+        if (argc == 8) {
             auto character = std::make_shared<const AssetPackage>(loadAssetPackage(argv[1]));
             const auto selection = readJunoSelection(argv[2]);
             const auto region = loadRegion(argv[3], argv[4]);
             const auto physics = readJunoPhysics(argv[6]);
             const auto collision = TrackCollision::load(argv[5], physics->math);
+            const auto cameraData = readJunoCamera(argv[7]);
             size_t planes = 0, exposed = 0;
             for (const auto &b : collision->blocks) {
                 planes += b.planes.size();
@@ -209,39 +237,50 @@ int main(int argc, char **argv) {
             near(body.position.y, -1.99, 1e-4); check(body.grounded() && body.state568 == 0 && body.move3B == 16, "Entry landing differs");
             ++movementCases;
             // Scripted run, jump, wall, turn and bank: deterministic and bounded.
-            auto run = [&](uint64_t &hash, JunoBody &juno, FollowCamera &cam) {
+            // Original camera right after spawning: behind Juno, above the path.
+            {
+                JunoBody fresh(physics, collision, selection, character->clips, {40, 19, 841}, 0);
+                JunoCamera cam(cameraData, fresh);
+                const float dx = cam.position.x - fresh.position.x, dz = cam.position.z - fresh.position.z;
+                check(cam.orbit104 == int16_t(0x8000) && dz > 100 && std::abs(dx) < 1 && cam.position.y > fresh.position.y && cam.fov == 52.0f,
+                      "Original camera did not start behind Juno");
+            }
+            ++movementCases;
+            auto run = [&](uint64_t &hash, JunoBody &juno, JunoCamera &cam) {
                 uint32_t jumps = 0, walls = 0; float top = -1e9f;
-                JunoControl applied;
                 for (uint64_t t = 0; t < MovementTicks; ++t) {
-                    cam.follow(juno, applied.stickX, applied.stickY);
-                    juno.tick(applied = movementControl(t, cam.yaw()));
+                    auto control = movementControl(t);
+                    control.cameraYaw = cam.yaw();
+                    juno.tick(control);
+                    cam.tick(juno, {control.cRight, control.cLeft, control.trigger}, 1);
+                    const float dx = juno.position.x - cam.position.x, dz = juno.position.z - cam.position.z;
+                    check((dx * dx) + (dz * dz) >= 1023.0f, "Camera left Juno inside its 32-unit push radius");
+                    check(cam.position.y >= float(collision->extents[2]) - 100.0f - 1e-3f, "Camera below the track floor limit");
                     for (float v : {juno.position.x, juno.position.y, juno.position.z, juno.velocity.y})
                         check(std::isfinite(v), "Nonfinite movement state");
                     check(juno.position.y > -3, "Juno fell through the path");
                     jumps += juno.state568 == 3; walls += juno.wall533 != 0; top = std::max(top, juno.position.y);
-                    uint32_t bits[4]; std::memcpy(bits, &juno.position, 12); std::memcpy(bits + 3, &juno.heading11C, 2);
+                    uint32_t bits[7] = {}; std::memcpy(bits, &juno.position, 12); std::memcpy(bits + 3, &juno.heading11C, 2);
+                    std::memcpy(bits + 4, &cam.position, 12);
                     for (auto word : bits) hash = (hash ^ word) * 1099511628211ull;
                 }
                 check(jumps > 20 && walls > 10 && top > 50, "Scenario did not jump or reach a wall");
             };
             uint64_t first = 1469598103934665603ull, second = first;
             JunoBody one(physics, collision, selection, character->clips, {40, 19, 841}, 0), two = one;
-            FollowCamera cameraOne, cameraTwo;
+            JunoCamera cameraOne(cameraData, one), cameraTwo(cameraData, two);
             run(first, one, cameraOne); run(second, two, cameraTwo);
             check(first == second, "Movement is not deterministic");
             digest = first;
             check(one.grounded() && one.state568 == 0 && one.speed04 > -0.25f, "Scenario did not settle on the ground");
             ++movementCases;
             // Session integration: pause, resume, transactions and stop.
-            NativeSession session; session.boot(character, selection, region, physics, collision);
+            NativeSession session; session.boot(character, selection, region, physics, collision, cameraData);
             session.apply(movementScene(*region));
             const EntityHandle juno{1, 1};
-            FollowCamera camera;
             uint64_t scriptTick = 0; // Host ticks also advance while paused.
-            JunoControl applied;
             auto source = [&](uint64_t) {
-                camera.follow(*session.body(juno), applied.stickX, applied.stickY);
-                TickInput input; ActorInput actor; actor.control = applied = movementControl(scriptTick++, camera.yaw());
+                TickInput input; ActorInput actor; actor.control = movementControl(scriptTick++);
                 input.actors.push_back({juno, actor}); return input;
             };
             std::set<uint32_t> clips;
@@ -259,7 +298,8 @@ int main(int argc, char **argv) {
                 clips.insert(session.snapshot().entities[0].clip);
             }
             check(scriptTick == MovementTicks, "Session did not run the whole script");
-            check(session.body(juno)->position == one.position, "Session and bare body diverged");
+            check(session.body(juno)->position == one.position && session.camera(juno)->position == cameraOne.position,
+                  "Session and bare body/camera diverged");
             for (uint32_t id : {1019u, 1026u, 1027u, 1028u, 1040u}) check(clips.count(id), "Expected original clip was not played");
             ++movementCases;
             reject([&] {  // Controller values outside the N64 stick range.
@@ -276,6 +316,9 @@ int main(int argc, char **argv) {
             check(session.snapshot().sceneGeneration == 1, "Rejected command changed the scene");
             reject([&] { NativeSession other; other.boot(character, selection, {}, physics, collision); });
             reject([&] { NativeSession other; other.boot(character, selection, region, physics, {}); });
+            reject([&] { NativeSession other; other.boot(character, selection, region, {}, {}, cameraData); });
+            reject([&] { readJunoCamera(argv[6]); });
+            reject([&] { JunoControl control; control.trigger = true; JunoBody b = body; b.tick(control); });
             reject([&] { readJunoPhysics(argv[5]); });
             reject([&] { TrackCollision::load(argv[6], physics->math); });
             reject([&] { JunoBody far(physics, collision, selection, character->clips, {1e7f, 0, 0}, 0); });

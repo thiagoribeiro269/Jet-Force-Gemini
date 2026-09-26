@@ -29,13 +29,17 @@ def main():
     require((meta["api"], meta["vendor"], meta["region"], meta["geometry"], meta["frame_count"], meta["ticks"]) ==
             ("D3D11", 0x10DE, 21, 17, FRAMES, 540), "Wrong movement render profile")
     require(meta["perspective"] and not meta["emulator_dependencies"] and not meta["display_list_interpreter"], "Wrong graphics path")
-    require(trace["stopped"] and trace["original_movement"] and not trace["object_collision"] and not trace["emulation"], "Wrong scope or cleanup")
+    require(trace["stopped"] and trace["original_movement"] and trace["original_camera"] and not trace["object_collision"] and not trace["emulation"],
+            "Wrong scope or cleanup")
     frames = trace["frames"]; require(len(frames) == FRAMES, "Incomplete movement timeline")
     for index, frame in enumerate(frames):
         require((frame["frame"], frame["tick"]) == (index, (index + 1) * 2), "Movement ticks left the 60 Hz host clock")
         require(frame["y"] >= -1.99 - 1e-4, "Juno went below the recovered floor response")
         if frame["floor"] & 1:
             require(frame["state"] == 0 or frame["vy"] <= 0, "Grounded frame with upward motion")
+        # The original camera pushes Juno away inside 32 units and never drops below the track floor limit.
+        require((frame["x"] - frame["camera_x"]) ** 2 + (frame["z"] - frame["camera_z"]) ** 2 >= 1023, "Camera inside Juno")
+        require(frame["camera_y"] >= -1.99 - 100 - 1e-3, "Camera below the recovered track limit")
     clips = [frame["clip"] for frame in frames]
     for clip in (1019, 1026, 1027, 1028, 1040):
         require(clip in clips, f"Original clip {clip} missing from the movement proof")
@@ -66,8 +70,9 @@ def main():
     first_ground = next(i for i, f in enumerate(frames) if f["floor"] & 1)
     jump = airborne[0]
     turned = next(i for i, f in enumerate(frames) if f["tick"] > 340 and f["speed04"] < -3)
+    orbit = next(i for i, f in enumerate(frames) if f["tick"] > 480 and (f["camera_yaw"] - frames[239]["camera_yaw"]) % 65536 > 0x2000)
     keys = {"landing": first_ground, "running": 60, "slope": 130, "jump": jump, "peak": peak, "turned": turned,
-            "return": 215, "settled": FRAMES - 1}
+            "return": 215, "c-left": orbit, "settled": FRAMES - 1}
     for frame in range(FRAMES):
         pixels = raw[frame * SIZE:(frame + 1) * SIZE]; hashes.append(digest(pixels))
         covered = sum(pixels[p:p + 3] != background[p:p + 3] for p in range(0, SIZE, 4))
@@ -80,6 +85,8 @@ def main():
                     "-framerate", "30", "-i", str(OUT / "frame.rgba"), "-an", "-c:v", "libx264", "-preset", "fast",
                     "-crf", "18", "-pix_fmt", "yuv420p", "-movflags", "+faststart", str(OUT / "forest-first-movement.mp4")], check=True)
     assets = json.loads((OUT / "movement-assets-report.json").read_text())
+    camera = json.loads((OUT / "camera-assets-report.json").read_text())
+    distances = [((f["x"] - f["camera_x"]) ** 2 + (f["z"] - f["camera_z"]) ** 2) ** 0.5 for f in frames]
     report = {"status": "passed", "level": 21, "geometry": 17, "frames": FRAMES, "original_frames": 540, "unique_frames": len(set(hashes)),
               "linux_windows_checks": windows, "scenario_digest_equal_on_linux_and_windows": True,
               "final_position": trace["final"], "lowest_y": trace["lowest_y"], "highest_y": trace["highest_y"],
@@ -92,15 +99,21 @@ def main():
               "physics_sha256": assets["physics"]["sha256"],
               "routine_audits": len(assets["physics"]["routine_audits"]),
               "audited_bytes": sum(a["bytes"] for a in assets["physics"]["routine_audits"]),
+              "camera": {"sha256": camera["sha256"], "mode": camera["camera_mode"], "profiles": len(camera["profiles"]),
+                         "routine_audits": len(camera["routine_audits"]), "level_camera_objects": camera["level_camera_objects"],
+                         "audited_bytes": sum(a["bytes"] for a in camera["routine_audits"]),
+                         "horizontal_distance_range": [round(min(distances), 2), round(max(distances), 2)],
+                         "yaw_at_start": frames[0]["camera_yaw"], "yaw_at_end": frames[-1]["camera_yaw"]},
               "raw_sha256": digest(raw), "video_sha256": digest((OUT / "forest-first-movement.mp4").read_bytes()),
               "fps_output": 30, "duration_seconds": FRAMES / 30,
               "limits": ["Juno walking and air states with original track collision; other states, water, ledges and object hit models not ported",
-                         "Port camera policy and a scripted controller stand in for the original camera and a physical controller",
+                         "Original free camera (player type 0, collision mode 1); zone, spline, static and cutscene cameras not ported",
+                         "A scripted controller stands in for a physical controller; raw values pass through the original joyClamp",
                          "Native animation blend replaces controlSetTransition; move selection and clip positions follow the original machine",
                          "No enemies, weapons, audio or full levelInit; no emulation; ROM and derived assets remain private"]}
     (ROOT / "port/native/movement-validation.json").write_text(json.dumps(report, indent=2) + "\n")
     print(json.dumps({k: report[k] for k in ("status", "frames", "unique_frames", "highest_y", "wall_contact_ticks",
-                                           "clips_played", "all_seven_previous_gpu_proofs_byte_equal")}))
+                                           "clips_played", "key_frames", "camera", "all_seven_previous_gpu_proofs_byte_equal")}))
 
 
 if __name__ == "__main__":

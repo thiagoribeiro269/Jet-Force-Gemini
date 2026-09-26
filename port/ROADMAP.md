@@ -37,7 +37,7 @@ Thiago no PC; os testes remotos não abrem a janela. [Como jogar](native/PLAY.md
 | Movimento na região | Deslocamento, gravidade, piso/obstáculos e câmera coerentes | Concluído para andar e ar do Juno com colisão original |
 | Câmera original | Câmera do jogo seguindo o Juno, com os mesmos modos e limites | Concluído para a câmera livre no modo de colisão 1, o de Forest First; zonas, câmeras estáticas, splines, cenas de corte e mira pendentes |
 | Entrada física | Controle lido no Windows, valores brutos pelo `joyClamp` original, executável jogável | Implementado: XInput, janela D3D11, parada estrita, gravação e reprodução; janela e controle aguardam o teste de Thiago |
-| Estados do Juno em Forest First | Agachar, rolar, deslizar, mira sem tiro, com perfis de colisão originais | Portados: agachar, andar agachado, deslizar, rolar e mira em pé e agachada, com o contador de mistura de clipes |
+| Estados do Juno em Forest First | Agachar, rolar, deslizar, mira sem tiro, com perfis de colisão originais | Portados: agachar, andar agachado, deslizar, rolar e mira em pé e agachada, com o contador de mistura de clipes e as rotações de juntas |
 | Interação de gameplay | Arma, projétil, alvo/inimigo, dano e ciclo de criação/remoção | Selecionar um encontro simples da mesma região e ampliar comportamentos/recursos necessários |
 | Sessão utilizável | Áudio, interface, troca de região e save/load, sobre a entrada física | Integrar serviços nativos, mantendo métodos de acesso ao PC autorizados; nenhum dispositivo virtual de N64 |
 | Cobertura e fidelidade | Mais regiões/personagens/efeitos, estabilidade e desempenho medidos | Expandir sobre os mesmos contratos e regressões; aprimoramentos visuais/voz ficam posteriores |
@@ -46,12 +46,9 @@ Thiago no PC; os testes remotos não abrem a janela. [Como jogar](native/PLAY.md
 
 1. Teste de Thiago com `jfg_native_play.exe` no PC: janela, controle,
    paradas e gravações. As gravações dele definem a ordem dos estados.
-2. Rotações de juntas (`0x3DB0`, `0x6290`, `0x4840` e a lista do fim do
-   `boyControl`): desenham o tronco, a cabeça e os braços mirando e o tronco
-   no passo lateral. Os estados de movimento do Juno em Forest First já estão
-   portados.
-3. Depois, interação de gameplay na mesma região: tiro, projéteis, objetos e
-   inimigos.
+2. Interação de gameplay na mesma região: tiro, projéteis, objetos e
+   inimigos. Os estados de movimento do Juno em Forest First e as rotações
+   de juntas (`0x3DB0`, `0x6290`, `0x4840`) já estão portados.
 
 Não usar resultados históricos de emulação como comprovação automática da
 rota atual. Pedidos que dependem de serviços ainda ausentes devem falhar

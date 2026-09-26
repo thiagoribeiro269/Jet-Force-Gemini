@@ -86,7 +86,6 @@ Resultados em [movement-validation.json](movement-validation.json).
 - Só Forest First e só o Juno. Sem inimigos, objetos, portas, itens, sons,
   céu, menus ou salvamento.
 - Tiro, água, lava e os demais estados param a sessão.
-- As rotações de juntas do tronco e da cabeça não foram portadas.
 - O teste remoto não abre a janela; ela só foi verificada no PC de Thiago.
 
 ## Reprodução

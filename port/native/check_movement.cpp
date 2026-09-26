@@ -212,7 +212,7 @@ int main(int argc, char **argv) {
         reject([&] { OriginalMath broken({}, {}); });
 
         bool actual = false;
-        uint64_t digest = 0;
+        uint64_t digest = 0, jointDigest = 0;
         // Camera queries on the synthetic block.
         {
             Vec3f s0{-150, 50, 0}, e0{150, 50, 0};
@@ -290,6 +290,11 @@ int main(int argc, char **argv) {
                   "Entry landing differs");
             ++movementCases;
             // Drive a copy with raw pads through joyRead, as the session does.
+            auto turns = [](const JunoBody &b) {
+                std::vector<std::pair<int, int>> list;
+                for (size_t i = 0; i < b.jointTurnCount; ++i) list.push_back({b.jointTurns[i].offset, b.jointTurns[i].value});
+                return list;
+            };
             auto drive = [&](JunoBody &b, JoypadReader &reader, PadState pad, int ticks, uint8_t mode = 0) {
                 for (int t = 0; t < ticks; ++t) b.tick({reader.read(pad), 0, mode});
             };
@@ -350,24 +355,85 @@ int main(int argc, char **argv) {
                 const int16_t steady = b.heading11C;
                 for (int t = 0; t < 5; ++t) stepJuno(b, &cam, r.read({Pad::R, 40, 0}), 0);
                 check(b.heading11C == steady && b.joint1CE != 0, "Aim within the dead band turned Juno");
+                {   // 0x3DB0 at the end of 0x4440: half the pitch on the torso, the yaw, the rest on channel 9,
+                    // then the head/arm against the recoil turns (equal to the aim turns without shots).
+                    const int32_t half = b.joint1D0 / 2;
+                    check(turns(b) == std::vector<std::pair<int, int>>{{6, half}, {8, b.joint1CE}, {0x12, b.joint1D0 - half},
+                                                                      {0x3C, b.joint1DE - half}, {0x3E, 0}, {0x44, int16_t(b.twist580)}} &&
+                          b.joint1CE != 0 && b.joint1DC == b.joint1CE && b.joint1DE == b.joint1D0, "Standing aim joint turns differ");
+                }
                 for (int t = 0; t < 20; ++t) stepJuno(b, &cam, r.read({Pad::R, 80, 0}), 0);
                 check(b.heading11C != steady && b.turn1E4 < 0.0f, "Aim at the edge did not turn Juno");
                 for (int t = 0; t < 120; ++t) stepJuno(b, &cam, r.read({Pad::R, 0, 80}), 0);
                 check(b.aimPitch1E2 == -0x2AAA, "Aim pitch limit differs");
+                // Aiming past the limit: 0x3DB0 clamps both pitches to -0x2AAA.
+                check(b.joint1D0 < -0x2AAA && turns(b)[0] == std::pair<int, int>{6, -0x1555} && turns(b)[2] == std::pair<int, int>{0x12, -0x1555} &&
+                      turns(b)[3] == std::pair<int, int>{0x3C, -0x1555}, "Aim joint-turn clamp differs");
                 // After 175 frames +0x18 is near 1: field of view near 60 and the camera at the aim distance.
                 const float dx = cam.position.x - b.position.x, dz = cam.position.z - b.position.z;
                 check(cam.fov > 59.7f && std::sqrt(dx * dx + dz * dz) < 70.0f, "Aim camera differs");
                 stop([&] { JunoBody c = b; JunoCamera k = cam; JoypadReader q = r; stepJuno(c, &k, q.read({uint16_t(Pad::R | Pad::Z), 0, 0}), 0); },
                      "Shot while aiming did not stop");
                 // Releasing R: walking again, the free camera's orbit behind Juno.
+                const int16_t pitchBefore = b.joint1D0;
                 stepJuno(b, &cam, r.read({}), 0);
                 check(b.state568 == 0 && cam.orbit104 == int16_t(0x8000 - b.orientation[0]), "Aim exit differs");
+                // Leaving the aim, +0x1F4 is still 1 for this frame: 0x6290 eases the turns (>>2
+                // toward the clamped aim, >>4 for recoil) and 0x3DB0 still writes them. Then only the twist.
+                check(b.firing1F4 == 1 && b.jointTurnCount == 6 && b.joint1D0 == int16_t(pitchBefore + shiftRight(-0x2AAA - pitchBefore, 2)) &&
+                      b.joint1DE == int16_t(pitchBefore + shiftRight(-pitchBefore, 4)), "Joint turns leaving the aim differ");
+                stepJuno(b, &cam, r.read({}), 0);
+                check(b.firing1F4 == 0 && turns(b) == std::vector<std::pair<int, int>>{{0x44, int16_t(b.twist580)}}, "Joint turns after the aim differ");
                 // Expert: C-up walks forward while aiming.
                 JunoBody e = body; JoypadReader q;
                 drive(e, q, {Pad::R, 0, 0}, 5, 1);
                 drive(e, q, {uint16_t(Pad::R | Pad::CUp), 0, 0}, 10, 1);
                 check(e.state568 == 0xB && e.speed04 < -1.0f, "Expert aim walk differs");
                 ++movementCases;
+            }
+            {   // Joint turns outside the aim (0x6290, 0x3DB0, 0x4840) and their use by gen_anim_data.
+                JunoBody b = body; JoypadReader r;
+                drive(b, r, {}, 1);
+                check(turns(b) == std::vector<std::pair<int, int>>{{0x44, 0}}, "Idle joint turns differ");
+                // +0x1F4 still set (a held fire key 2 frames ago): 0x3DB0 halves the eased pitch with
+                // round-toward-zero, -9 -> -4 and -5, and the recoil pitch 0 leaves +4 on channel 30.
+                b.firing1F4 = 2; b.joint1D0 = -12; b.joint1CE = 0; b.joint1DE = 0; b.joint1DC = 0;
+                drive(b, r, {}, 1);
+                check(b.firing1F4 == 1 && b.joint1D0 == -9 && turns(b) == std::vector<std::pair<int, int>>{{6, -4}, {8, 0}, {0x12, -5}, {0x3C, 4},
+                                                                                                          {0x3E, 0}, {0x44, 0}},
+                      "0x3DB0 rounding differs");
+                // Turning while running: the aim follows the body one frame late, so the yaw turn lags
+                // (clamped to 0x1000) even though nothing writes it to the list without +0x1F4.
+                drive(b, r, {0, 0, 70}, 40);
+                bool lag = false;
+                for (int t = 0; t < 20; ++t) { drive(b, r, {0, 70, 30}, 1); lag = lag || (b.joint1CE != 0 && b.joint1CE >= -0x1000 && b.joint1CE <= 0x1000); }
+                check(lag && b.firing1F4 == 0 && b.jointTurnCount == 1, "Joint-turn lag while turning differs");
+                // Running with a C-left strafe: 0x4840 twists the torso toward -Arctanf(lateral, |speed|),
+                // 1/16 of the wrapped difference per frame, and it settles within 16 of the target.
+                drive(b, r, {0, 0, 70}, 60);
+                drive(b, r, {Pad::CLeft, 0, 70}, 240);
+                check(b.lateral10 < 0.0f && std::abs(b.lateral10) < std::abs(b.speed04), "Running strafe differs");
+                int32_t target = -int32_t(physics->math.arctanf(b.lateral10, std::abs(b.speed04))) & 0xFFFF;
+                if (target >= 0x8000) target -= 0x10000;
+                check(target > 0 && std::abs(b.twist580 - target) < 16 && turns(b).back() == std::pair<int, int>{0x44, int16_t(b.twist580)},
+                      "Strafe torso twist differs");
+                // Sideways faster than forward: the twist returns to zero.
+                drive(b, r, {Pad::CLeft, 0, 0}, 120);
+                check(std::abs(b.lateral10) >= std::abs(b.speed04) && std::abs(b.twist580) < 16, "Strafe twist release differs");
+                // gen_anim_data: channel o/2 is bone o/6, axis (o/2)%3, in binary angle units.
+                Keyframe pose{{0, 0, 0}, std::vector<Vec3>(21, Vec3{0.25f, 0.5f, 0.75f})};
+                JunoBody list = body;
+                list.jointTurns = {{{6, 0x4000}, {8, -0x2000}, {0x12, 0x1000}, {0x3C, 0}, {0x3E, 0x800}, {0x44, -0x100}}};
+                list.jointTurnCount = 6;
+                applyJointTurns(pose, list);
+                near(pose.angles[1][0], 0.25 + Pi / 2, 1e-6); near(pose.angles[1][1], 0.5 - Pi / 4, 1e-6); near(pose.angles[3][0], 0.25 + Pi / 8, 1e-6);
+                near(pose.angles[10][0], 0.25, 0); near(pose.angles[10][1], 0.5 + Pi / 16, 1e-6); near(pose.angles[11][1], 0.5 - Pi / 128, 1e-6);
+                near(pose.angles[0][0], 0.25, 0); near(pose.angles[11][2], 0.75, 0);
+                for (uint16_t offset : {uint16_t(0x1006), uint16_t(7), uint16_t(120)})
+                    reject([&] { JunoBody bad = body; bad.jointTurns[0] = {offset, 1}; bad.jointTurnCount = 1; Keyframe k = pose; applyJointTurns(k, bad); });
+                reject([&] { JunoBody bad = body; bad.jointTurnCount = 9; Keyframe k = pose; applyJointTurns(k, bad); });
+                reject([&] { Keyframe small{{0, 0, 0}, std::vector<Vec3>(10)}; applyJointTurns(small, list); });
+                movementCases += 2;
             }
             {   // Crouch states: 0x2EB4 (1) and 0x321C (2) with their collision profiles.
                 JunoBody b = body; JoypadReader r;
@@ -387,6 +453,10 @@ int main(int argc, char **argv) {
                     check(c.state568 == 5, "Crouched aim did not start");
                     for (int t = 0; t < 30; ++t) stepJuno(c, &k, q.read({Pad::R, 0, 80}), 0);
                     check(c.state568 == 5 && c.aimPitch1E2 == -0xA80 && k.fov > 55.0f, "Crouched aim limits or camera differ");
+                    // 0x3F30's own list: no half pitch and no clamp.
+                    check(turns(c) == std::vector<std::pair<int, int>>{{6, c.joint1D0}, {8, c.joint1CE}, {0x12, 0}, {0x3C, int16_t(c.joint1DE - c.joint1D0)},
+                                                                      {0x3E, int16_t(c.joint1DC - c.joint1CE)}, {0x44, int16_t(c.twist580)}} &&
+                          c.joint1D0 < -0xA80, "Crouched aim joint turns differ");
                     JunoBody up = c; JunoCamera ku = k; JoypadReader qu = q;
                     stepJuno(up, &ku, qu.read({uint16_t(Pad::R | Pad::A), 0, 0}), 0);
                     check(up.state568 == 0xB, "A in crouched aim did not stand into the aim");
@@ -466,8 +536,9 @@ int main(int argc, char **argv) {
                       "Original camera did not start behind Juno");
             }
             ++movementCases;
-            auto run = [&](uint64_t &hash, JunoBody &juno, JunoCamera &cam) {
+            auto run = [&](uint64_t &hash, uint64_t &jointHash, JunoBody &juno, JunoCamera &cam) {
                 uint32_t jumps = 0, walls = 0, strafeTicks = 0, crouched = 0, crouchWalk = 0, rolls = 0, slides = 0, aiming = 0, crouchAim = 0; float top = -1e9f;
+                uint32_t aimTurns = 0, crouchAimTurns = 0, aimExits = 0, twisted = 0;
                 JoypadReader reader;
                 for (uint64_t t = 0; t < MovementTicks; ++t) {
                     stepJuno(juno, &cam, reader.read(movementPad(t)), 0);
@@ -485,6 +556,15 @@ int main(int argc, char **argv) {
                         check(std::isfinite(v), "Nonfinite movement state");
                     check(juno.position.y > -3, "Juno fell through the path");
                     jumps += juno.state568 == 3; walls += juno.wall533 != 0; top = std::max(top, juno.position.y);
+                    // Joint turns: 0x3DB0 in the standing aim, 0x3F30's list crouched, one 0x3DB0 frame on
+                    // each aim exit, and the 0x4840 twist always last.
+                    const auto list = turns(juno);
+                    check(!list.empty() && list.back() == std::pair<int, int>{0x44, int16_t(juno.twist580)}, "Scenario twist entry differs");
+                    aimTurns += juno.state568 == 0xB && list.size() == 6 && list[0].first == 6;
+                    crouchAimTurns += juno.state568 == 5 && list.size() == 6 && list[2] == std::pair<int, int>{0x12, 0};
+                    aimExits += juno.state568 == 0 && list.size() == 6;
+                    twisted += juno.twist580 != 0;
+                    for (const auto &entry : list) jointHash = (jointHash ^ uint32_t(entry.first << 16 | uint16_t(entry.second))) * 1099511628211ull;
                     uint32_t bits[7] = {}; std::memcpy(bits, &juno.position, 12); std::memcpy(bits + 3, &juno.heading11C, 2);
                     std::memcpy(bits + 4, &cam.position, 12);
                     for (auto word : bits) hash = (hash ^ word) * 1099511628211ull;
@@ -493,13 +573,17 @@ int main(int argc, char **argv) {
                 check(strafeTicks > 20, "Scenario did not strafe with C-left");
                 check(crouched > 10 && crouchWalk > 40 && rolls > 20 && slides == 40, "Scenario did not crouch, roll or slide");
                 check(aiming >= 105 && crouchAim >= 35 && juno.state568 == 0, "Scenario did not aim or crouch-aim");
+                // The frame that enters an aim state from walking or crouching runs the old state's
+                // routine, which writes no aim list (A from the crouched aim keeps 0x3F30's list).
+                // Rolls and running strafes twist the torso.
+                check(aimTurns == aiming - 1 && crouchAimTurns == crouchAim - 1 && aimExits == 2 && twisted > 150, "Scenario joint turns differ");
             };
-            uint64_t first = 1469598103934665603ull, second = first;
+            uint64_t first = 1469598103934665603ull, second = first, joints = first, jointsTwo = first;
             JunoBody one(physics, collision, selection, character->clips, {40, 19, 841}, 0), two = one;
             JunoCamera cameraOne(cameraData, one), cameraTwo(cameraData, two);
-            run(first, one, cameraOne); run(second, two, cameraTwo);
-            check(first == second, "Movement is not deterministic");
-            digest = first;
+            run(first, joints, one, cameraOne); run(second, jointsTwo, two, cameraTwo);
+            check(first == second && joints == jointsTwo, "Movement is not deterministic");
+            digest = first; jointDigest = joints;
             check(one.grounded() && one.state568 == 0 && one.speed04 > -0.25f, "Scenario did not settle on the ground");
             ++movementCases;
             // Session integration: pause, resume, transactions and stop.
@@ -567,7 +651,7 @@ int main(int argc, char **argv) {
         std::cout << "{\"status\":\"passed\",\"math_cases\":" << mathCases << ",\"input_cases\":" << inputCases
                   << ",\"collision_cases\":" << collisionCases << ",\"movement_cases\":" << movementCases
                   << ",\"not_ported_stops\":" << stops << ",\"rejected_cases\":" << rejected
-                  << ",\"original_region\":" << (actual ? "true" : "false") << ",\"scenario_digest\":\"" << std::hex << digest << "\"}\n";
+                  << ",\"original_region\":" << (actual ? "true" : "false") << ",\"scenario_digest\":\"" << std::hex << digest << "\",\"joint_digest\":\"" << jointDigest << "\"}\n";
         return 0;
     } catch (const std::exception &error) { std::cerr << error.what() << '\n'; return 1; }
 }

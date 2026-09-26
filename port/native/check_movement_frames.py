@@ -84,9 +84,24 @@ def main():
     require(frames[aim]["state"] == 11 and frames[aim_up]["state"] == 11, "Aim key frames left the aim state")
     crouch_aim = next(i for i, f in enumerate(frames) if f["state"] == 5) + 10
     require(frames[crouch_aim]["state"] == 5, "Crouched aim key frame left state 5")
+    # Joint turns: 0x4840's torso twist ends every list; 0x3DB0 (standing aim) and 0x3F30 (crouched aim)
+    # write five channel turns before it; walking writes none without +0x1F4.
+    for f in frames:
+        turns = f["joint_turns"]
+        require(turns and turns[-1] == [0x44, (f["twist"] + 0x8000) % 0x10000 - 0x8000], "Torso twist entry missing")
+        require(len(turns) in (1, 6) and all(t[0] in (6, 8, 0x12, 0x3C, 0x3E, 0x44) for t in turns), "Unexpected joint-turn command")
+    aim_frames = [f for f in frames if f["state"] == 11]; crouch_aim_frames = [f for f in frames if f["state"] == 5]
+    aim_turned = sum(len(f["joint_turns"]) == 6 and f["joint_turns"][0][0] == 6 for f in aim_frames)
+    crouch_turned = sum(len(f["joint_turns"]) == 6 and f["joint_turns"][2] == [0x12, 0] for f in crouch_aim_frames)
+    require(aim_turned >= len(aim_frames) - 1 and crouch_turned >= len(crouch_aim_frames) - 1, "Aim frames without joint turns")
+    require(any(f["joint_turns"][1][1] != 0 for f in aim_frames) and any(f["joint_turns"][0][1] != 0 for f in aim_frames),
+            "Aim did not turn the torso")
+    twisted = [i for i, f in enumerate(frames) if abs(f["twist"]) > 0x400]
+    require(len(twisted) > 20, "Rolls and running strafes did not twist the torso")
+    twist = max(range(FRAMES), key=lambda i: abs(frames[i]["twist"]))
     keys = {"landing": first_ground, "running": 60, "slope": 130, "jump": jump, "peak": peak, "turned": turned,
             "return": 215, "c-left": orbit, "crouch": crouch, "crouch-walk": crouch_walk + 10, "roll": roll, "stand": stand,
-            "slide": slide, "aim": aim, "aim-up": aim_up, "crouch-aim": crouch_aim, "settled": FRAMES - 1}
+            "slide": slide, "aim": aim, "aim-up": aim_up, "crouch-aim": crouch_aim, "twist": twist, "settled": FRAMES - 1}
     for frame in range(FRAMES):
         pixels = raw[frame * SIZE:(frame + 1) * SIZE]; hashes.append(digest(pixels))
         covered = sum(pixels[p:p + 3] != background[p:p + 3] for p in range(0, SIZE, 4))
@@ -106,6 +121,9 @@ def main():
               "final_position": trace["final"], "lowest_y": trace["lowest_y"], "highest_y": trace["highest_y"],
               "wall_contact_ticks": trace["wall_ticks"], "airborne_ticks": trace["airborne_ticks"], "move_changes": trace["move_changes"],
               "strafe_frames_at_full_speed": len(strafe),
+              "joint_turns": {"aim_frames": len(aim_frames), "aim_frames_with_torso_turns": aim_turned,
+                              "crouched_aim_frames": len(crouch_aim_frames), "crouched_aim_frames_with_turns": crouch_turned,
+                              "frames_with_torso_twist_over_0x400": len(twisted), "largest_twist": frames[twist]["twist"]},
               "clips_played": sorted(set(clips)), "key_frames": keys, "region_coverage_range": [min(coverage), max(coverage)],
               "terrain_pixels_first_frame": len(terrain_pixels), "character_pixels_in_isolation": len(actor_pixels),
               "all_seven_previous_gpu_proofs_byte_equal": True,
@@ -123,7 +141,7 @@ def main():
               "fps_output": 30, "duration_seconds": FRAMES / 30,
               "limits": ["Juno walking, crouch (1/2), standing and crouched aim (0xB, 5) and air states with original track collision and collision profiles; shots, water and object hit models not ported; crouched aim (5) waits for the model clip blend as the original",
                          "Original free and aim cameras (player type 0, collision mode 1); zone, spline, static and cutscene cameras not ported",
-                         "Aim joint turns (0x3DB0/0x6290) not drawn: the aim changes the camera, heading and stance, not the arm pose",
+                         "Joint turns of the aim (0x3DB0, 0x3F30, 0x6290) and the torso twist (0x4840) are drawn; recoil turns need shots, which are not ported",
                          "A scripted controller stands in for a physical controller; raw N64 pad values pass through the original joyRead and controlReadJoypad",
                          "Native animation blend between clips; move selection, clip positions and collision profiles follow the original machine",
                          "No enemies, weapons, audio or full levelInit; no emulation; ROM and derived assets remain private"]}

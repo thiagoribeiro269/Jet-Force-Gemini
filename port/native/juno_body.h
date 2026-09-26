@@ -14,8 +14,9 @@ namespace jfg_native {
 // 0x5120, movement 0x5BB8, controlPlatform, controlMakeGravity,
 // controlHalfTurn, controlWalkingBack, controlGroundHits, func_80035628,
 // func_800344C8, objMoveXYZ, objAnimDframe/objAnimSetMove, mathRnd,
-// controlReadJoypad, controlUpdatePlayerAim without targets and the fire
-// decision of controlUpdateWeapon/boyCanFire. One call is one original
+// controlReadJoypad, controlUpdatePlayerAim without targets, the fire
+// decision of controlUpdateWeapon/boyCanFire, the aim states 0x4440/0x3F30
+// and the joint turns 0x6290/0x3DB0/0x4840. One call is one original
 // 1/60-second frame (frames = 1). Fields keep original offsets.
 struct JunoSphere { Vec3f offset; float radius = 0; uint8_t flags = 0, rotate = 0; };
 struct JunoPhysicsData {
@@ -132,6 +133,15 @@ struct JunoControl {
     int16_t cameraOffset10A = 0;  // the free camera's C-button offset (a player field in the original)
 };
 
+// One entry of the player's joint-turn list (controlPlayerTiltList, player
+// +0x240), in the command format of gen_anim_data (func_80074D60). Command 0,
+// the only one the ported states write, adds `value` to the s16 channel at
+// byte offset `offset` of the decoded animation channels.
+struct JointTurn { uint16_t offset = 0; int16_t value = 0; };
+// MIPS sra on a 32-bit value (floor division by 2^n), without relying on
+// implementation-defined signed shifts.
+inline int32_t shiftRight(int32_t value, unsigned n) { return value >= 0 ? value >> n : ~(~value >> n); }
+
 // mathRnd: 64-bit shift generator on a 32-bit seed (DKR lineage).
 class OriginalRandom {
     uint32_t seed_;
@@ -173,6 +183,12 @@ public:
     int16_t aimYaw1C6 = 0, aimPitch1C8 = 0, aimYaw1CA = 0, aimPitch1CC = 0, joint1CE = 0, joint1D0 = 0, joint1DC = 0, joint1DE = 0,
             joint1E0 = 0, aimPitch1E2 = 0;
     float turn1E4 = 0, turn1E8 = 0;
+    // Joint turns: boyControl rebuilds the list each frame and
+    // modGenAnimMatrices applies it to the pose of that frame. +0x580 is the
+    // torso twist of 0x4840 (an s32 that only this routine writes).
+    int32_t twist580 = 0;
+    std::array<JointTurn, 8> jointTurns{};
+    uint8_t jointTurnCount = 0;
     // Camera fields the character routine writes (+0x10A offset, +0x104
     // orbit): applied by the caller to the camera before it runs.
     bool clearCameraOffset = false, setCameraOrbit = false;
@@ -246,6 +262,7 @@ public:
         controlMode = control.controlMode;
         cameraOffsetIn_ = control.cameraOffset10A;
         clearCameraOffset = setCameraOrbit = false;
+        jointTurnCount = 0;                     // boyControl: tilt list pointer = player + 0x240
         const auto &mode = data_->controlModes[controlMode];
         // boyControl: legitimate-ROM joystick scale; unk189 variants inactive.
         const float scale = 0.0625f;
@@ -294,6 +311,12 @@ public:
         else throw NotPortedError("Juno state outside the ported walking/air subset", "Este estado do Juno ainda não foi portado.");
         animate(dt);
         move(gravity, frames, dt, disabled);
+        // After the hang checks (no ledges in Forest First) and 0x2220 (hits
+        // on Juno, none without enemies): 0x6290 outside the aim, air and
+        // state 8 routines, then the torso twist 0x4840. The list ends there
+        // (weapon bits 0x40 of +0x540 need a weapon other than the pistol).
+        if (state568 != 5 && state568 != 0xB && state568 != 3 && state568 != 8) followAim(frames);
+        strafeTwist(frames);
         // modGenAnimMatrices at the end of boyControl (objResetAnimModels marks
         // the model every frame): the clip blend runs down one step.
         if (blend5E != 0) {
@@ -673,14 +696,22 @@ private:
         if (aimPitch1E2 < -0xA80) aimPitch1E2 = -0xA80;
         if (aimPitch1E2 >= 0x1556) aimPitch1E2 = 0x1555;
         smoothAim(yaw, pitch, rate);
+        // 0x3F30 writes its own list before the stand checks; the recoil term
+        // (+0x1F6/+0x1F7) is 0 without shots.
+        const int16_t recoil = 0;
+        addTurn(6, int16_t(joint1D0 + recoil));
+        addTurn(8, joint1CE);
+        addTurn(0x12, recoil);
+        addTurn(0x3C, int16_t(joint1DE - joint1D0));
+        addTurn(0x3E, int16_t(joint1DC - joint1CE));
         if ((controlMode != 0 && ((mode.word[7] | mode.word[8]) & controlKeys)) || (controlDkeys & mode.jump())) {
             state568 = 0xB;
             requestMove(chooseMove(), 0.0f);
         }
     }
     // Standing aim state 0xB: func_overlay_16_01004440. R released returns to
-    // walking and points the free camera's orbit behind Juno. The joint turns
-    // of 0x3DB0 (torso, head and arm toward the aim) are not ported.
+    // walking and points the free camera's orbit behind Juno; otherwise the
+    // torso, head and arm turn toward the aim (0x3DB0).
     void aimStand(int32_t frames, const ControlModeKeys &mode) {
         const auto &d = *data_;
         skid576 = 0;
@@ -708,6 +739,69 @@ private:
         int16_t yaw = 0, pitch = 0;
         manualAim(0xE38, 0xE38, -0x2AAA, 0x2AAA, yaw, pitch, frames);  // no zoom: camSetZoom is not called
         smoothAim(yaw, pitch, 1.0f - OriginalMath::powerf(d.aimSmoothing, frames));
+        torsoTurns(joint1D0, joint1CE, joint1DE, joint1DC);  // +0x1F6 recoil wobble needs shots
+    }
+    void addTurn(uint16_t offset, int16_t value) {
+        if (jointTurnCount >= jointTurns.size()) throw std::runtime_error("Juno joint-turn list overflow");
+        jointTurns[jointTurnCount++] = {offset, value};
+    }
+    // func_overlay_16_01003DB0: torso (channels 3/4 and 9), head and arm
+    // (30/31) turns from the aim pitch and yaw and the recoil turns. The half
+    // pitch is cvt.w.s under round-toward-zero.
+    void torsoTurns(int16_t pitch, int16_t yaw, int16_t recoilPitch, int16_t recoilYaw) {
+        int32_t a0 = pitch, a2 = recoilPitch;
+        if (a0 < -0x2AAA) a0 = -0x2AAA;
+        if (a2 >= 0x2AAB) a2 = 0x2AAA;
+        if (a2 < -0x2AAA) a2 = -0x2AAA;
+        const int32_t half = OriginalMath::truncate(float(a0) * 0.5f);
+        addTurn(6, int16_t(half));
+        addTurn(8, yaw);
+        addTurn(0x12, int16_t(a0 - half));
+        addTurn(0x3C, int16_t(a2 - half));
+        addTurn(0x3E, int16_t(int32_t(recoilYaw) - int32_t(yaw)));
+    }
+    // func_overlay_16_01006290: outside the aim states the joint turns
+    // (+0x1D0 pitch, +0x1CE yaw) follow the aim relative to the body, zero
+    // while crouch-walking; the recoil turns (+0x1DE/+0x1DC) settle to zero
+    // (+0x1F5 recoil frames are set only by shots). While +0x1F4 is set the
+    // torso and head keep turning (0x3DB0).
+    void followAim(int32_t frames) {
+        int32_t pitch = 0, yaw = 0;
+        if (state568 != 0xA && state568 != 2) {
+            pitch = int16_t(aimPitch1C8 - orientation[1]);
+            if (pitch < -0x2AAA) pitch = -0x2AAA;
+            if (pitch >= 0x2AAB) pitch = 0x2AAA;
+            yaw = int16_t(aimYaw1C6 - orientation[0]);
+            if (yaw < -0x1000) yaw = -0x1000;
+            if (yaw >= 0x1001) yaw = 0x1000;
+        }
+        for (int32_t i = 0; i < frames; ++i) {
+            joint1D0 = int16_t(joint1D0 + shiftRight(pitch - joint1D0, 2));
+            joint1CE = int16_t(joint1CE + shiftRight(yaw - joint1CE, 2));
+        }
+        for (int32_t i = 0; i < frames; ++i) {
+            joint1DE = int16_t(joint1DE + shiftRight(0 - joint1DE, 4));
+            joint1DC = int16_t(joint1DC + shiftRight(0 - joint1DC, 4));
+        }
+        if (firing1F4 != 0) torsoTurns(joint1D0, joint1CE, joint1DE, joint1DC);
+    }
+    // mathDiffAngle on full registers: one 16-bit wrap of to - from.
+    static int32_t diffAngle(int32_t from, int32_t to) {
+        int32_t difference = to - from;
+        if (difference >= 0x8000) difference -= 0x10000;
+        else if (difference < -0x7FFF) difference += 0x10000;
+        return difference;
+    }
+    // func_overlay_16_01004840, every frame: moving more forward than
+    // sideways twists the torso (channel 34) against the lateral speed.
+    void strafeTwist(int32_t frames) {
+        float forward = speed04, side = lateral10;
+        if (forward < 0.0f) forward = -forward;
+        if (side < 0.0f) side = -side;
+        int32_t target = 0;
+        if (side < forward) target = -int32_t(data_->math.arctanf(lateral10, forward));
+        for (int32_t i = 0; i < frames; ++i) twist580 = twist580 + shiftRight(diffAngle(twist580, target), 4);
+        addTurn(0x44, int16_t(twist580));
     }
     // boyCanFire (overlay 16) for the ported moves: no skid, no half-turn,
     // not move 8, and a state that holds the weapon out, or crouched on moves
@@ -1100,4 +1194,21 @@ private:
         orientation[1] = OriginalMath::dAngle(orientation[1], pitch, fraction);
     }
 };
+
+// gen_anim_data (func_80074D60) with the player's list: each command-0 entry
+// adds its value to one decoded s16 channel before the bone matrices. The
+// channels are 3 per animated bone (60 for Juno's 20), and all 52 of Juno's
+// clips map bone i to channel triple i (checked by movement_assets.py), so
+// byte offset o turns bone o/6 about axis (o/2)%3. The same list applies to
+// both clips of a blend, so adding it to the blended pose gives the same angle.
+inline void applyJointTurns(Keyframe &pose, const JunoBody &body) {
+    if (body.jointTurnCount > body.jointTurns.size()) throw std::runtime_error("Invalid Juno joint-turn list");
+    for (size_t i = 0; i < body.jointTurnCount; ++i) {
+        const auto &turn = body.jointTurns[i];
+        if ((turn.offset & 0xF000) != 0 || (turn.offset & 1) || turn.offset >= 120 || size_t(turn.offset / 6) >= pose.angles.size())
+            throw std::runtime_error("Juno joint turn outside the animated channels");
+        if (turn.value == 0) continue;
+        pose.angles[turn.offset / 6][(turn.offset / 2) % 3] += float(turn.value) * (2 * Pi / 65536);
+    }
+}
 }

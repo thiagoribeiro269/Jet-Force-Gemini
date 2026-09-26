@@ -293,6 +293,18 @@ def convert_physics(assets, rom_path):
         clip_start, clip_end = struct.unpack(">II", region(assets.section(0x2A), model_clips[move] * 4, 8))
         blend_steps.append(region(assets.section(0x2B), clip_start, clip_end - clip_start)[1] & 0xF)
     require(blend_steps[14] != 0 and blend_steps[33] == 2 and blend_steps[16] == 10, "Clip blend steps differ")
+    # Joint turns (controlPlayerTiltList -> gen_anim_data) address decoded
+    # channels; modGenAnimMatrices copies each clip's channel map (asset 0x2D)
+    # into the bones. Juno's 52 maps are the identity, so channel triple i
+    # is bone i for every clip.
+    map_start, map_end = struct.unpack(">II", region(assets.section(0x2C), 220 * 4, 8))
+    channel_maps = region(assets.section(0x2D), map_start, map_end - map_start)
+    require(all(channel_maps[move * 21:(move + 1) * 21] == bytes(range(21)) for move in range(52)),
+            "Juno clip channel maps are not the identity")
+    # boyControl adds the weapon bone commands 0x4024/0x4026/0x4028 only with
+    # +0x540 bit 0x40, which controlUpdateWeapon sets for weaponTable byte 6
+    # == -2. The pistol's is 0, so the ported list never holds them.
+    require(weapon_table[6] == 0, "Pistol weapon flags differ")
     # controlGetManualAim: turn speed per stick step past 45 (D_800A2E60).
     aim_turn = struct.unpack(">20f", main_bytes(assets, 0x800A2E60, 80))
     f32 = lambda value: struct.unpack("<f", struct.pack("<f", value))[0]

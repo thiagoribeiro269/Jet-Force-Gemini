@@ -31,6 +31,7 @@ confere 59 rotinas, 71.280 bytes, contra a ROM US antes de gerar os dados.
 | `controlCeiling`, `trackGetIntersect` | `roomToStand`, `TrackQuery::getIntersect` | Espaço acima para levantar |
 | Estado `0x4440`, `controlGetManualAim` | `JunoBody::aimStand`, `manualAim` | Mira em pé: mira pelo analógico e giro na borda |
 | Estado `0x3F30` | `JunoBody::aimCrouch` | Mira agachada |
+| `0x6290`, `0x3DB0`, `0x4840`, `controlPlayerTiltList`, `gen_anim_data` | `followAim`, `torsoTurns`, `strafeTwist`, `applyJointTurns` | Rotações de juntas: tronco, cabeça e braço na mira; torção do tronco |
 | `objAnimSetMove`, `modGenAnimMatrices`, `objResetAnimModels` | `startBlend` e o fim de `tick` | Contador de mistura de clipes do modelo (`+0x5E`) |
 | `func_8002C078` | `JunoCamera::aimCamera` | Câmera de mira sobre o ombro |
 | `joyRead`, `controlReadJoypad`, `controlPlayer`, `frontGetTargetControl` | `JoypadReader`, `controlReadJoypad`, `ControlModeKeys` | Leitura do controle e tabelas dos modos Normal e Expert |
@@ -196,15 +197,47 @@ volta ao andar e põe a órbita da câmera livre atrás do Juno.
 
 R agachado leva à mira agachada (estado 5), com o perfil de câmera 2 e a
 inclinação da mira entre −0xA80 e 0x1555. Soltar R volta a agachar; A levanta
-direto para a mira em pé. As rotações de tronco, cabeça e braço em direção à
-mira (`0x3DB0`) não são desenhadas.
+direto para a mira em pé.
+
+## Rotações de juntas
+
+A cada quadro, o `boyControl` monta uma lista de rotações em `+0x240`
+(`controlPlayerTiltList`). O `modGenAnimMatrices` a entrega ao `gen_anim_data`,
+que soma cada valor a um canal da animação decodificada antes das matrizes
+dos ossos. O port monta a mesma lista no `JunoBody` e a aplica na pose de
+cada quadro (`applyJointTurns`).
+
+- **Mira em pé** (`0x4440` → `0x3DB0`): metade da inclinação vai ao tronco,
+  junto com o giro (canais 3 e 4). O resto vai ao canal 9, e a cabeça e o
+  braço (canais 30 e 31) ficam com a diferença até as rotações de recuo. A
+  inclinação é limitada a −0x2AAA; a metade é truncada em direção a zero,
+  como o `cvt.w.s` com arredondamento para zero.
+- **Mira agachada** (`0x3F30`): lista própria, sem metade e sem limite.
+- **Fora da mira** (`0x6290`, exceto nos estados 5, 0xB, 3 e 8): as rotações
+  seguem a mira em relação ao corpo, 1/4 da diferença por quadro, até ±0x2AAA
+  na inclinação e ±0x1000 no giro. Andando agachado, o alvo é zero. As de
+  recuo voltam a zero em 1/16 por quadro. Com o contador `+0x1F4` ativo, o
+  `0x3DB0` continua escrevendo; isso acontece no quadro de saída da mira.
+- **Torção do tronco** (`0x4840`, sempre): indo mais para a frente que para o
+  lado, o tronco gira contra a velocidade lateral, até
+  `−Arctanf(lateral, |frente|)`, 1/16 por quadro. Fica visível nos rolamentos
+  e no passo lateral correndo.
+
+Os 52 clipes do Juno ligam o osso *i* ao trio de canais *i*, conferido pelo
+conversor. Por isso o canal *c* gira o osso *c*/3, no eixo *c* mod 3. A
+mesma lista vale para os dois clipes de uma mistura, e somá-la à pose já
+misturada dá o mesmo ângulo. O recuo (`+0x1F5` a `+0x1F7`) e os comandos que
+escondem ossos da arma (bit 0x40 de `+0x540`) dependem de tiros ou de outras
+armas. Com a pistola e sem tiro, eles não acontecem; o conversor confere o
+byte da tabela de armas que os liga.
 
 ## Verificação
 
 - Linux com ASAN/UBSAN e Windows na RTX: 6 casos de matemática, 4 de entrada,
-  11 de colisão sintética, 14 de movimento e câmera com dados reais, 4 paradas
-  tipadas e 18 rejeições. O resumo do cenário, que inclui a posição da câmera
-  a cada tique, é igual nas duas plataformas.
+  11 de colisão sintética, 16 de movimento e câmera com dados reais, 4 paradas
+  tipadas e 23 rejeições. O resumo do cenário, que inclui a posição da câmera
+  a cada tique, e o resumo das listas de juntas são iguais nas duas
+  plataformas.
 - Os testes cobrem o passo lateral de 0,2 por quadro até 2,5, o pulo correndo
   durante o passo lateral, o modo Expert, os botões inertes e a trava de pouso.
 - Também cobrem agachar, andar agachado, os rolamentos, levantar, deslizar, os
@@ -215,6 +248,10 @@ mira (`0x3DB0`) não são desenhadas.
   na saída, no modo Expert e na parada do tiro. A mira agachada é testada na
   espera pela mistura de clipes, no limite de inclinação, na saída e na
   passagem para a mira em pé.
+- As rotações de juntas são testadas na mira em pé e agachada, no limite de
+  −0x2AAA, no quadro de saída da mira, no truncamento da metade
+  (−9 → −4 e −5), no atraso do giro ao virar correndo e na torção do tronco
+  correndo com C-left. A aplicação na pose e as listas inválidas também.
 - Na carga de Forest First surgem 5.759 planos e 1.759 arestas expostas. Todos
   os planos são normalizados e todas as referências são válidas.
 - O Juno nasce no ponto original, 21 unidades acima do caminho, e pousa em
@@ -225,7 +262,9 @@ mira (`0x3DB0`) não são desenhadas.
   limite do cenário.
 - A RTX produziu 580 quadros em 640 × 480, dezenove segundos a 30 fps.
   As sete provas gráficas anteriores, incluindo a da região, ficaram idênticas
-  byte a byte. A ROM matching continua com SHA-1
+  byte a byte. Comparados à prova anterior, os 396 quadros sem rotação de
+  junta ficaram idênticos byte a byte, e os 184 com rotação mudaram. O corpo e
+  a câmera não mudaram. A ROM matching continua com SHA-1
   `493ced9008dbe932d6e91179b68e8630cf23a023`.
 
 Métricas e hashes estão em [movement-validation.json](movement-validation.json).
@@ -264,9 +303,7 @@ Métricas e hashes estão em [movement-validation.json](movement-validation.json
   modelos de colisão e os outros personagens ainda não existem.
 - O modelo da pistola não é desenhado: a pose das variantes com arma
   aparece com as mãos vazias.
-- As rotações de juntas não foram portadas. No original, o tronco do Juno
-  gira durante o passo lateral (`0x4840`) e a cabeça acompanha a mira
-  (`0x6290`); no port, o corpo segue só a animação.
+- As rotações de recuo do tiro não existem, porque o tiro não foi portado.
 - A mistura entre clipes é nativa. A parte de colisão de `controlSetTransition`
   foi portada; a interpolação visual entre clipes continua própria do port.
 - Não há inimigos, áudio nem `levelInit` completo.

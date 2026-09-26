@@ -20,7 +20,8 @@ B ou X               agachar; correndo, desliza; com o analógico, anda agachado
 Analógico direito    esquerda/direita: passo lateral e giro da câmera;
                      agachado, rola para o lado
 LT ou RB (R)         mira: segure; o analógico move a mira e, no fim do curso,
-                     gira o Juno; em pé, o analógico direito dá passo lateral;
+                     gira o Juno; tronco, cabeça e braço seguem a mira;
+                     em pé, o analógico direito dá passo lateral;
                      agachado, A levanta para a mira em pé
 Start                pausa (o menu de pausa original ainda não foi portado)
 Back                 recomeça no ponto de entrada (função do port)

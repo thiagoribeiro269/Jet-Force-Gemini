@@ -273,7 +273,9 @@ public:
     SessionSnapshot snapshot() const {
         SessionSnapshot result{phase_, hostTick_, world_ ? world_->updates : 0, generation_, world_ ? world_->name : "", assets_, {}, world_ ? world_->region : nullptr};
         if (world_) for (const auto &actor : world_->actors) {
-            auto bones = composePose(assets_->skeleton, actor->animation.animation().current());
+            auto local = actor->animation.animation().current();
+            if (actor->body) applyJointTurns(local, *actor->body);
+            auto bones = composePose(assets_->skeleton, local);
             auto world = actor->motion.world(); world[13] = float(actor->elevation);
             if (actor->visualOffsetY != 0) world[13] += actor->visualOffsetY;
             if (actor->body) world = originalWorld(*actor->body);

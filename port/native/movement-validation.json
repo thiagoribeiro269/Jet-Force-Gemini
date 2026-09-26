@@ -1,14 +1,14 @@
 {
   "status": "passed",
   "recorded_date": "2026-09-26",
-  "previous_checkpoint": "615382c",
-  "architecture": "Native C++ host with recovered Juno control/physics, original controller reading, track collision and free camera; Direct3D 11 renderer with window presentation; XInput adapter to raw N64 pad values; no emulation",
+  "previous_checkpoint": "f16d2b0",
+  "architecture": "Native C++ host with recovered Juno control/physics, original controller reading, track collision, free and aim cameras and joint turns; Direct3D 11 renderer with window presentation; XInput adapter to raw N64 pad values; no emulation",
   "build": {
-    "native_movement_executable_sha256": "116eb9c5e502a0ac6ed9042acf6d4c5a6ff5513d557e6e6d006de03805f3ea92",
-    "native_movement_check_sha256": "b14989caad3cbb5c2f989918da175a63dd37b5e35ab6031559eacf57406c6565",
-    "native_play_executable_sha256": "1e9f954d5fa7d2a201c4d06427e502b04f5930fed85b8fbeb2af30388f83f103",
-    "native_replay_executable_sha256": "23b23152d81edd01b8c00c9231f26532e4d5c1b8e6a36133723ee6807837031c",
-    "native_play_check_sha256": "7f266e32a3603aad65a6937d1dac44cdd0f21ae08fe73fd8565c5d3dfdc65d3f"
+    "native_movement_executable_sha256": "795d52ec48c65d65e659c7e5eb2d5869416e8b4b92b59ef461f0a70e8b5c598a",
+    "native_movement_check_sha256": "377bcf5bb925b7c45dff4c3dc8001fcd184efb3fca71670c7694ffb636bc584a",
+    "native_play_executable_sha256": "88a5e68c50962c63d866c0c525e35df42f105d3ba2c2f344f2d286c1a8408558",
+    "native_replay_executable_sha256": "7cb8b651b9d276edd4aa27f506bcaf3ca7986c4fa490ae6db52587296949d493",
+    "native_play_check_sha256": "ba25d60d7ea86cb1217345f953b3e35903d2f4b9ee106e825b85508eaabf4a18"
   },
   "imports": {
     "jfg_native_movement.exe": [
@@ -36,8 +36,8 @@
     ],
     "plus_windows_ucrt_api_sets_only": true
   },
-  "private_package_sha256": "ed2e5cde3901edc84621d6f629d612ad079f77a08966132e3ec92f6a08669942",
-  "play_package_sha256": "f62f838f0f6cae7472512c5df8a7d9af8ed1ddd7e1a1a3ec1d59bf4effc92c7e",
+  "private_package_sha256": "d28b6b60f547ad89e88f6dae7385b4deecfced03db654de815f07d5360181e3a",
+  "play_package_sha256": "77670e4a99da69d6e316c70854cbfafe42be63fcc5f40c6c7439aa51a8ca49be",
   "windows": "Windows-11-10.0.26200-SP0",
   "tests": {
     "windows": {
@@ -87,11 +87,12 @@
         "math_cases": 6,
         "input_cases": 4,
         "collision_cases": 11,
-        "movement_cases": 14,
+        "movement_cases": 16,
         "not_ported_stops": 4,
-        "rejected_cases": 18,
+        "rejected_cases": 23,
         "original_region": true,
-        "scenario_digest": "e0ea92f5755c3377"
+        "scenario_digest": "e0ea92f5755c3377",
+        "joint_digest": "14a3286a6dd12ba"
       },
       "play_test": {
         "status": "passed",
@@ -151,11 +152,12 @@
         "math_cases": 6,
         "input_cases": 4,
         "collision_cases": 11,
-        "movement_cases": 14,
+        "movement_cases": 16,
         "not_ported_stops": 4,
-        "rejected_cases": 18,
+        "rejected_cases": 23,
         "original_region": true,
-        "scenario_digest": "e0ea92f5755c3377"
+        "scenario_digest": "e0ea92f5755c3377",
+        "joint_digest": "14a3286a6dd12ba"
       },
       "check_play": {
         "status": "passed",
@@ -251,11 +253,12 @@
       "math_cases": 6,
       "input_cases": 4,
       "collision_cases": 11,
-      "movement_cases": 14,
+      "movement_cases": 16,
       "not_ported_stops": 4,
-      "rejected_cases": 18,
+      "rejected_cases": 23,
       "original_region": true,
-      "scenario_digest": "e0ea92f5755c3377"
+      "scenario_digest": "e0ea92f5755c3377",
+      "joint_digest": "14a3286a6dd12ba"
     },
     "scenario_digest_equal_on_linux_and_windows": true,
     "final_position": {
@@ -269,6 +272,14 @@
     "airborne_ticks": 45,
     "move_changes": 37,
     "strafe_frames_at_full_speed": 14,
+    "joint_turns": {
+      "aim_frames": 55,
+      "aim_frames_with_torso_turns": 55,
+      "crouched_aim_frames": 20,
+      "crouched_aim_frames_with_turns": 20,
+      "frames_with_torso_twist_over_0x400": 32,
+      "largest_twist": 6164
+    },
     "clips_played": [
       1019,
       1021,
@@ -309,6 +320,7 @@
       "aim": 465,
       "aim-up": 480,
       "crouch-aim": 550,
+      "twist": 345,
       "settled": 579
     },
     "region_coverage_range": [
@@ -349,18 +361,26 @@
       "yaw_at_start": -32768,
       "yaw_at_end": 28997
     },
-    "raw_sha256": "d8e86d7c9b7358cbc3fff711d16deffdc82d096e07edca88daf93fa375d44b72",
-    "video_sha256": "18584c04e98c59966ed4e800f4643eaefb8c2521a69eff674815c58cb48ef2c7",
+    "raw_sha256": "b4e96cab731a32f43ad69a24b387d811549859fcef12ed8cce7e2726b84d17e2",
+    "video_sha256": "24a2b7f5497be8615c5d041f45213ea8db49765f27105bf26a8be087e9c0de9a",
     "fps_output": 30,
     "duration_seconds": 19.333333333333332,
     "limits": [
       "Juno walking, crouch (1/2), standing and crouched aim (0xB, 5) and air states with original track collision and collision profiles; shots, water and object hit models not ported; crouched aim (5) waits for the model clip blend as the original",
       "Original free and aim cameras (player type 0, collision mode 1); zone, spline, static and cutscene cameras not ported",
-      "Aim joint turns (0x3DB0/0x6290) not drawn: the aim changes the camera, heading and stance, not the arm pose",
+      "Joint turns of the aim (0x3DB0, 0x3F30, 0x6290) and the torso twist (0x4840) are drawn; recoil turns need shots, which are not ported",
       "A scripted controller stands in for a physical controller; raw N64 pad values pass through the original joyRead and controlReadJoypad",
       "Native animation blend between clips; move selection, clip positions and collision profiles follow the original machine",
       "No enemies, weapons, audio or full levelInit; no emulation; ROM and derived assets remain private"
     ]
+  },
+  "joint_turns_against_previous_proof": {
+    "previous_raw_sha256": "d8e86d7c9b7358cbc3fff711d16deffdc82d096e07edca88daf93fa375d44b72",
+    "frames_without_turns_byte_identical": 396,
+    "frames_with_turns_changed": 184,
+    "frames_with_turns_unchanged": 0,
+    "body_and_camera_trace_identical": true,
+    "raw_sha256_equal_on_two_rtx_runs": true
   },
   "not_ported_stops": [
     "Z pistol shot when boyCanFire allows it (crouched: after the model clip blend of moves 0xE/0x21)",
@@ -368,6 +388,6 @@
     "other Juno states and moves",
     "track bounds restart"
   ],
-  "next_milestone": "Joint turns for the aiming pose and strafe torso; then weapons, objects and enemies",
+  "next_milestone": "Gameplay interaction in Forest First: pistol shots, projectiles, objects and enemies",
   "ai_assistance": "Claude Code (Anthropic); reviewed changes and recorded evidence"
 }

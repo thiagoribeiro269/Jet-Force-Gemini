@@ -68,8 +68,9 @@ as mesmas diretrizes. O [movimento do Juno em Forest First](../port/native/MOVEM
 foi portado a partir das rotinas originais de controle, física e colisão,
 lidas estaticamente e auditadas contra a ROM, sem emulação. A pedido de Thiago,
 o comportamento original é a referência. A câmera livre original foi portada
-em seguida e substituiu a câmera provisória. A entrada da prova continua um
-roteiro até a integração do controle físico.
+em seguida e substituiu a câmera provisória. Depois veio a leitura original
+do controle e um executável jogável com controle Xbox, que para de forma
+explícita quando o Juno faria algo ainda não portado.
 
 ## Melhorias futuras
 

@@ -263,6 +263,16 @@ public:
             accumulator_ -= ClockScale; ++hostTick_;
         }
     }
+    // Exactly one host tick with the given input, as one iteration of
+    // advanceNanoseconds: a failure leaves the tick to be retried.
+    void step(const TickInput &input) {
+        if (phase_ == SessionPhase::Cold || phase_ == SessionPhase::Stopped) throw std::runtime_error("Native session is not booted");
+        execute(input, true);
+        ++hostTick_;
+    }
+    SessionPhase phase() const { return phase_; }
+    uint32_t sceneGeneration() const { return world_ ? world_->generation : 0; }
+    uint64_t hostTick() const { return hostTick_; }
     SessionSnapshot snapshot() const {
         SessionSnapshot result{phase_, hostTick_, world_ ? world_->updates : 0, generation_, world_ ? world_->name : "", assets_, {}, world_ ? world_->region : nullptr};
         if (world_) for (const auto &actor : world_->actors) {

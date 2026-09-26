@@ -133,10 +133,13 @@ meia-volta e troca o repouso sorteado pelo movimento 0x12, como no original.
 
 Bordas não existem no cenário de Forest First. As marcas de borda
 (`+0x20`, bits 3 a 5) só vêm de faces com os bits 0 ou 1, e nenhuma face da
-fase os tem. O conversor e a carga em C++ exigem isso, então `controlHangOK`
-e `controlGrabOK` não encontrariam borda no cenário. Também ficam inertes sem
-objetos `controlSquashCheckPrior/Post` (caixas e plataformas), `0x2220`
-(acertos no Juno) e `controlFadePlayer` (só age na mira).
+fase os tem. O conversor, a carga em C++ e `check_movement` exigem isso, então
+`controlHangOK` e `controlGrabOK` não encontrariam borda no cenário.
+
+Pela leitura estática das rotinas, sem teste automático, outras três
+checagens de cada tique também não agem nesse recorte:
+`controlSquashCheckPrior/Post` dependem de caixas, plataformas ou estados de
+borda; `0x2220` trata acertos no Juno; `controlFadePlayer` só age na mira.
 
 ## Verificação
 

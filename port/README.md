@@ -8,7 +8,8 @@ do programa, host de aplicação, cenas e entidades independentes, snapshots
 e backend compartilhado. Em Forest First, o Juno já se move pelo controle,
 física, colisão e máquina de movimentos originais, portados para C++
 ([resultado](native/MOVEMENT.md)), agora com a câmera livre original. O
-[roteiro vigente](ROADMAP.md) prioriza a entrada por controle físico. O ciclo
+[executável jogável](native/PLAY.md) já aceita um controle Xbox numa janela. O
+[roteiro vigente](ROADMAP.md) prioriza os estados restantes do Juno. O ciclo
 completo de gameplay ainda não está integrado.
 
 ## Histórico da rota anterior

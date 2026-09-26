@@ -1,0 +1,45 @@
+Jet Force Gemini: port nativo para PC, Forest First
+====================================================
+
+Esta pasta contém dados convertidos da sua ROM. Não publique nem compartilhe.
+
+Como jogar
+----------
+1. Conecte um controle Xbox, ou compatível com XInput.
+2. Abra jfg_native_play.exe.
+
+Teclas do PC: Esc sai. F5 recomeça no ponto de entrada. Alt+Enter alterna a
+tela cheia.
+
+Controle (modo Normal, o padrão do jogo)
+----------------------------------------
+Analógico esquerdo   andar e correr, em relação à câmera
+A                    pular; parado, segure para carregar o pulo
+Analógico direito    esquerda/direita: passo lateral e giro da câmera
+Start                pausa (o menu de pausa original ainda não foi portado)
+Back                 recomeça no ponto de entrada (função do port)
+
+Ainda não portados. Ao usar, a sessão para e explica o motivo:
+LT ou RB (R)         mira
+B ou X               agachar, deslizar e rolar
+RT (Z)               tiro; no ar o Juno não atira, como no original
+
+Para trocar botões ou usar o modo Expert do menu original, edite
+controles.ini.
+
+Por que a sessão para
+---------------------
+O port segue o código original do jogo. Quando o Juno faria algo que o port
+ainda não executa, a sessão para em vez de seguir um caminho diferente do
+original. A janela mostra o que faltou. Repetir recomeça no ponto de
+entrada; Cancelar sai.
+
+Gravações
+---------
+Cada sessão grava os comandos do controle em gravacoes\sessao-DATA-HORA.jfgpad
+e um resumo em .txt. A gravação reproduz a sessão exatamente, inclusive as
+paradas. Enviar essas gravações ajuda a escolher o que portar primeiro.
+
+Limites desta versão
+--------------------
+Só Forest First, só o Juno, sem inimigos, objetos, sons, céu nem menus.

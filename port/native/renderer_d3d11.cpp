@@ -3,7 +3,7 @@
 #include <windows.h>
 #include <d3d11.h>
 #include <d3dcompiler.h>
-#include <dxgi.h>
+#include <dxgi1_2.h>
 #include <wrl/client.h>
 #include <iostream>
 #include <algorithm>
@@ -92,6 +92,16 @@ struct NativeRenderer::State {
     ComPtr<ID3D11BlendState> blendState[2];
     ComPtr<ID3D11SamplerState> samplerState[4];
     std::vector<uint8_t> pixels = std::vector<uint8_t>(Width * Height * 4);
+    // Window presentation (play executable only).
+    HWND window = nullptr;
+    ComPtr<IDXGISwapChain1> swapChain;
+    ComPtr<ID3D11RenderTargetView> backView;
+    ComPtr<ID3D11Texture2D> sceneColor, sceneDepth, sceneStaging;
+    ComPtr<ID3D11RenderTargetView> sceneView;
+    ComPtr<ID3D11DepthStencilView> sceneDepthView;
+    unsigned backWidth = 0, backHeight = 0, sceneWidth = 0, sceneHeight = 0;
+    const char *effect = "none";
+    std::vector<uint8_t> presented;
     State(std::vector<std::shared_ptr<const AssetPackage>> packages, CameraPreset camera) : preset(camera) {
         require(!packages.empty() && packages.size() <= 64, "Unbounded native resource catalog");
         for (auto &package : packages) {
@@ -188,6 +198,103 @@ struct NativeRenderer::State {
     }
     ~State() { if (context) { context->ClearState(); context->Flush(); } }
     const std::vector<uint8_t> &draw(const std::vector<RenderInstance> &instances, const WorldCamera *camera) {
+        render(instances, camera, colorView.Get(), depthView.Get(), Width, Height);
+        context->OMSetRenderTargets(0, nullptr, nullptr); context->CopyResource(staging.Get(), color.Get());
+        D3D11_MAPPED_SUBRESOURCE mapped{};
+        check(context->Map(staging.Get(), 0, D3D11_MAP_READ, 0, &mapped), "Wait and read GPU framebuffer");
+        for (unsigned y = 0; y < Height; ++y)
+            std::memcpy(pixels.data() + y * Width * 4, static_cast<uint8_t *>(mapped.pData) + y * mapped.RowPitch, Width * 4);
+        context->Unmap(staging.Get(), 0);
+        return pixels;
+    }
+    void attachWindow(HWND hwnd, unsigned width, unsigned height) {
+        require(hwnd && !swapChain, "Native window already attached or missing");
+        require(preset == CameraPreset::World, "Window presentation requires the world camera");
+        ComPtr<IDXGIDevice> dxgiDevice; check(device.As(&dxgiDevice), "DXGI device");
+        ComPtr<IDXGIAdapter> adapter; check(dxgiDevice->GetAdapter(&adapter), "DXGI adapter");
+        ComPtr<IDXGIFactory2> factory;
+        check(adapter->GetParent(__uuidof(IDXGIFactory2), reinterpret_cast<void **>(factory.GetAddressOf())), "DXGI 1.2 factory");
+        DXGI_SWAP_CHAIN_DESC1 desc{};
+        desc.Width = std::max(width, 1u); desc.Height = std::max(height, 1u); desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        desc.SampleDesc.Count = 1; desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT; desc.Scaling = DXGI_SCALING_STRETCH;
+        desc.BufferCount = 2; desc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+        effect = "flip_discard";
+        if (FAILED(factory->CreateSwapChainForHwnd(device.Get(), hwnd, &desc, nullptr, nullptr, &swapChain))) {
+            // Sessions without a composited desktop only offer the legacy blit model.
+            desc.BufferCount = 1; desc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
+            effect = "discard";
+            check(factory->CreateSwapChainForHwnd(device.Get(), hwnd, &desc, nullptr, nullptr, &swapChain), "Native swap chain");
+        }
+        check(factory->MakeWindowAssociation(hwnd, DXGI_MWA_NO_ALT_ENTER | DXGI_MWA_NO_WINDOW_CHANGES), "Window association");
+        window = hwnd;
+        resizeWindow(desc.Width, desc.Height);
+    }
+    void resizeWindow(unsigned width, unsigned height) {
+        require(bool(swapChain), "No native window attached");
+        width = std::max(width, 2u); height = std::max(height, 2u);
+        context->OMSetRenderTargets(0, nullptr, nullptr);
+        backView.Reset();
+        check(swapChain->ResizeBuffers(0, width, height, DXGI_FORMAT_UNKNOWN, 0), "Resize swap chain");
+        ComPtr<ID3D11Texture2D> back;
+        check(swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void **>(back.GetAddressOf())), "Swap chain buffer");
+        check(device->CreateRenderTargetView(back.Get(), nullptr, &backView), "Back buffer view");
+        backWidth = width; backHeight = height;
+        fitScene(width, height);
+    }
+    // The original 4:3 picture, as large as the client area allows.
+    void fitScene(unsigned width, unsigned height) {
+        width = std::max(width, 2u); height = std::max(height, 2u);
+        unsigned w = width, h = (width * 3) / 4;
+        if (h > height) { h = height; w = (height * 4) / 3; }
+        w = std::max(w & ~1u, 2u); h = std::max(h & ~1u, 2u);
+        D3D11_TEXTURE2D_DESC target{};
+        target.Width = w; target.Height = h; target.MipLevels = target.ArraySize = 1;
+        target.Format = DXGI_FORMAT_R8G8B8A8_UNORM; target.SampleDesc.Count = 1; target.BindFlags = D3D11_BIND_RENDER_TARGET;
+        sceneColor.Reset(); sceneView.Reset(); sceneDepth.Reset(); sceneDepthView.Reset(); sceneStaging.Reset();
+        check(device->CreateTexture2D(&target, nullptr, &sceneColor), "Window scene target");
+        check(device->CreateRenderTargetView(sceneColor.Get(), nullptr, &sceneView), "Window scene view");
+        target.Format = DXGI_FORMAT_D32_FLOAT; target.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+        check(device->CreateTexture2D(&target, nullptr, &sceneDepth), "Window depth target");
+        check(device->CreateDepthStencilView(sceneDepth.Get(), nullptr, &sceneDepthView), "Window depth view");
+        target.Format = DXGI_FORMAT_R8G8B8A8_UNORM; target.BindFlags = 0;
+        target.Usage = D3D11_USAGE_STAGING; target.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+        check(device->CreateTexture2D(&target, nullptr, &sceneStaging), "Window readback target");
+        sceneWidth = w; sceneHeight = h;
+    }
+    void prepareSceneTarget(unsigned width, unsigned height) {
+        require(!swapChain && preset == CameraPreset::World, "Scene target without a window is for self-tests only");
+        fitScene(width, height);
+    }
+    void drawScene(const std::vector<RenderInstance> &instances, const WorldCamera &camera) {
+        require(bool(sceneView), "No window scene target");
+        render(instances, &camera, sceneView.Get(), sceneDepthView.Get(), sceneWidth, sceneHeight);
+        context->OMSetRenderTargets(0, nullptr, nullptr);
+    }
+    void present(const std::vector<RenderInstance> &instances, const WorldCamera &camera, bool vsync) {
+        require(bool(swapChain), "No native window attached");
+        drawScene(instances, camera);
+        const float black[4] = {0, 0, 0, 1};
+        context->ClearRenderTargetView(backView.Get(), black);
+        ComPtr<ID3D11Texture2D> back;
+        check(swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void **>(back.GetAddressOf())), "Swap chain buffer");
+        context->CopySubresourceRegion(back.Get(), 0, (backWidth - sceneWidth) / 2, (backHeight - sceneHeight) / 2, 0, sceneColor.Get(), 0, nullptr);
+        const HRESULT result = swapChain->Present(vsync ? 1 : 0, 0);
+        if (result != DXGI_STATUS_OCCLUDED) check(result, "Present native frame");
+    }
+    const std::vector<uint8_t> &readPresented(unsigned &width, unsigned &height) {
+        require(bool(sceneColor), "No window scene target");
+        context->CopyResource(sceneStaging.Get(), sceneColor.Get());
+        D3D11_MAPPED_SUBRESOURCE mapped{};
+        check(context->Map(sceneStaging.Get(), 0, D3D11_MAP_READ, 0, &mapped), "Read window scene");
+        presented.resize(size_t(sceneWidth) * sceneHeight * 4);
+        for (unsigned y = 0; y < sceneHeight; ++y)
+            std::memcpy(presented.data() + size_t(y) * sceneWidth * 4, static_cast<uint8_t *>(mapped.pData) + y * mapped.RowPitch, sceneWidth * 4);
+        context->Unmap(sceneStaging.Get(), 0);
+        width = sceneWidth; height = sceneHeight;
+        return presented;
+    }
+    void render(const std::vector<RenderInstance> &instances, const WorldCamera *camera, ID3D11RenderTargetView *target,
+                ID3D11DepthStencilView *depthTarget, unsigned width, unsigned height) {
         require(instances.size() <= 64, "Native frame instance budget exceeded");
         require((preset == CameraPreset::World) == (camera != nullptr), "Camera does not match renderer mode");
         const auto cameraMatrix = camera ? camera->matrix() : identityMatrix();
@@ -216,9 +323,11 @@ struct NativeRenderer::State {
             context->VSSetConstantBuffers(0, 1, cameraBuffer.GetAddressOf());
         }
         const float clear[4] = {camera ? camera->clearColor[0] : 0, camera ? camera->clearColor[1] : 0, camera ? camera->clearColor[2] : 0, 1};
-        context->ClearRenderTargetView(colorView.Get(), clear);
-        context->ClearDepthStencilView(depthView.Get(), D3D11_CLEAR_DEPTH, 1, 0);
-        context->OMSetRenderTargets(1, colorView.GetAddressOf(), depthView.Get());
+        const D3D11_VIEWPORT viewport{0, 0, float(width), float(height), 0, 1};
+        context->RSSetViewports(1, &viewport);
+        context->ClearRenderTargetView(target, clear);
+        context->ClearDepthStencilView(depthTarget, D3D11_CLEAR_DEPTH, 1, 0);
+        context->OMSetRenderTargets(1, &target, depthTarget);
         struct Job { size_t instance, draw; float depth; };
         for (unsigned alpha = 0; alpha < 2; ++alpha) {
           std::vector<Job> jobs;
@@ -258,13 +367,6 @@ struct NativeRenderer::State {
                 context->Draw(draw.count, draw.first);
           }
         }
-        context->OMSetRenderTargets(0, nullptr, nullptr); context->CopyResource(staging.Get(), color.Get());
-        D3D11_MAPPED_SUBRESOURCE mapped{};
-        check(context->Map(staging.Get(), 0, D3D11_MAP_READ, 0, &mapped), "Wait and read GPU framebuffer");
-        for (unsigned y = 0; y < Height; ++y)
-            std::memcpy(pixels.data() + y * Width * 4, static_cast<uint8_t *>(mapped.pData) + y * mapped.RowPitch, Width * 4);
-        context->Unmap(staging.Get(), 0);
-        return pixels;
     }
 };
 NativeRenderer::NativeRenderer(std::shared_ptr<const AssetPackage> assets, CameraPreset camera)
@@ -275,4 +377,13 @@ NativeRenderer::~NativeRenderer() = default;
 const std::vector<uint8_t> &NativeRenderer::draw(const std::vector<RenderInstance> &instances) { return state_->draw(instances, nullptr); }
 const std::vector<uint8_t> &NativeRenderer::draw(const std::vector<RenderInstance> &instances, const WorldCamera &camera) { return state_->draw(instances, &camera); }
 uint32_t NativeRenderer::vendor() const { return state_->adapterInfo.VendorId; }
+void NativeRenderer::attachWindow(void *window, unsigned width, unsigned height) { state_->attachWindow(static_cast<HWND>(window), width, height); }
+void NativeRenderer::resizeWindow(unsigned width, unsigned height) { state_->resizeWindow(width, height); }
+void NativeRenderer::present(const std::vector<RenderInstance> &instances, const WorldCamera &camera, bool vsync) {
+    state_->present(instances, camera, vsync);
+}
+const std::vector<uint8_t> &NativeRenderer::readPresented(unsigned &width, unsigned &height) { return state_->readPresented(width, height); }
+const char *NativeRenderer::swapEffect() const { return state_->effect; }
+void NativeRenderer::prepareSceneTarget(unsigned width, unsigned height) { state_->prepareSceneTarget(width, height); }
+void NativeRenderer::drawScene(const std::vector<RenderInstance> &instances, const WorldCamera &camera) { state_->drawScene(instances, camera); }
 }

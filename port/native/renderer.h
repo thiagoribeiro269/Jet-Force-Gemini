@@ -20,5 +20,18 @@ public:
     const std::vector<uint8_t> &draw(const std::vector<RenderInstance> &instances);
     const std::vector<uint8_t> &draw(const std::vector<RenderInstance> &instances, const WorldCamera &camera);
     uint32_t vendor() const;
+    // Window presentation for the play executable; `window` is a Win32 HWND.
+    // The scene is drawn into a 4:3 target fitted to the client area and
+    // copied centred into the swap chain. The offscreen proof path above keeps
+    // its own 640x480 targets and commands.
+    void attachWindow(void *window, unsigned width, unsigned height);
+    void resizeWindow(unsigned width, unsigned height);
+    void present(const std::vector<RenderInstance> &instances, const WorldCamera &camera, bool vsync);
+    const std::vector<uint8_t> &readPresented(unsigned &width, unsigned &height);
+    const char *swapEffect() const;
+    // The same 4:3 scene target without a window or swap chain, so remote
+    // self-tests can check the window drawing path in sessions without a desktop.
+    void prepareSceneTarget(unsigned width, unsigned height);
+    void drawScene(const std::vector<RenderInstance> &instances, const WorldCamera &camera);
 };
 }

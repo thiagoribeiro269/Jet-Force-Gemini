@@ -52,6 +52,11 @@ if assets.get("movement_profile"):
     camera = json.loads((out / "camera-assets-report.json").read_text())
     if hashlib.sha256(files["juno-camera.bin"]).hexdigest() != camera["sha256"]:
         raise ValueError("Native camera data differs from its conversion report")
+    # Play package: the windowed executable, its replay tool and tests.
+    for name in ("jfg_native_play.exe", "jfg_native_replay.exe", "check_play.exe"):
+        files[name] = (build / name).read_bytes()
+    files["controles.ini"] = (ROOT / "port/native/controles.ini").read_bytes()
+    files["LEIA-ME.txt"] = (ROOT / "port/native/LEIA-ME-jogar.txt").read_bytes()
 files["run_windows.py"] = (ROOT / "port/native/run_windows.py").read_bytes()
 files["PRIVATE.txt"] = b"Private game-derived meshes and textures. Do not publish this package.\n"
 files["hashes.json"] = (json.dumps({n: hashlib.sha256(v).hexdigest() for n, v in files.items()}, indent=2) + "\n").encode()
@@ -61,5 +66,17 @@ with zipfile.ZipFile(package, "w", compression=zipfile.ZIP_DEFLATED) as archive:
         archive.writestr(name, data)
 report = {"private": True, "package": str(package), "sha256": hashlib.sha256(package.read_bytes()).hexdigest(),
           "bytes": package.stat().st_size, "contains_game_assets": True, "contains_rom": False}
+if "jfg_native_play.exe" in files:
+    # Folder for Thiago to play: the game, the replay tool and the data only.
+    names = ["jfg_native_play.exe", "jfg_native_replay.exe", "controles.ini", "LEIA-ME.txt", "movement-scene.bin",
+             "juno-selection.bin", "region-mesh.bin", "region-info.bin", "collision.bin", "juno-physics.bin", "juno-camera.bin"]
+    play = {name: files[name] for name in names}
+    play["hashes.json"] = (json.dumps({n: hashlib.sha256(v).hexdigest() for n, v in play.items()}, indent=2) + "\n").encode()
+    play_package = out / "jogar.zip"
+    with zipfile.ZipFile(play_package, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+        for name, data in play.items():
+            archive.writestr(name, data)
+    report["play_package"] = str(play_package)
+    report["play_sha256"] = hashlib.sha256(play_package.read_bytes()).hexdigest()
 (out / "package-report.json").write_text(json.dumps(report, indent=2) + "\n")
 print(json.dumps(report))

@@ -62,5 +62,18 @@ subprocess.run([str(compiler), "-std=c++17", "-O2", "-Wall", "-Wextra", "-Werror
                 str(ROOT / "port/native/check_movement.cpp"), "-o", str(movement_check)], check=True)
 report["native_movement_executable_sha256"] = hashlib.sha256(movement_exe.read_bytes()).hexdigest()
 report["native_movement_check_sha256"] = hashlib.sha256(movement_check.read_bytes()).hexdigest()
+play_exe = out / "jfg_native_play.exe"
+subprocess.run([str(compiler), "-std=c++17", "-O2", "-Wall", "-Wextra", "-Werror", "-ffp-contract=off", "-DNOMINMAX", "-DWIN32_LEAN_AND_MEAN",
+                "-static", "-mwindows", str(ROOT / "port/native/play_main.cpp"), str(ROOT / "port/native/renderer_d3d11.cpp"),
+                "-o", str(play_exe), "-ld3d11", "-ld3dcompiler", "-ldxgi", "-lole32", "-luser32", "-lxinput1_4"], check=True)
+replay_exe = out / "jfg_native_replay.exe"
+subprocess.run([str(compiler), "-std=c++17", "-O2", "-Wall", "-Wextra", "-Werror", "-ffp-contract=off", "-static",
+                str(ROOT / "port/native/replay_main.cpp"), "-o", str(replay_exe)], check=True)
+play_check = out / "check_play.exe"
+subprocess.run([str(compiler), "-std=c++17", "-O2", "-Wall", "-Wextra", "-Werror", "-ffp-contract=off", "-static",
+                str(ROOT / "port/native/check_play.cpp"), "-o", str(play_check)], check=True)
+report["native_play_executable_sha256"] = hashlib.sha256(play_exe.read_bytes()).hexdigest()
+report["native_replay_executable_sha256"] = hashlib.sha256(replay_exe.read_bytes()).hexdigest()
+report["native_play_check_sha256"] = hashlib.sha256(play_check.read_bytes()).hexdigest()
 (out / "build-report.json").write_text(json.dumps(report, indent=2) + "\n")
 print(json.dumps(report))

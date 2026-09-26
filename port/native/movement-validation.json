@@ -1,11 +1,14 @@
 {
   "status": "passed",
   "recorded_date": "2026-09-26",
-  "previous_checkpoint": "badd042",
-  "architecture": "Native C++ host with recovered Juno control/physics, original controller reading, track collision and free camera; Direct3D 11 renderer; no emulation",
+  "previous_checkpoint": "9d29f1a",
+  "architecture": "Native C++ host with recovered Juno control/physics, original controller reading, track collision and free camera; Direct3D 11 renderer with window presentation; XInput adapter to raw N64 pad values; no emulation",
   "build": {
-    "native_movement_executable_sha256": "79ee3ccccd5d27b4b9808800c201531965d2fc1fb47cea84ff994056985f4bbb",
-    "native_movement_check_sha256": "90a21c4be80cbcefad813303c8a231fafbf5a6b2aa395a9eb409ceee907a55d0"
+    "native_movement_executable_sha256": "7faff43bc6dca724f2c27a6723e76eda01ec7a83cd2d5651514ce054dd18a88f",
+    "native_movement_check_sha256": "da7337c84267b570a701d6797b792979367335bc2f7320bd84a9478ff69965e3",
+    "native_play_executable_sha256": "de9e09dad58a445748bb729d90e5ff55fcb119f88210682ccb4119a1fc749508",
+    "native_replay_executable_sha256": "2a62e08bab359aaf8a793bebd3910e42f43196d3ed05ee7ca1b162987c3bf951",
+    "native_play_check_sha256": "398cd4387be9e32bd4647754c3ca845e3d88006a6feb1a0a49c6c86814ef6e51"
   },
   "imports": {
     "jfg_native_movement.exe": [
@@ -17,9 +20,24 @@
     "check_movement.exe": [
       "KERNEL32.dll"
     ],
+    "jfg_native_play.exe": [
+      "D3DCOMPILER_47.dll",
+      "KERNEL32.dll",
+      "USER32.dll",
+      "XINPUT1_4.dll",
+      "d3d11.dll",
+      "dxgi.dll"
+    ],
+    "jfg_native_replay.exe": [
+      "KERNEL32.dll"
+    ],
+    "check_play.exe": [
+      "KERNEL32.dll"
+    ],
     "plus_windows_ucrt_api_sets_only": true
   },
-  "private_package_sha256": "e89207b71bada9dacb3c1b6d5f11dda6e0b9981f4f7585fd314a74fe52b5d8b6",
+  "private_package_sha256": "14d5f1d1b9ff0ddaa96e5a6e1172c6a21d1ced0127c161bd48c4e91c87ed08bb",
+  "play_package_sha256": "40056b356d41e5511b1165c09f2a7286dfc87ac35aae44533e198cca1d599cef",
   "windows": "Windows-11-10.0.26200-SP0",
   "tests": {
     "windows": {
@@ -74,6 +92,16 @@
         "rejected_cases": 18,
         "original_region": true,
         "scenario_digest": "15e32a2955901859"
+      },
+      "play_test": {
+        "status": "passed",
+        "adapter_cases": 3,
+        "config_cases": 4,
+        "recording_cases": 2,
+        "replay_cases": 5,
+        "rejected_cases": 11,
+        "original_data": true,
+        "replay_digest": "26dcf5ece0128e08"
       }
     },
     "linux_asan_ubsan": {
@@ -128,8 +156,85 @@
         "rejected_cases": 18,
         "original_region": true,
         "scenario_digest": "15e32a2955901859"
+      },
+      "check_play": {
+        "status": "passed",
+        "adapter_cases": 3,
+        "config_cases": 4,
+        "recording_cases": 2,
+        "replay_cases": 5,
+        "rejected_cases": 11,
+        "original_data": true,
+        "replay_digest": "26dcf5ece0128e08"
       }
     }
+  },
+  "play": {
+    "remote_self_test": {
+      "status": "passed",
+      "window": false,
+      "swap_chain": "unavailable",
+      "swap_chain_error": "Native swap chain HRESULT=2289696802",
+      "frames": 540,
+      "host_ticks": 540,
+      "scene_equals_offscreen_640x480": true,
+      "base_coverage": 1,
+      "fitted_sizes": [
+        {
+          "client": [
+            1920,
+            1080
+          ],
+          "scene": [
+            1440,
+            1080
+          ],
+          "coverage": 1
+        },
+        {
+          "client": [
+            1280,
+            1024
+          ],
+          "scene": [
+            1280,
+            960
+          ],
+          "coverage": 1
+        },
+        {
+          "client": [
+            1000,
+            700
+          ],
+          "scene": [
+            932,
+            700
+          ],
+          "coverage": 1
+        }
+      ],
+      "state_digest": "26dcf5ece0128e08",
+      "stop": "Aim state 0xB (controlKeys 0x10) is not ported",
+      "restart": true
+    },
+    "replay_of_script": {
+      "status": "replayed",
+      "records": 540,
+      "host_ticks": 540,
+      "control_mode": 0,
+      "paused": false,
+      "failures": [],
+      "final": {
+        "x": 49.8339043,
+        "y": -0.899419785,
+        "z": 306.564148,
+        "state": 0
+      },
+      "state_digest": "26dcf5ece0128e08"
+    },
+    "replay_digest_equal_on_linux_and_windows": true,
+    "window_and_physical_controller": "not verifiable over SSH (no desktop); pending Thiago's test on his PC"
   },
   "matching_rom_byte_equal": true,
   "rom_sha1": "493ced9008dbe932d6e91179b68e8630cf23a023",
@@ -234,15 +339,6 @@
       "No enemies, weapons, audio or full levelInit; no emulation; ROM and derived assets remain private"
     ]
   },
-  "visual_review": [
-    "Frame 4: Juno lands on the path from the original entry point, seen from behind by the original camera",
-    "Frame 60: running along the path with the camera trailing about 207 units behind",
-    "Frame 175: jump peak; Juno leaves the top of the frame because the original camera aims at the take-off height during jumps under 108 units",
-    "Frame 215: running back toward the camera, which retreats ahead of Juno",
-    "Frames 242-258: C-left strafes Juno sideways with the strafe clip while the camera swings behind him",
-    "Frame 269: standing on the path after the strafe, camera behind Juno"
-  ],
-  "scope": "Juno walking and air states in Forest First with original controller reading (Normal/Expert tables), strafe, original collision and free camera; scripted N64 pad values",
   "not_ported_stops": [
     "R aim state 0xB",
     "B crouch states 1/2",
@@ -251,6 +347,6 @@
     "other Juno states and moves",
     "track bounds restart"
   ],
-  "next_milestone": "Playable Windows executable: XInput adapter to N64 pad values, window presentation, strict stops with restart and pad recordings",
+  "next_milestone": "Thiago's test of the playable executable; then crouch states 1/2 and aim states 0xB/5",
   "ai_assistance": "Claude Code (Anthropic); reviewed changes and recorded evidence"
 }

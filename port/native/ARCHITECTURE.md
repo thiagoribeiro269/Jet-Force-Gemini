@@ -159,7 +159,7 @@ precisam de medição. A validação a 144 Hz não é benchmark de desempenho.
 | Câmera, desenho de mundo e materiais | Câmera livre original, perspectiva, catálogo e terreno ativos em D3D11; outras câmeras, céu e efeitos pendentes |
 | Armas, projéteis, inimigos e scripts | Pendente; deverá usar a mesma vida de entidades, sem cenários paralelos isolados |
 | Áudio e música | Saída/síntese ainda não integradas |
-| Interface, salvamento e entrada física | Leitura original do controle portada; dispositivo físico, interface e salvamento pendentes |
+| Interface, salvamento e entrada física | Leitura original do controle e adaptador XInput prontos, com janela; interface e salvamento pendentes |
 
 `requireOriginalService` rejeita pedidos dos serviços ainda ausentes. Pedir
 uma cena marcada como gameplay original também falha; `regionId` identifica
@@ -196,5 +196,17 @@ com 270 quadros na RTX e as sete provas anteriores idênticas byte a byte.
 A câmera livre original substituiu a câmera do port e alimenta `controlcam`
 como no jogo, na mesma sessão. [Resultado e limites](MOVEMENT.md).
 
-O próximo marco é a **entrada física**: ler um controle no Windows, passar os
-valores brutos pelo `joyClamp` original e abrir um executável jogável.
+A entrada física chegou ao mesmo host: `jfg_native_play.exe` lê um controle
+Xbox, entrega valores brutos do N64 à leitura original e apresenta numa
+janela D3D11. Cada sessão gera uma gravação que `jfg_native_replay.exe`
+reproduz sem janela. [Como jogar e limites](PLAY.md).
+
+| Arquivo | Responsabilidade e fronteira |
+| --- | --- |
+| `pad_adapter.h` | XInput para valores brutos do N64 e `controles.ini`; serviço do port, sem lógica do jogo |
+| `pad_recording.h` | Formato `.jfgpad`: uma tentativa de tique por registro |
+| `play_session.h` | `PlayRun`: dados, sessão, parada estrita, reinício e pausa, comum ao jogo e à reprodução |
+| `play_main.cpp` / `replay_main.cpp` | Executável com janela e reprodutor sem janela |
+
+O próximo marco são os estados restantes do Juno em Forest First,
+na ordem indicada pelas gravações de Thiago.

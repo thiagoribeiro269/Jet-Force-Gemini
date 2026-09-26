@@ -66,6 +66,14 @@ def main():
     movement_test = owned("movement_test", [str(package / "check_movement.exe"), *movement_inputs]) if movement else None
     if movement and (movement_test["exit_code"] or movement_test["timed_out"]):
         raise RuntimeError("Native movement checks failed: " + movement_test["stderr"])
+    play = (package / "jfg_native_play.exe").is_file()
+    play_test = owned("play_test", [str(package / "check_play.exe"), str(out), str(package), str(package / "controles.ini")]) if play else None
+    if play and (play_test["exit_code"] or play_test["timed_out"]):
+        raise RuntimeError("Native play checks failed: " + play_test["stderr"])
+    # The windowed executable in self-test mode: hidden window, scripted pads.
+    play_autotest = owned("play_autotest", [str(package / "jfg_native_play.exe"), "--autoteste", str(out / "play-autotest.json")]) if play else None
+    replay_script = owned("replay_script", [str(package / "jfg_native_replay.exe"), str(package), "--script", str(out / "script.jfgpad")]) if play else None
+    replay = owned("replay", [str(package / "jfg_native_replay.exe"), str(package), str(out / "script.jfgpad")]) if play else None
     magic = (package / "scene.bin").read_bytes()[:8]
     multiple = magic == b"JFGNAT3\0"
     rigged = multiple or magic == b"JFGNAT2\0"
@@ -132,6 +140,14 @@ def main():
     result["ok"] = bool(result["ok"] and (not integration or (result["session"] and juno_regression and juno_regression["exit_code"] == 0 and not juno_regression["timed_out"])))
     result["ok"] = bool(result["ok"] and (not region or (result["region_trace"] and integration_regression and integration_regression["exit_code"] == 0 and not integration_regression["timed_out"])))
     result["ok"] = bool(result["ok"] and (not movement or (result["movement_trace"] and region_regression and region_regression["exit_code"] == 0 and not region_regression["timed_out"])))
+    result["play_test"] = play_test
+    result["play_autotest"] = json.loads((out / "play-autotest.json").read_text()) if play and (out / "play-autotest.json").exists() else None
+    result["play_autotest_process"] = play_autotest
+    result["replay"] = replay
+    result["ok"] = bool(result["ok"] and (not play or (
+        result["play_autotest"] and result["play_autotest"]["status"] == "passed" and
+        play_autotest["exit_code"] == 0 and not play_autotest["timed_out"] and replay_script["exit_code"] == 0 and
+        replay["exit_code"] == 0 and not replay["timed_out"])))
     (out / "result.json").write_text(json.dumps(result, indent=2) + "\n")
     print(json.dumps(result))
 

@@ -189,6 +189,9 @@ public:
     int32_t twist580 = 0;
     std::array<JointTurn, 8> jointTurns{};
     uint8_t jointTurnCount = 0;
+    // +0x19C: controlFadePlayer's fade counter; the model draw turns it into
+    // the object's opacity (+0x39) through func_80015CB8.
+    int8_t fade19C = 0;
     // Camera fields the character routine writes (+0x10A offset, +0x104
     // orbit): applied by the caller to the camera before it runs.
     bool clearCameraOffset = false, setCameraOrbit = false;
@@ -237,6 +240,14 @@ public:
     void pushByCamera(float dx, float dz) { objMove({dx, 0.0f, dz}); }
     const JunoPhysicsData &data() const { return *data_; }
     uint32_t clipId() const { return selector_.local(move3B).clip; }
+    // func_80015CB8 in single player, with the camera on this player: the
+    // opacity the draw list writes to the object (+0x39) before the model is
+    // drawn. (+0x5C0 would force 255; the ported subset never sets it.)
+    uint8_t opacity() const {
+        if (state568 == 0xA) return uint8_t(0xFF - (fade19C * 2));
+        const int32_t value = 0xFF - (fade19C * 4);
+        return uint8_t(value < 0 ? 0 : value);
+    }
     // Sphere definitions and floor masks of the current collision profile (+0x360).
     const JunoSphere &sphereDef(size_t i) const { return profile360 < 0 ? data_->spheres[i] : data_->profiles[size_t(profile360)].spheres[i]; }
     uint8_t profileMask(unsigned k) const {  // 1: +5 feet, 2: +6, 3: +7
@@ -294,6 +305,7 @@ public:
         else airborne185 = 0;
         if (((feet & floor532) && state568 != 3) || state568 == 4) fallStart57C = position.y;
         aimWithoutTargets();
+        if (state568 != 0xA) fadePlayer(frames);
         // Water and lava from trackPolyHeight(x, z, +0x5C, 0x8000A000): not ported.
         float surfaceHeight = 0;
         if (query_.polyHeight(position.x, position.z, surfaceHeight, 0x8000A000u))
@@ -607,6 +619,22 @@ private:
         if (firing1F4 != 0) firing1F4 = int8_t(firing1F4 - 1);
         aimPitch1C8 = aimPitch1CC = orientation[1];
         aimYaw1C6 = aimYaw1CA = orientation[0];
+    }
+    // controlFadePlayer(player, NULL, frames) for the player's own camera.
+    // The aim states fade Juno in, one step per frame up to 0x28 (arg1 is
+    // NULL, so the 0x40 limit of weapon 7 never applies); otherwise the fade
+    // runs out 16 per frame. Elsewhere the target-lock timer (+0x541 low
+    // nibble) would also fade him, but only controlUpdatePlayerAim sets it,
+    // with a target. States 4/6/7/8 (no fade), the lobby and static cameras
+    // and the +0x19D/+0x1F9/+0x1FA/+0x198 flags are outside the ported subset.
+    void fadePlayer(int32_t frames) {
+        if (state568 == 0xB || state568 == 5) {
+            fade19C = int8_t(fade19C + frames);
+            if (0x28 < fade19C) fade19C = 0x28;
+        } else if (fade19C != 0) {
+            fade19C = int8_t(fade19C - (frames * 0x10));
+            if (fade19C < 0) fade19C = 0;
+        }
     }
     // Entering an aim state from walking (0x2708): the heading absorbs the
     // camera's C offset, which is cleared, and the aim fields restart.

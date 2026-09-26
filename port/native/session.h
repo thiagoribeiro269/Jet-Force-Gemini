@@ -287,7 +287,7 @@ public:
                 const auto &b = *actor->body;
                 result.entities.push_back({actor->handle, b.position.x, b.position.y, b.position.z, b.orientation[0] * (2 * double(Pi) / 65536),
                                            actor->animation.animation().frame(), actor->animation.animation().id(),
-                                           actor->animation.selection().transitionProfile, {0, std::move(bones)}});
+                                           actor->animation.selection().transitionProfile, {0, std::move(bones), identityMatrix(), b.opacity()}});
                 continue;
             }
             result.entities.push_back({actor->handle, actor->motion.x(), actor->elevation, actor->motion.z(), actor->motion.yaw(),

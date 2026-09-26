@@ -5,7 +5,9 @@
 
 namespace jfg_native {
 enum class CameraPreset { Original, Wide, Character, Integration, World };
-struct RenderInstance { uint32_t mesh = 0; std::vector<Matrix> bones; Matrix world = identityMatrix(); };
+// `opacity` is the original object opacity (+0x39): below 255 the model is
+// drawn with its translucent display lists (objPrintModelObject).
+struct RenderInstance { uint32_t mesh = 0; std::vector<Matrix> bones; Matrix world = identityMatrix(); uint8_t opacity = 255; };
 // Rendering consumes prepared poses. It owns no animation, input or game clock.
 class NativeRenderer {
     struct State;

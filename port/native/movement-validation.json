@@ -1,14 +1,14 @@
 {
   "status": "passed",
   "recorded_date": "2026-09-26",
-  "previous_checkpoint": "f16d2b0",
-  "architecture": "Native C++ host with recovered Juno control/physics, original controller reading, track collision, free and aim cameras and joint turns; Direct3D 11 renderer with window presentation; XInput adapter to raw N64 pad values; no emulation",
+  "previous_checkpoint": "36018ef",
+  "architecture": "Native C++ host with recovered Juno control/physics, original controller reading, track collision, free and aim cameras, joint turns and the aim fade; Direct3D 11 renderer with window presentation; XInput adapter to raw N64 pad values; no emulation",
   "build": {
-    "native_movement_executable_sha256": "795d52ec48c65d65e659c7e5eb2d5869416e8b4b92b59ef461f0a70e8b5c598a",
-    "native_movement_check_sha256": "377bcf5bb925b7c45dff4c3dc8001fcd184efb3fca71670c7694ffb636bc584a",
-    "native_play_executable_sha256": "88a5e68c50962c63d866c0c525e35df42f105d3ba2c2f344f2d286c1a8408558",
-    "native_replay_executable_sha256": "7cb8b651b9d276edd4aa27f506bcaf3ca7986c4fa490ae6db52587296949d493",
-    "native_play_check_sha256": "ba25d60d7ea86cb1217345f953b3e35903d2f4b9ee106e825b85508eaabf4a18"
+    "native_movement_executable_sha256": "9cdfd8992915362bb40be88b622a6e0f7d9289bece3e25aec19c8ac7b627c890",
+    "native_movement_check_sha256": "3951c0a2859495f7d5d2fc4bc1f5807f5ffd4ac62510344ecc718ed457e8fe36",
+    "native_play_executable_sha256": "cb573a45d4a7fe706557950bc0ac19728ae87a2b552ae3793fd884e11eab81a0",
+    "native_replay_executable_sha256": "4497d350a89640425812ff92febb073ae425f719c91242ef10ab66639431d4f5",
+    "native_play_check_sha256": "ef4abe6d7b55a7fb550d747688b676ef2e7268d8da4d6248e5bc5b6272d9b475"
   },
   "imports": {
     "jfg_native_movement.exe": [
@@ -36,8 +36,8 @@
     ],
     "plus_windows_ucrt_api_sets_only": true
   },
-  "private_package_sha256": "d28b6b60f547ad89e88f6dae7385b4deecfced03db654de815f07d5360181e3a",
-  "play_package_sha256": "77670e4a99da69d6e316c70854cbfafe42be63fcc5f40c6c7439aa51a8ca49be",
+  "private_package_sha256": "ac5ad0dd3f1c718a9dbce60157727b61b8524b11979bae5ecf79d45f248dfa5e",
+  "play_package_sha256": "a36261053459a35e3ba99c2f8578b5c4ceb2cfa5b6752a49ebbc013308179a12",
   "windows": "Windows-11-10.0.26200-SP0",
   "tests": {
     "windows": {
@@ -92,7 +92,7 @@
         "rejected_cases": 23,
         "original_region": true,
         "scenario_digest": "e0ea92f5755c3377",
-        "joint_digest": "14a3286a6dd12ba"
+        "pose_digest": "d6a8040098b4a5b8"
       },
       "play_test": {
         "status": "passed",
@@ -157,7 +157,7 @@
         "rejected_cases": 23,
         "original_region": true,
         "scenario_digest": "e0ea92f5755c3377",
-        "joint_digest": "14a3286a6dd12ba"
+        "pose_digest": "d6a8040098b4a5b8"
       },
       "check_play": {
         "status": "passed",
@@ -258,7 +258,7 @@
       "rejected_cases": 23,
       "original_region": true,
       "scenario_digest": "e0ea92f5755c3377",
-      "joint_digest": "14a3286a6dd12ba"
+      "pose_digest": "d6a8040098b4a5b8"
     },
     "scenario_digest_equal_on_linux_and_windows": true,
     "final_position": {
@@ -279,6 +279,10 @@
       "crouched_aim_frames_with_turns": 20,
       "frames_with_torso_twist_over_0x400": 32,
       "largest_twist": 6164
+    },
+    "fade": {
+      "frames_below_full_opacity": 77,
+      "frames_at_95": 35
     },
     "clips_played": [
       1019,
@@ -321,6 +325,7 @@
       "aim-up": 480,
       "crouch-aim": 550,
       "twist": 345,
+      "faded": 470,
       "settled": 579
     },
     "region_coverage_range": [
@@ -361,26 +366,28 @@
       "yaw_at_start": -32768,
       "yaw_at_end": 28997
     },
-    "raw_sha256": "b4e96cab731a32f43ad69a24b387d811549859fcef12ed8cce7e2726b84d17e2",
-    "video_sha256": "24a2b7f5497be8615c5d041f45213ea8db49765f27105bf26a8be087e9c0de9a",
+    "raw_sha256": "98c016695c138604410fabcb105d8e43c0d6ea6c8f31b4acdb9f269318d82495",
+    "video_sha256": "bef96607f96f6fb60c36256f8a771c51dc5f21a403fb06ec71fc8d67ad7ed616",
     "fps_output": 30,
     "duration_seconds": 19.333333333333332,
     "limits": [
       "Juno walking, crouch (1/2), standing and crouched aim (0xB, 5) and air states with original track collision and collision profiles; shots, water and object hit models not ported; crouched aim (5) waits for the model clip blend as the original",
       "Original free and aim cameras (player type 0, collision mode 1); zone, spline, static and cutscene cameras not ported",
       "Joint turns of the aim (0x3DB0, 0x3F30, 0x6290) and the torso twist (0x4840) are drawn; recoil turns need shots, which are not ported",
+      "controlFadePlayer's aim fade is drawn with the translucent render mode (Z compare, no Z update, texel alpha times opacity); the port renderer interprets materials, not display lists",
       "A scripted controller stands in for a physical controller; raw N64 pad values pass through the original joyRead and controlReadJoypad",
       "Native animation blend between clips; move selection, clip positions and collision profiles follow the original machine",
       "No enemies, weapons, audio or full levelInit; no emulation; ROM and derived assets remain private"
     ]
   },
-  "joint_turns_against_previous_proof": {
-    "previous_raw_sha256": "d8e86d7c9b7358cbc3fff711d16deffdc82d096e07edca88daf93fa375d44b72",
-    "frames_without_turns_byte_identical": 396,
-    "frames_with_turns_changed": 184,
-    "frames_with_turns_unchanged": 0,
-    "body_and_camera_trace_identical": true,
-    "raw_sha256_equal_on_two_rtx_runs": true
+  "against_previous_proofs": {
+    "f16d2b0_raw_sha256": "d8e86d7c9b7358cbc3fff711d16deffdc82d096e07edca88daf93fa375d44b72",
+    "f16d2b0_frames_without_turns_and_opaque_byte_identical": 394,
+    "f16d2b0_other_frames_changed": 186,
+    "36018ef_raw_sha256": "b4e96cab731a32f43ad69a24b387d811549859fcef12ed8cce7e2726b84d17e2",
+    "36018ef_opaque_frames_byte_identical": 503,
+    "36018ef_faded_frames_changed": 77,
+    "body_and_camera_trace_identical": true
   },
   "not_ported_stops": [
     "Z pistol shot when boyCanFire allows it (crouched: after the model clip blend of moves 0xE/0x21)",

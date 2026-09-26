@@ -212,7 +212,7 @@ int main(int argc, char **argv) {
         reject([&] { OriginalMath broken({}, {}); });
 
         bool actual = false;
-        uint64_t digest = 0, jointDigest = 0;
+        uint64_t digest = 0, poseDigest = 0;
         // Camera queries on the synthetic block.
         {
             Vec3f s0{-150, 50, 0}, e0{150, 50, 0};
@@ -351,6 +351,9 @@ int main(int argc, char **argv) {
                 for (int t = 0; t < 30; ++t) stepJuno(b, &cam, r.read({Pad::R, 0, 0}), 0);
                 check(b.firing1F4 == 1 && b.move3B == 27 && b.profile360 == 3 && cam.fov > 55.0f && cam.fov < 56.0f,
                       "Aim stance or aim camera blend differs");
+                // controlFadePlayer: the entry frame still ran with state 0, then one step per aim frame;
+                // func_80015CB8 draws Juno at 255 - 4 * steps.
+                check(b.fade19C == 30 && b.opacity() == 135, "Aim fade differs");
                 // Stick past 45 turns Juno; within 40 it only moves the aim.
                 const int16_t steady = b.heading11C;
                 for (int t = 0; t < 5; ++t) stepJuno(b, &cam, r.read({Pad::R, 40, 0}), 0);
@@ -366,6 +369,7 @@ int main(int argc, char **argv) {
                 check(b.heading11C != steady && b.turn1E4 < 0.0f, "Aim at the edge did not turn Juno");
                 for (int t = 0; t < 120; ++t) stepJuno(b, &cam, r.read({Pad::R, 0, 80}), 0);
                 check(b.aimPitch1E2 == -0x2AAA, "Aim pitch limit differs");
+                check(b.fade19C == 0x28 && b.opacity() == 95, "Aim fade limit differs");
                 // Aiming past the limit: 0x3DB0 clamps both pitches to -0x2AAA.
                 check(b.joint1D0 < -0x2AAA && turns(b)[0] == std::pair<int, int>{6, -0x1555} && turns(b)[2] == std::pair<int, int>{0x12, -0x1555} &&
                       turns(b)[3] == std::pair<int, int>{0x3C, -0x1555}, "Aim joint-turn clamp differs");
@@ -384,6 +388,10 @@ int main(int argc, char **argv) {
                       b.joint1DE == int16_t(pitchBefore + shiftRight(-pitchBefore, 4)), "Joint turns leaving the aim differ");
                 stepJuno(b, &cam, r.read({}), 0);
                 check(b.firing1F4 == 0 && turns(b) == std::vector<std::pair<int, int>>{{0x44, int16_t(b.twist580)}}, "Joint turns after the aim differ");
+                // The exit frame still faded with state 0xB (held at 0x28); walking runs it out 16 per frame.
+                check(b.fade19C == 0x18 && b.opacity() == 159, "Fade after the aim differs");
+                stepJuno(b, &cam, r.read({}), 0); stepJuno(b, &cam, r.read({}), 0);
+                check(b.fade19C == 0 && b.opacity() == 255, "Fade did not run out");
                 // Expert: C-up walks forward while aiming.
                 JunoBody e = body; JoypadReader q;
                 drive(e, q, {Pad::R, 0, 0}, 5, 1);
@@ -453,6 +461,7 @@ int main(int argc, char **argv) {
                     check(c.state568 == 5, "Crouched aim did not start");
                     for (int t = 0; t < 30; ++t) stepJuno(c, &k, q.read({Pad::R, 0, 80}), 0);
                     check(c.state568 == 5 && c.aimPitch1E2 == -0xA80 && k.fov > 55.0f, "Crouched aim limits or camera differ");
+                    check(c.fade19C == 30 && c.opacity() == 135, "Crouched aim fade differs");
                     // 0x3F30's own list: no half pitch and no clamp.
                     check(turns(c) == std::vector<std::pair<int, int>>{{6, c.joint1D0}, {8, c.joint1CE}, {0x12, 0}, {0x3C, int16_t(c.joint1DE - c.joint1D0)},
                                                                       {0x3E, int16_t(c.joint1DC - c.joint1CE)}, {0x44, int16_t(c.twist580)}} &&
@@ -538,7 +547,7 @@ int main(int argc, char **argv) {
             ++movementCases;
             auto run = [&](uint64_t &hash, uint64_t &jointHash, JunoBody &juno, JunoCamera &cam) {
                 uint32_t jumps = 0, walls = 0, strafeTicks = 0, crouched = 0, crouchWalk = 0, rolls = 0, slides = 0, aiming = 0, crouchAim = 0; float top = -1e9f;
-                uint32_t aimTurns = 0, crouchAimTurns = 0, aimExits = 0, twisted = 0;
+                uint32_t aimTurns = 0, crouchAimTurns = 0, aimExits = 0, twisted = 0, faded = 0, fullFade = 0;
                 JoypadReader reader;
                 for (uint64_t t = 0; t < MovementTicks; ++t) {
                     stepJuno(juno, &cam, reader.read(movementPad(t)), 0);
@@ -565,6 +574,10 @@ int main(int argc, char **argv) {
                     aimExits += juno.state568 == 0 && list.size() == 6;
                     twisted += juno.twist580 != 0;
                     for (const auto &entry : list) jointHash = (jointHash ^ uint32_t(entry.first << 16 | uint16_t(entry.second))) * 1099511628211ull;
+                    jointHash = (jointHash ^ juno.opacity()) * 1099511628211ull;
+                    faded += juno.opacity() < 255; fullFade += juno.opacity() == 95;
+                    check((juno.state568 == 0xB || juno.state568 == 5 || juno.fade19C == 0 || juno.fade19C % 16 == 8) && juno.fade19C <= 0x28,
+                          "Fade outside the aim states");
                     uint32_t bits[7] = {}; std::memcpy(bits, &juno.position, 12); std::memcpy(bits + 3, &juno.heading11C, 2);
                     std::memcpy(bits + 4, &cam.position, 12);
                     for (auto word : bits) hash = (hash ^ word) * 1099511628211ull;
@@ -577,13 +590,15 @@ int main(int argc, char **argv) {
                 // routine, which writes no aim list (A from the crouched aim keeps 0x3F30's list).
                 // Rolls and running strafes twist the torso.
                 check(aimTurns == aiming - 1 && crouchAimTurns == crouchAim - 1 && aimExits == 2 && twisted > 150, "Scenario joint turns differ");
+                // Every aim frame but the entries fades Juno; each aim lasts long enough to reach 0x28.
+                check(faded >= aiming + crouchAim - 2 && fullFade > 60, "Scenario fade differs");
             };
             uint64_t first = 1469598103934665603ull, second = first, joints = first, jointsTwo = first;
             JunoBody one(physics, collision, selection, character->clips, {40, 19, 841}, 0), two = one;
             JunoCamera cameraOne(cameraData, one), cameraTwo(cameraData, two);
             run(first, joints, one, cameraOne); run(second, jointsTwo, two, cameraTwo);
             check(first == second && joints == jointsTwo, "Movement is not deterministic");
-            digest = first; jointDigest = joints;
+            digest = first; poseDigest = joints;
             check(one.grounded() && one.state568 == 0 && one.speed04 > -0.25f, "Scenario did not settle on the ground");
             ++movementCases;
             // Session integration: pause, resume, transactions and stop.
@@ -605,10 +620,17 @@ int main(int argc, char **argv) {
             const auto snapshot = session.snapshot();
             check(snapshot.entities.size() == 1 && snapshot.entities[0].y == double(before.y), "Snapshot position differs from body");
             // Whole script through the session: the animation follows the move machine.
+            uint32_t faded = 0;
             for (uint64_t t = 20; t < MovementTicks; ++t) {
                 session.advanceNanoseconds(NativeSession::ClockScale / 60 + 1, source);
-                clips.insert(session.snapshot().entities[0].clip);
+                const auto frame = session.snapshot();
+                clips.insert(frame.entities[0].clip);
+                // The draw list reads the fade after the tick, as objPrintModelObject does.
+                check(frame.entities[0].render.opacity == session.body(juno)->opacity() &&
+                      frame.renderInstances().back().opacity == frame.entities[0].render.opacity, "Snapshot opacity differs from the body");
+                faded += frame.entities[0].render.opacity < 255;
             }
+            check(faded > 150, "Aiming did not fade Juno in the session");
             check(scriptTick == MovementTicks, "Session did not run the whole script");
             check(session.body(juno)->position == one.position && session.camera(juno)->position == cameraOne.position,
                   "Session and bare body/camera diverged");
@@ -651,7 +673,7 @@ int main(int argc, char **argv) {
         std::cout << "{\"status\":\"passed\",\"math_cases\":" << mathCases << ",\"input_cases\":" << inputCases
                   << ",\"collision_cases\":" << collisionCases << ",\"movement_cases\":" << movementCases
                   << ",\"not_ported_stops\":" << stops << ",\"rejected_cases\":" << rejected
-                  << ",\"original_region\":" << (actual ? "true" : "false") << ",\"scenario_digest\":\"" << std::hex << digest << "\",\"joint_digest\":\"" << jointDigest << "\"}\n";
+                  << ",\"original_region\":" << (actual ? "true" : "false") << ",\"scenario_digest\":\"" << std::hex << digest << "\",\"pose_digest\":\"" << poseDigest << "\"}\n";
         return 0;
     } catch (const std::exception &error) { std::cerr << error.what() << '\n'; return 1; }
 }

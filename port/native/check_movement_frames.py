@@ -99,9 +99,17 @@ def main():
     twisted = [i for i, f in enumerate(frames) if abs(f["twist"]) > 0x400]
     require(len(twisted) > 20, "Rolls and running strafes did not twist the torso")
     twist = max(range(FRAMES), key=lambda i: abs(frames[i]["twist"]))
+    # controlFadePlayer: aiming fades Juno to 255 - 4 * 0x28 = 95; elsewhere the fade runs out in 3 frames.
+    opacities = [f["opacity"] for f in frames]
+    require(all(o in range(95, 256) and (255 - o) % 4 == 0 for o in opacities), "Opacity outside func_80015CB8's values")
+    require(all(f["opacity"] < 255 for f in aim_frames[1:] + crouch_aim_frames[1:]), "Aim frame drawn opaque")
+    require(all(f["opacity"] == 255 or f["state"] in (5, 11) or opacities[i - 2] < 255 for i, f in enumerate(frames)),
+            "Juno faded outside the aim")
+    faded = next(i for i, o in enumerate(opacities) if o == 95)
     keys = {"landing": first_ground, "running": 60, "slope": 130, "jump": jump, "peak": peak, "turned": turned,
             "return": 215, "c-left": orbit, "crouch": crouch, "crouch-walk": crouch_walk + 10, "roll": roll, "stand": stand,
-            "slide": slide, "aim": aim, "aim-up": aim_up, "crouch-aim": crouch_aim, "twist": twist, "settled": FRAMES - 1}
+            "slide": slide, "aim": aim, "aim-up": aim_up, "crouch-aim": crouch_aim, "twist": twist, "faded": faded,
+            "settled": FRAMES - 1}
     for frame in range(FRAMES):
         pixels = raw[frame * SIZE:(frame + 1) * SIZE]; hashes.append(digest(pixels))
         covered = sum(pixels[p:p + 3] != background[p:p + 3] for p in range(0, SIZE, 4))
@@ -124,6 +132,7 @@ def main():
               "joint_turns": {"aim_frames": len(aim_frames), "aim_frames_with_torso_turns": aim_turned,
                               "crouched_aim_frames": len(crouch_aim_frames), "crouched_aim_frames_with_turns": crouch_turned,
                               "frames_with_torso_twist_over_0x400": len(twisted), "largest_twist": frames[twist]["twist"]},
+              "fade": {"frames_below_full_opacity": sum(o < 255 for o in opacities), "frames_at_95": opacities.count(95)},
               "clips_played": sorted(set(clips)), "key_frames": keys, "region_coverage_range": [min(coverage), max(coverage)],
               "terrain_pixels_first_frame": len(terrain_pixels), "character_pixels_in_isolation": len(actor_pixels),
               "all_seven_previous_gpu_proofs_byte_equal": True,
@@ -142,6 +151,7 @@ def main():
               "limits": ["Juno walking, crouch (1/2), standing and crouched aim (0xB, 5) and air states with original track collision and collision profiles; shots, water and object hit models not ported; crouched aim (5) waits for the model clip blend as the original",
                          "Original free and aim cameras (player type 0, collision mode 1); zone, spline, static and cutscene cameras not ported",
                          "Joint turns of the aim (0x3DB0, 0x3F30, 0x6290) and the torso twist (0x4840) are drawn; recoil turns need shots, which are not ported",
+                         "controlFadePlayer's aim fade is drawn with the translucent render mode (Z compare, no Z update, texel alpha times opacity); the port renderer interprets materials, not display lists",
                          "A scripted controller stands in for a physical controller; raw N64 pad values pass through the original joyRead and controlReadJoypad",
                          "Native animation blend between clips; move selection, clip positions and collision profiles follow the original machine",
                          "No enemies, weapons, audio or full levelInit; no emulation; ROM and derived assets remain private"]}

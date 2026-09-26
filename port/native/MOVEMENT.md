@@ -32,6 +32,7 @@ confere 59 rotinas, 71.280 bytes, contra a ROM US antes de gerar os dados.
 | Estado `0x4440`, `controlGetManualAim` | `JunoBody::aimStand`, `manualAim` | Mira em pé: mira pelo analógico e giro na borda |
 | Estado `0x3F30` | `JunoBody::aimCrouch` | Mira agachada |
 | `0x6290`, `0x3DB0`, `0x4840`, `controlPlayerTiltList`, `gen_anim_data` | `followAim`, `torsoTurns`, `strafeTwist`, `applyJointTurns` | Rotações de juntas: tronco, cabeça e braço na mira; torção do tronco |
+| `controlFadePlayer`, `func_80015CB8`, `objPrintModelObject` | `fadePlayer`, `opacity`, passe translúcido do renderer | Juno translúcido na mira |
 | `objAnimSetMove`, `modGenAnimMatrices`, `objResetAnimModels` | `startBlend` e o fim de `tick` | Contador de mistura de clipes do modelo (`+0x5E`) |
 | `func_8002C078` | `JunoCamera::aimCamera` | Câmera de mira sobre o ombro |
 | `joyRead`, `controlReadJoypad`, `controlPlayer`, `frontGetTargetControl` | `JoypadReader`, `controlReadJoypad`, `ControlModeKeys` | Leitura do controle e tabelas dos modos Normal e Expert |
@@ -153,10 +154,11 @@ Bordas não existem no cenário de Forest First. As marcas de borda
 fase os tem. O conversor, a carga em C++ e `check_movement` exigem isso, então
 `controlHangOK` e `controlGrabOK` não encontrariam borda no cenário.
 
-Pela leitura estática das rotinas, sem teste automático, outras três
+Pela leitura estática das rotinas, sem teste automático, outras duas
 checagens de cada tique também não agem nesse recorte:
 `controlSquashCheckPrior/Post` dependem de caixas, plataformas ou estados de
-borda; `0x2220` trata acertos no Juno; `controlFadePlayer` só age na mira.
+borda; `0x2220` trata acertos no Juno. O `controlFadePlayer` age na mira e
+foi portado (seção seguinte à das rotações de juntas).
 
 ## Agachar, rolar e deslizar
 
@@ -231,13 +233,31 @@ escondem ossos da arma (bit 0x40 de `+0x540`) dependem de tiros ou de outras
 armas. Com a pistola e sem tiro, eles não acontecem; o conversor confere o
 byte da tabela de armas que os liga.
 
+## Juno translúcido na mira
+
+Na mira, o jogo deixa o Juno translúcido. O
+`controlFadePlayer` roda antes do estado de cada quadro. Nos estados 0xB e 5,
+soma 1 ao contador `+0x19C` até 0x28; fora deles, tira 16 por quadro. O
+`func_80015CB8` transforma o contador na opacidade do objeto (`+0x39`):
+255 − 4 × `+0x19C`, até 95. Fora da mira, o contador também sobe com o
+temporizador de alvo travado (`+0x541`), que só existe quando há alvos.
+
+Com opacidade abaixo de 255, o `objPrintModelObject` troca as listas de
+desenho do modelo (`+0x78` em vez de `+0x74`). A leitura estática do
+`makeModelGfx` e do `texDPTextureX` sobre a tabela de modos da ROM mostra que
+todos os lotes do Juno passam a `G_RM_AA_ZB_XLU_SURF`: comparam Z sem
+atualizar e misturam por alfa. O combinador multiplica o alfa da textura pela
+cor primitiva `0xFFFFFF00 | opacidade`. O renderer do port desenha o Juno
+nesse caso no passe translúcido, com um programa próprio que multiplica o
+alfa, e mantém a ordem dos lotes do modelo. O caminho opaco não muda.
+
 ## Verificação
 
 - Linux com ASAN/UBSAN e Windows na RTX: 6 casos de matemática, 4 de entrada,
   11 de colisão sintética, 16 de movimento e câmera com dados reais, 4 paradas
   tipadas e 23 rejeições. O resumo do cenário, que inclui a posição da câmera
-  a cada tique, e o resumo das listas de juntas são iguais nas duas
-  plataformas.
+  a cada tique, e o resumo da pose (listas de juntas e opacidade) são iguais
+  nas duas plataformas.
 - Os testes cobrem o passo lateral de 0,2 por quadro até 2,5, o pulo correndo
   durante o passo lateral, o modo Expert, os botões inertes e a trava de pouso.
 - Também cobrem agachar, andar agachado, os rolamentos, levantar, deslizar, os
@@ -252,6 +272,9 @@ byte da tabela de armas que os liga.
   −0x2AAA, no quadro de saída da mira, no truncamento da metade
   (−9 → −4 e −5), no atraso do giro ao virar correndo e na torção do tronco
   correndo com C-left. A aplicação na pose e as listas inválidas também.
+- O desbotamento é testado na entrada da mira, no limite de 95, na saída
+  (24, 8 e 0) e na mira agachada. A opacidade da sessão é conferida a cada
+  tique contra o corpo.
 - Na carga de Forest First surgem 5.759 planos e 1.759 arestas expostas. Todos
   os planos são normalizados e todas as referências são válidas.
 - O Juno nasce no ponto original, 21 unidades acima do caminho, e pousa em
@@ -262,9 +285,9 @@ byte da tabela de armas que os liga.
   limite do cenário.
 - A RTX produziu 580 quadros em 640 × 480, dezenove segundos a 30 fps.
   As sete provas gráficas anteriores, incluindo a da região, ficaram idênticas
-  byte a byte. Comparados à prova anterior, os 396 quadros sem rotação de
-  junta ficaram idênticos byte a byte, e os 184 com rotação mudaram. O corpo e
-  a câmera não mudaram. A ROM matching continua com SHA-1
+  byte a byte. Comparados à prova anterior, os 394 quadros sem rotação de
+  junta e opacos ficaram idênticos byte a byte, e os 186 restantes mudaram.
+  O corpo e a câmera não mudaram. A ROM matching continua com SHA-1
   `493ced9008dbe932d6e91179b68e8630cf23a023`.
 
 Métricas e hashes estão em [movement-validation.json](movement-validation.json).

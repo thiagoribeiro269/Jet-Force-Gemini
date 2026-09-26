@@ -56,13 +56,30 @@ float4 pixelMain(Output input) : SV_TARGET {
 }
 )";
 
-static ComPtr<ID3DBlob> compile(const char *entry, const char *target, CameraPreset camera) {
+// Objects below full opacity (+0x39) use their translucent display lists:
+// G_RM_AA_ZB_XLU_SURF (Z compare without update, alpha blend) with a
+// combiner that multiplies the texel alpha by the primitive alpha
+// (0xFFFFFF00 | opacity). A separate program leaves the shader above intact.
+static const char *FadedShader = R"(
+Texture2D image : register(t0);
+SamplerState linearSampler : register(s0);
+cbuffer ObjectOpacity : register(b1) { float4 opacity; };
+struct Output { float4 position : SV_POSITION; float2 uv : TEXCOORD0; float4 tint : COLOR0; };
+float4 pixelMain(Output input) : SV_TARGET {
+    float4 color = image.Sample(linearSampler, input.uv) * input.tint;
+    color.a *= opacity.x;
+    clip(color.a - 0.01);
+    return color;
+}
+)";
+
+static ComPtr<ID3DBlob> compile(const char *entry, const char *target, CameraPreset camera, const char *source = Shader) {
     ComPtr<ID3DBlob> code, errors;
     const D3D_SHADER_MACRO macros[] = {{"JFG_WIDE_CAMERA", camera == CameraPreset::Wide ? "1" : "0"},
                                      {"JFG_CHARACTER_CAMERA", camera == CameraPreset::Character ? "1" : "0"},
                                      {"JFG_INTEGRATION_CAMERA", camera == CameraPreset::Integration ? "1" : "0"},
                                      {"JFG_WORLD_CAMERA", camera == CameraPreset::World ? "1" : "0"}, {nullptr, nullptr}};
-    const HRESULT result = D3DCompile(Shader, std::strlen(Shader), "native_preview.hlsl", macros, nullptr,
+    const HRESULT result = D3DCompile(source, std::strlen(source), "native_preview.hlsl", macros, nullptr,
                                      entry, target, D3DCOMPILE_ENABLE_STRICTNESS | D3DCOMPILE_OPTIMIZATION_LEVEL3,
                                      0, &code, &errors);
     if (FAILED(result) && errors) std::cerr.write(static_cast<const char *>(errors->GetBufferPointer()), errors->GetBufferSize());
@@ -81,7 +98,8 @@ struct NativeRenderer::State {
     ComPtr<ID3D11Device> device;
     ComPtr<ID3D11DeviceContext> context;
     ComPtr<ID3D11VertexShader> vertexShader;
-    ComPtr<ID3D11PixelShader> pixelShader;
+    ComPtr<ID3D11PixelShader> pixelShader, fadedShader;
+    ComPtr<ID3D11Buffer> opacityBuffer;
     ComPtr<ID3D11InputLayout> layout;
     ComPtr<ID3D11Buffer> cameraBuffer;
     ComPtr<ID3D11Texture2D> color, depth, staging;
@@ -147,6 +165,11 @@ struct NativeRenderer::State {
         const auto vs = compile("vertexMain", "vs_5_0", camera), ps = compile("pixelMain", "ps_5_0", camera);
         check(device->CreateVertexShader(vs->GetBufferPointer(), vs->GetBufferSize(), nullptr, &vertexShader), "Vertex shader");
         check(device->CreatePixelShader(ps->GetBufferPointer(), ps->GetBufferSize(), nullptr, &pixelShader), "Pixel shader");
+        const auto faded = compile("pixelMain", "ps_5_0", camera, FadedShader);
+        check(device->CreatePixelShader(faded->GetBufferPointer(), faded->GetBufferSize(), nullptr, &fadedShader), "Faded pixel shader");
+        D3D11_BUFFER_DESC opacityDesc{}; opacityDesc.ByteWidth = 16; opacityDesc.Usage = D3D11_USAGE_DYNAMIC;
+        opacityDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER; opacityDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+        check(device->CreateBuffer(&opacityDesc, nullptr, &opacityBuffer), "Object opacity buffer");
         const D3D11_INPUT_ELEMENT_DESC elements[] = {
             {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
             {"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0},
@@ -329,14 +352,26 @@ struct NativeRenderer::State {
         context->ClearDepthStencilView(depthTarget, D3D11_CLEAR_DEPTH, 1, 0);
         context->OMSetRenderTargets(1, &target, depthTarget);
         struct Job { size_t instance, draw; float depth; };
+        context->PSSetShader(pixelShader.Get(), nullptr, 0);
+        int shownOpacity = 255;  // opacity of the program currently bound
         for (unsigned alpha = 0; alpha < 2; ++alpha) {
           std::vector<Job> jobs;
           for (size_t i = 0; i < posed.size(); ++i) {
             const auto &entry = catalog[instances[i].mesh];
+            // A faded object draws every batch in the translucent pass, in its
+            // own display-list order: one depth for the whole object.
+            const bool faded = instances[i].opacity != 255;
+            float objectDepth = 0;
+            if (camera && alpha && faded) {
+                Vec3 center{};
+                for (const auto &v : posed[i]) { center[0] += v.x; center[1] += v.y; center[2] += v.z; }
+                for (auto &value : center) value /= float(posed[i].size());
+                objectDepth = dot(subtract(center, camera->eye), normalized(subtract(camera->target, camera->eye)));
+            }
             for (size_t d = 0; d < entry.assets->draws.size(); ++d) {
-                const auto &draw = entry.assets->draws[d]; if (bool(draw.flags & 2) != bool(alpha)) continue;
-                float depth = 0;
-                if (camera && alpha) {
+                const auto &draw = entry.assets->draws[d]; if ((bool(draw.flags & 2) || faded) != bool(alpha)) continue;
+                float depth = objectDepth;
+                if (camera && alpha && !faded) {
                     Vec3 center{};
                     for (size_t v = draw.first; v < draw.first + draw.count; ++v) {
                         center[0] += posed[i][v].x; center[1] += posed[i][v].y; center[2] += posed[i][v].z;
@@ -360,6 +395,18 @@ struct NativeRenderer::State {
             uploaded = job.instance;
             }
                 const auto &draw = entry.assets->draws[job.draw];
+                const int opacity = instances[job.instance].opacity;
+                if (opacity != shownOpacity) {
+                    if (opacity != 255) {
+                        D3D11_MAPPED_SUBRESOURCE mapped{};
+                        check(context->Map(opacityBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped), "Update object opacity");
+                        const float value[4] = {float(opacity) / 255.0f, 0, 0, 0};
+                        std::memcpy(mapped.pData, value, sizeof(value)); context->Unmap(opacityBuffer.Get(), 0);
+                        context->PSSetConstantBuffers(1, 1, opacityBuffer.GetAddressOf());
+                    }
+                    context->PSSetShader(opacity != 255 ? fadedShader.Get() : pixelShader.Get(), nullptr, 0);
+                    shownOpacity = opacity;
+                }
                 context->RSSetState(raster[draw.flags & 1].Get()); context->OMSetDepthStencilState(depthState[alpha].Get(), 0);
                 context->OMSetBlendState(blendState[alpha].Get(), nullptr, 0xffffffff);
                 context->PSSetShaderResources(0, 1, entry.textureViews[draw.texture].GetAddressOf());

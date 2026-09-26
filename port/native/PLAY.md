@@ -30,7 +30,7 @@ N64.
 | A | A | pulo; parado, segurar carrega o pulo; agachado, levanta |
 | Analógico direito | C-buttons | esquerda/direita: passo lateral e câmera; agachado, rolar |
 | B, X | B | agachar; correndo, deslizar; com o analógico, andar agachado |
-| LT, RB | R | mira em pé ou agachado: o analógico mira e gira na borda |
+| LT, RB | R | mira em pé ou agachado: o analógico mira e gira na borda; o Juno fica translúcido |
 | RT | Z | tiro: **parada** quando `boyCanFire` permite |
 | LB | L | sem leitura no personagem |
 | D-pad | D-pad | trocar arma: inerte com uma arma só |

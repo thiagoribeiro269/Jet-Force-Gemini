@@ -65,7 +65,8 @@ int main(int argc, char **argv) {
                   << ",\"wall\":" << unsigned(body.wall533) << ",\"ceiling\":" << unsigned(body.ceiling534) << ",\"move\":" << body.move3B
                   << ",\"clip\":" << snapshot.entities[0].clip << ",\"progress\":" << body.progress28 << ",\"camera_yaw\":" << camera.yaw() << ",\"camera_pitch\":" << camera.angles[1]
                   << ",\"camera_x\":" << camera.position.x << ",\"camera_y\":" << camera.position.y << ",\"camera_z\":" << camera.position.z
-                  << ",\"collision\":" << body.lastCollisionMask << ",\"twist\":" << body.twist580 << ",\"joint_turns\":[";
+                  << ",\"collision\":" << body.lastCollisionMask << ",\"twist\":" << body.twist580 << ",\"opacity\":" << unsigned(snapshot.entities[0].render.opacity)
+                  << ",\"joint_turns\":[";
             for (size_t i = 0; i < body.jointTurnCount; ++i)
                 trace << (i ? "," : "") << "[" << body.jointTurns[i].offset << "," << body.jointTurns[i].value << "]";
             trace << "]}";
